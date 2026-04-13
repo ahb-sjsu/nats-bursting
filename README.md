@@ -55,6 +55,30 @@ architecture; the `internal/` packages are scaffolds with stub
 implementations. First milestone: trivial Job submission via NATS
 publish, status echo back via NATS subscribe.
 
+## Python client (`python/`)
+
+The Atlas-side submit path is shipped as a Python package living
+under `python/`. It provides:
+
+- `atlas_burst.Client` — synchronous-feeling submit API over NATS
+- `atlas_burst.JobDescriptor` — mirrors the Go submitter struct
+- `atlas_burst.gpu_is_busy()` — local GPU probe via `nvidia-smi`
+- `%%burst` IPython cell magic — package a notebook cell as a Job,
+  submit it to Nautilus when the local GPU is busy
+
+```bash
+pip install -e ./python
+```
+
+```python
+%load_ext atlas_burst.magic
+%%burst --gpu 1 --memory 16Gi
+import torch
+print(torch.cuda.is_available())
+```
+
+See `python/README.md` for the full client docs.
+
 ## Architecture
 
 ```

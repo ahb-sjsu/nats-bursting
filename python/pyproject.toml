@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-burst"
+version = "0.1.0"
+description = "Atlas-side Python client + IPython magic for the atlas-burst NATS-to-Kubernetes bursting controller"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Andrew H. Bond", email = "andrew.bond@sjsu.edu" }]
+requires-python = ">=3.10"
+dependencies = [
+  "nats-py>=2.6.0",
+]
+
+[project.optional-dependencies]
+ipython = ["ipython>=8.0"]
+dev = [
+  "pytest>=7.0",
+  "pytest-asyncio>=0.23",
+  "black==26.1.0",
+  "ruff==0.15.0",
+  "mypy>=1.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ahb-sjsu/atlas-burst"
+Issues = "https://github.com/ahb-sjsu/atlas-burst/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["atlas_burst*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
