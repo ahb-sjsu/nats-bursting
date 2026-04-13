@@ -1,0 +1,39 @@
+[Unit]
+Description=Atlas-Burst — NATS-to-Kubernetes bursting controller
+Documentation=https://github.com/ahb-sjsu/atlas-burst
+After=network-online.target nats.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=claude
+Group=claude
+WorkingDirectory=/home/claude/atlas-burst
+
+# Single static binary; expects /etc/atlas-burst/config.yaml to be
+# the canonical config source. CLI flags can still override it.
+ExecStart=/usr/local/bin/atlas-burst --config /etc/atlas-burst/config.yaml
+
+# Environment for kubeconfig / NATS creds; keep secrets in a separate
+# EnvironmentFile owned by root and 0600 so they're not world-readable.
+EnvironmentFile=-/etc/atlas-burst/secrets.env
+
+Restart=on-failure
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ReadWritePaths=/var/log/atlas-burst
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=atlas-burst
+
+[Install]
+WantedBy=multi-user.target
