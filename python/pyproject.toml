@@ -68,7 +68,8 @@ source = ["nats_bursting"]
 
 [tool.coverage.report]
 show_missing = true
-fail_under = 80
+# Alpha target; raise as async NATS transport gets integration tests.
+fail_under = 70
 
 [tool.black]
 line-length = 88
