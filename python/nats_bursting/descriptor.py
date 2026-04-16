@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -68,7 +67,7 @@ class JobDescriptor:
         return json.dumps(self.to_dict()).encode("utf-8")
 
     @classmethod
-    def from_dict(cls, data: dict) -> "JobDescriptor":
+    def from_dict(cls, data: dict) -> JobDescriptor:
         res = data.get("resources", {}) or {}
         return cls(
             name=data["name"],
@@ -109,12 +108,12 @@ class StatusEvent:
 
     job_id: str
     state: str  # "submitted" | "error" | future states
-    reason: Optional[str] = None
-    k8s_job: Optional[str] = None
-    ts: Optional[str] = None
+    reason: str | None = None
+    k8s_job: str | None = None
+    ts: str | None = None
 
     @classmethod
-    def from_dict(cls, data: dict) -> "StatusEvent":
+    def from_dict(cls, data: dict) -> StatusEvent:
         return cls(
             job_id=data.get("job_id", ""),
             state=data.get("state", ""),

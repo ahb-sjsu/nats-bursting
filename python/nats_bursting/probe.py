@@ -10,7 +10,6 @@ from __future__ import annotations
 import shutil
 import subprocess
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -82,7 +81,7 @@ def _parse_nvidia_smi(out: str) -> list[GPUState]:
 def gpu_is_busy(
     util_threshold_pct: float = 85.0,
     memory_threshold_pct: float = 85.0,
-    states: Optional[list[GPUState]] = None,
+    states: list[GPUState] | None = None,
 ) -> bool:
     """Decision helper used by the `%%burst` magic.
 

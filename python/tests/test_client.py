@@ -7,7 +7,6 @@ out gives us complete coverage of Client behavior without a broker.
 from __future__ import annotations
 
 import json
-from typing import Optional
 
 from nats_bursting.client import Client, SubmitResult
 from nats_bursting.descriptor import JobDescriptor, Resources
@@ -23,9 +22,9 @@ class FakeTransport:
 
     def __init__(
         self,
-        request_replies: Optional[list[bytes]] = None,
-        subscribe_replies: Optional[list[Optional[bytes]]] = None,
-        request_error: Optional[Exception] = None,
+        request_replies: list[bytes] | None = None,
+        subscribe_replies: list[bytes | None] | None = None,
+        request_error: Exception | None = None,
     ):
         self.request_replies = list(request_replies or [])
         self.subscribe_replies = list(subscribe_replies or [])
@@ -42,7 +41,7 @@ class FakeTransport:
             raise AssertionError("FakeTransport.request exhausted")
         return self.request_replies.pop(0)
 
-    def subscribe_status(self, job_id: str, timeout: float) -> Optional[bytes]:
+    def subscribe_status(self, job_id: str, timeout: float) -> bytes | None:
         self.subscribes.append((job_id, timeout))
         if not self.subscribe_replies:
             return None

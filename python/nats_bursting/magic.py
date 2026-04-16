@@ -43,7 +43,6 @@ from __future__ import annotations
 
 import os
 import uuid
-from typing import Optional
 
 from nats_bursting.client import Client
 from nats_bursting.descriptor import JobDescriptor, Resources
@@ -94,7 +93,7 @@ DEFAULT_IMAGE = "python:3.12-slim"
 class BurstMagic(Magics):  # type: ignore[misc]
     """Container for ``%%burst``. Registered by ``load_ipython_extension``."""
 
-    def __init__(self, shell=None, client: Optional[Client] = None):
+    def __init__(self, shell=None, client: Client | None = None):
         super().__init__(shell)
         self._client_override = client
 
@@ -131,10 +130,9 @@ class BurstMagic(Magics):  # type: ignore[misc]
         if args.never:
             return _run_locally(cell, self.shell)
 
-        if not args.always:
-            # --when-busy (default): only burst if GPU busy
-            if not gpu_is_busy():
-                return _run_locally(cell, self.shell)
+        # --when-busy (default): only burst if GPU busy
+        if not args.always and not gpu_is_busy():
+            return _run_locally(cell, self.shell)
 
         desc = _build_descriptor(cell, args)
 

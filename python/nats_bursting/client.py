@@ -14,12 +14,13 @@ tests supply a ``FakeTransport`` that echoes scripted replies.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import threading
 import time
 import uuid
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Protocol
 
 from nats_bursting.descriptor import JobDescriptor, StatusEvent, SubmitEnvelope
 
@@ -31,14 +32,14 @@ class SubmitResult:
     """
 
     job_id: str
-    status: Optional[StatusEvent] = None
+    status: StatusEvent | None = None
 
     @property
     def accepted(self) -> bool:
         return self.status is not None and self.status.state == "submitted"
 
     @property
-    def k8s_job_name(self) -> Optional[str]:
+    def k8s_job_name(self) -> str | None:
         return self.status.k8s_job if self.status else None
 
 
@@ -53,7 +54,7 @@ class Transport(Protocol):
     """
 
     def request(self, subject: str, payload: bytes, timeout: float) -> bytes: ...
-    def subscribe_status(self, job_id: str, timeout: float) -> Optional[bytes]: ...
+    def subscribe_status(self, job_id: str, timeout: float) -> bytes | None: ...
     def close(self) -> None: ...
 
 
@@ -68,7 +69,7 @@ class NATSTransport:
     def __init__(
         self,
         url: str,
-        creds_file: Optional[str] = None,
+        creds_file: str | None = None,
         status_prefix: str = "burst.status",
         connect_timeout: float = 10.0,
     ):
@@ -77,8 +78,8 @@ class NATSTransport:
         self._status_prefix = status_prefix
         self._connect_timeout = connect_timeout
 
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._loop_thread: Optional[threading.Thread] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._loop_thread: threading.Thread | None = None
         self._nc = None  # type: ignore[var-annotated]
 
     # ---- lifecycle ---------------------------------------------------
@@ -124,14 +125,14 @@ class NATSTransport:
             timeout=timeout + 2
         )
 
-    def subscribe_status(self, job_id: str, timeout: float) -> Optional[bytes]:
+    def subscribe_status(self, job_id: str, timeout: float) -> bytes | None:
         """Block up to ``timeout`` seconds for the first status event
         published on ``<status_prefix>.<job_id>``."""
         self._connect()
         assert self._nc is not None and self._loop is not None
         subj = f"{self._status_prefix}.{job_id}"
 
-        async def _do() -> Optional[bytes]:
+        async def _do() -> bytes | None:
             sub = await self._nc.subscribe(subj)  # type: ignore[union-attr]
             try:
                 msg = await sub.next_msg(timeout=timeout)
@@ -149,15 +150,11 @@ class NATSTransport:
         if self._nc is not None and self._loop is not None:
 
             async def _drain() -> None:
-                try:
+                with contextlib.suppress(Exception):
                     await self._nc.drain()  # type: ignore[union-attr]
-                except Exception:
-                    pass
 
-            try:
+            with contextlib.suppress(Exception):
                 asyncio.run_coroutine_threadsafe(_drain(), self._loop).result(timeout=5)
-            except Exception:
-                pass
         if self._loop is not None and self._loop.is_running():
             self._loop.call_soon_threadsafe(self._loop.stop)
         self._nc = None
@@ -186,10 +183,10 @@ class Client:
     def __init__(
         self,
         nats_url: str = "nats://localhost:4222",
-        nats_creds: Optional[str] = None,
+        nats_creds: str | None = None,
         submit_subject: str = "burst.submit",
         status_prefix: str = "burst.status",
-        transport: Optional[Transport] = None,
+        transport: Transport | None = None,
     ):
         self._submit_subject = submit_subject
         if transport is not None:
@@ -204,7 +201,7 @@ class Client:
     # ---- core API ----------------------------------------------------
 
     def submit(
-        self, descriptor: JobDescriptor, job_id: Optional[str] = None
+        self, descriptor: JobDescriptor, job_id: str | None = None
     ) -> SubmitResult:
         """Publish a submit message and return the first status event
         (if the controller echoed one within a short window).
@@ -256,14 +253,14 @@ class Client:
     def close(self) -> None:
         self._transport.close()
 
-    def __enter__(self) -> "Client":
+    def __enter__(self) -> Client:
         return self
 
     def __exit__(self, *exc_info: object) -> None:
         self.close()
 
 
-def _parse_status(data: Optional[bytes]) -> Optional[StatusEvent]:
+def _parse_status(data: bytes | None) -> StatusEvent | None:
     if not data:
         return None
     try:
