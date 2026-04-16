@@ -18,8 +18,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/ahb-sjsu/atlas-burst/internal/config"
-	"github.com/ahb-sjsu/atlas-burst/internal/submitter"
+	"github.com/ahb-sjsu/nats-bursting/internal/config"
+	"github.com/ahb-sjsu/nats-bursting/internal/submitter"
 	"github.com/nats-io/nats.go"
 )
 
@@ -34,7 +34,7 @@ type Bridge struct {
 // New connects to NATS using cfg and wraps the given Submitter.
 func New(cfg config.NATSConfig, sub *submitter.Submitter, log *slog.Logger) (*Bridge, error) {
 	opts := []nats.Option{
-		nats.Name("atlas-burst"),
+		nats.Name("nats-bursting"),
 		nats.Timeout(cfg.ConnectWait),
 		nats.MaxReconnects(-1),
 	}

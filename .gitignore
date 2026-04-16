@@ -15,3 +15,13 @@ __pycache__/
 .ruff_cache/
 build/
 *.egg
+
+# Secrets — never commit real credentials
+secrets.env
+*.secret.yaml
+*-kubeconfig
+nrp-config
+
+# Local scratch scripts + credential workspace (one-time migration helpers,
+# paramiko wrappers with plaintext passwords, etc.)
+/_scratch/

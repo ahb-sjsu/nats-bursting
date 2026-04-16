@@ -1,0 +1,57 @@
+# RBAC for nats-bursting controller operating against the NRP namespace.
+#
+# On NRP, the kubeconfig from the portal already grants namespace-level
+# access. This Role documents the minimum permissions nats-bursting needs
+# and can be bound to a dedicated ServiceAccount if you want tighter
+# scoping than the portal-issued identity.
+#
+# Cluster-wide reads (nodes, all-namespace pods) are NOT included here
+# because NRP does not grant ClusterRole creation to tenants. The
+# prober degrades gracefully when those calls return 403.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: nats-bursting
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: nats-bursting
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: controller
+rules:
+  # Submitter: create, get, delete Jobs
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  # Prober: list pods in our namespace for job status
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # Prober: read pod logs for streaming results back
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: nats-bursting
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: nats-bursting
+subjects:
+  - kind: ServiceAccount
+    name: nats-bursting
+    namespace: ssu-atlas-ai

@@ -33,7 +33,7 @@ jobs:
         run: go tool cover -func=coverage.out | tail -1
 
   python:
-    name: Python client (atlas-burst pip pkg)
+    name: Python client (nats-bursting pip pkg)
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -74,6 +74,6 @@ jobs:
       - name: Build
         run: |
           mkdir -p dist
-          CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/atlas-burst ./cmd/atlas-burst
+          CGO_ENABLED=0 go build -ldflags="-s -w" -o dist/nats-bursting ./cmd/nats-bursting
       - name: Image build (smoke test only)
-        run: docker build -t atlas-burst:ci .
+        run: docker build -t nats-bursting:ci .

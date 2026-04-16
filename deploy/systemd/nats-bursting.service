@@ -1,0 +1,38 @@
+[Unit]
+Description=nats-bursting — NATS-to-Kubernetes bursting controller
+Documentation=https://github.com/ahb-sjsu/nats-bursting
+After=network-online.target atlas-nats.service
+Wants=network-online.target
+Requires=atlas-nats.service
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+[Service]
+Type=simple
+User=claude
+Group=claude
+WorkingDirectory=/home/claude
+
+# Single static binary reading /etc/nats-bursting/config.yaml.
+# CLI flags can still override the config.
+ExecStart=/usr/local/bin/nats-bursting --config /etc/nats-bursting/config.yaml
+
+# Optional env file (e.g. NATS_CREDS path, KUBECONFIG override).
+# Owned by root:claude, mode 0640 so the service user can read it.
+EnvironmentFile=-/etc/nats-bursting/secrets.env
+
+Restart=on-failure
+RestartSec=10
+
+# Hardening — not as strict as a dedicated-user service because we
+# need access to /home/claude/.kube for the OIDC-refreshed kubeconfig.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=nats-bursting
+
+[Install]
+WantedBy=atlas.target multi-user.target

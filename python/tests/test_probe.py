@@ -1,4 +1,4 @@
-"""Tests for ``atlas_burst.probe``.
+"""Tests for ``nats_bursting.probe``.
 
 No real nvidia-smi is invoked; we exercise the parser and the
 threshold logic directly.
@@ -6,7 +6,7 @@ threshold logic directly.
 
 from __future__ import annotations
 
-from atlas_burst.probe import GPUState, _parse_nvidia_smi, gpu_is_busy
+from nats_bursting.probe import GPUState, _parse_nvidia_smi, gpu_is_busy
 
 
 def test_parse_nvidia_smi_typical() -> None:

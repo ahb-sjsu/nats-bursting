@@ -1,4 +1,4 @@
-"""Synchronous-looking NATS client for the atlas-burst controller.
+"""Synchronous-looking NATS client for the nats-bursting controller.
 
 Wraps ``nats.py`` (which is async) with a synchronous facade suitable
 for use from notebooks and scripts. The underlying async loop is
@@ -21,7 +21,7 @@ import uuid
 from dataclasses import dataclass
 from typing import Optional, Protocol
 
-from atlas_burst.descriptor import JobDescriptor, StatusEvent, SubmitEnvelope
+from nats_bursting.descriptor import JobDescriptor, StatusEvent, SubmitEnvelope
 
 
 @dataclass
@@ -46,7 +46,7 @@ class Transport(Protocol):
     """Minimal NATS-like transport.
 
     ``request`` sends a message on ``subject`` and waits up to
-    ``timeout`` seconds for a reply on a reply-inbox. The atlas-burst
+    ``timeout`` seconds for a reply on a reply-inbox. The nats-bursting
     controller is written to publish its first status update back on
     the caller's reply subject when available, falling back to the
     canonical ``burst.status.<job_id>`` subject otherwise.
@@ -88,7 +88,7 @@ class NATSTransport:
             return self._loop
         self._loop = asyncio.new_event_loop()
         self._loop_thread = threading.Thread(
-            target=self._loop.run_forever, name="atlas-burst-nats", daemon=True
+            target=self._loop.run_forever, name="nats-bursting-nats", daemon=True
         )
         self._loop_thread.start()
         return self._loop
@@ -100,7 +100,7 @@ class NATSTransport:
             self._url,
             user_credentials=self._creds_file if self._creds_file else None,
             connect_timeout=self._connect_timeout,
-            name="atlas-burst-py",
+            name="nats-bursting-py",
         )
 
     def _connect(self) -> None:
@@ -166,7 +166,7 @@ class NATSTransport:
 
 
 class Client:
-    """High-level atlas-burst submit client.
+    """High-level nats-bursting submit client.
 
     Parameters
     ----------

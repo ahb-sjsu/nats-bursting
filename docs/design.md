@@ -1,4 +1,4 @@
-# atlas-burst design
+# nats-bursting design
 
 ## Goal
 
@@ -16,22 +16,22 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
 ## Architecture
 
 ```
-   ┌───────── Atlas (workstation) ─────────┐         ┌───── Nautilus (K8s) ─────┐
-   │                                       │         │                          │
-   │   atlas subsystems publish:           │         │  Job pod runs:           │
-   │     burst.submit { JobDescriptor }    │         │   - your workload        │
-   │                                       │         │   - (optional) atlas-    │
-   │   atlas-burst (Go binary):            │         │     burst runner         │
-   │     1. consume burst.submit           │         │     publishes:           │
-   │     2. probe k8s state                │         │       burst.status.<id>  │
-   │     3. politeness decision            │   NATS  │       burst.result.<id>  │
-   │     4. client-go Job create  ────────────────►  │                          │
-   │     5. publish burst.status.<id>      │  via    │                          │
-   │                                       │  Tail-  │                          │
-   │   atlas subsystems consume:           │  scale  │                          │
-   │     burst.status.<id>                 │  Funnel │                          │
-   │     burst.result.<id>                 │         │                          │
-   └───────────────────────────────────────┘         └──────────────────────────┘
+   ┌───────── Atlas (workstation) ─────────┐            ┌── NRP (ssu-atlas-ai) ──┐
+   │                                       │            │                         │
+   │   atlas subsystems publish:           │            │  Workload pods:         │
+   │     burst.submit { JobDescriptor }    │            │   - subscribe agi.*     │
+   │     agi.lh.request.*  etc.            │            │   - publish responses   │
+   │                                       │            │     as if local         │
+   │   NATS hub :4222  ◄─── leaf link ─────────────────►│                         │
+   │                       (TLS, :7422)    │            │  NATS leaf pod          │
+   │                                       │            │   bridges subjects      │
+   │   nats-bursting (Go binary):            │            │   into the namespace    │
+   │     1. consume burst.submit           │            │                         │
+   │     2. probe k8s state                │            │  nats-bursting creates    │
+   │     3. politeness decision            │ kubeconfig │  Jobs via K8s API       │
+   │     4. client-go Job create  ──────────────────►   │                         │
+   │     5. publish burst.status.<id>      │            │                         │
+   └───────────────────────────────────────┘            └─────────────────────────┘
 ```
 
 ### Components
@@ -47,7 +47,7 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
   shipped struct) into a real `*batchv1.Job` and creates it.
 * **`internal/natsbridge`** — NATS `Subscribe(burst.submit)` →
   `Submitter.Submit` → `Publish(burst.status.<id>)`.
-* **`cmd/atlas-burst/main.go`** — config load, k8s client init,
+* **`cmd/nats-bursting/main.go`** — config load, k8s client init,
   signal handling, run loop.
 
 ### JobDescriptor
@@ -91,13 +91,17 @@ resource — out of scope for v1.
 
 ## Threat model
 
-* Atlas's NATS bus is exposed via Tailscale Funnel (a public ingress)
-  so Nautilus pods can reach it. Funnel terminates TLS; we layer NATS
-  user/password or NKey auth on top.
-* The NATS subject namespace is unscoped: anyone with funnel
-  credentials can publish `burst.submit`. Single-user system today;
-  multi-tenant requires per-user subject prefixes and JetStream
-  consumer groups.
+* Atlas's NATS bus is extended to NRP via a NATS **leaf node**
+  connection (outbound from NRP, TLS terminated by nats-server itself
+  using Caddy-managed Let's Encrypt certs, exposed publicly through
+  DuckDNS + home-router NAT on port 7422). NATS user/password auth
+  guards the leaf endpoint. See `docs/nats-leafnode-duckdns.md`.
+* The NATS subject namespace is unscoped: anyone with leaf credentials
+  can publish `burst.submit` or any `agi.*` subject the leaf is
+  configured to propagate. Single-user system today; multi-tenant
+  requires account-based isolation (separate NATS account per tenant
+  with explicit subject exports) and eventually per-user subject
+  prefixes.
 
 ## Scaling notes
 

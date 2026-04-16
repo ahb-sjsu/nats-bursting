@@ -1,0 +1,36 @@
+# nats-bursting controller configuration for Atlas workstation.
+# Deployed to /etc/nats-bursting/config.yaml on Atlas.
+# See deploy/systemd/nats-bursting.service for the systemd unit.
+
+nats:
+  # Local NATS JetStream — already running on Atlas :4222
+  url: "nats://localhost:4222"
+  # creds_file: ""  # Not needed for local NATS; only if auth is enforced
+  submit_subject: "burst.submit"
+  status_prefix: "burst.status"
+  result_prefix: "burst.result"
+  connect_wait: 10s
+
+k8s:
+  # NRP kubeconfig — downloaded from https://nrp.ai and placed at the
+  # standard default location. kubelogin's OIDC token cache also lives
+  # under /home/claude/.kube/cache/oidc-login/, so the controller can
+  # use cached refresh tokens without a browser.
+  kubeconfig: "/home/claude/.kube/config"
+  namespace: "ssu-atlas-ai"
+
+politeness:
+  # Conservative defaults for a shared academic cluster.
+  # NRP Nautilus has ~400-pod namespace caps; stay well under.
+  max_concurrent_jobs: 10
+  max_pending_jobs: 5
+  queue_depth_threshold: 100
+  utilization_threshold: 0.85
+
+  # Backoff: start at 30s, double each time, cap at 15min.
+  initial_backoff: 30s
+  max_backoff: 15m
+  backoff_multiplier: 2.0
+  max_attempts: 15
+
+log_level: "info"

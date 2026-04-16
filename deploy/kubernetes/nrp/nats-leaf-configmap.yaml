@@ -1,0 +1,54 @@
+# NATS leaf-node configuration for ssu-atlas-ai.
+#
+# This nats-server instance:
+#   1. Dials OUTBOUND to Atlas via atlas-sjsu.duckdns.org:7422 (TLS).
+#   2. Exposes a plain NATS listener on :4222 for in-cluster workload pods.
+#   3. Bridges subjects bidirectionally between the two.
+#
+# Workload pods in this namespace connect to:
+#   nats://atlas-nats.ssu-atlas-ai.svc.cluster.local:4222
+# and their publishes propagate to Atlas's hub as if local.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atlas-nats-leaf-config
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: atlas-nats-leaf
+    app.kubernetes.io/component: messaging
+data:
+  nats.conf: |
+    # In-cluster listener for NRP workload pods. No TLS inside the
+    # cluster — traffic stays on the pod network.
+    port: 4222
+    http_port: 8222   # monitoring endpoint
+
+    # Tune as needed; small cluster defaults are fine for bursting.
+    max_payload: 8MB
+
+    # Outbound leaf connection to Atlas.
+    leafnodes {
+      remotes: [
+        {
+          url: "tls://atlas-sjsu.duckdns.org:7422"
+          credentials: "/etc/nats-leaf-creds/creds"
+
+          # Optional: restrict which subjects flow across the link.
+          # Start wide-open during bring-up, narrow later.
+          #
+          # import: [
+          #   { stream: { subject: "agi.lh.request.>" } }
+          #   { stream: { subject: "agi.rh.request.>" } }
+          #   { stream: { subject: "burst.submit" } }
+          # ]
+          # export: [
+          #   { stream: { subject: "agi.lh.response.>" } }
+          #   { stream: { subject: "agi.rh.response.>" } }
+          #   { stream: { subject: "burst.status.>" } }
+          #   { stream: { subject: "burst.result.>" } }
+          # ]
+        }
+      ]
+      # Reconnect behavior — academic clusters reboot nodes sometimes.
+      reconnect: "5s"
+    }

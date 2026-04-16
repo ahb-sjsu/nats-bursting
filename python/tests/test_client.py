@@ -1,4 +1,4 @@
-"""Tests for ``atlas_burst.client`` using a FakeTransport.
+"""Tests for ``nats_bursting.client`` using a FakeTransport.
 
 The transport is the only thing that touches NATS, so swapping it
 out gives us complete coverage of Client behavior without a broker.
@@ -9,8 +9,8 @@ from __future__ import annotations
 import json
 from typing import Optional
 
-from atlas_burst.client import Client, SubmitResult
-from atlas_burst.descriptor import JobDescriptor, Resources
+from nats_bursting.client import Client, SubmitResult
+from nats_bursting.descriptor import JobDescriptor, Resources
 
 
 class FakeTransport:

@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "atlas-burst"
+name = "nats-bursting"
 version = "0.1.0"
-description = "Atlas-side Python client + IPython magic for the atlas-burst NATS-to-Kubernetes bursting controller"
+description = "Atlas-side Python client + IPython magic for the nats-bursting NATS-to-Kubernetes bursting controller"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Andrew H. Bond", email = "andrew.bond@sjsu.edu" }]
@@ -25,12 +25,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ahb-sjsu/atlas-burst"
-Issues = "https://github.com/ahb-sjsu/atlas-burst/issues"
+Homepage = "https://github.com/ahb-sjsu/nats-bursting"
+Issues = "https://github.com/ahb-sjsu/nats-bursting/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["atlas_burst*"]
+include = ["nats_bursting*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -113,7 +113,7 @@ func (d JobDescriptor) ToJob(namespace string) (*batchv1.Job, error) {
 		limits[corev1.ResourceName("nvidia.com/gpu")] = *resource.NewQuantity(int64(d.Resources.GPU), resource.DecimalSI)
 	}
 
-	labels := map[string]string{"app.kubernetes.io/managed-by": "atlas-burst"}
+	labels := map[string]string{"app.kubernetes.io/managed-by": "nats-bursting"}
 	for k, v := range d.Labels {
 		labels[k] = v
 	}

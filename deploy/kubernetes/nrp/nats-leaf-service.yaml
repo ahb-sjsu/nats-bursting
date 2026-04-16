@@ -1,0 +1,25 @@
+# In-cluster service for workload pods to connect to the leaf.
+# DNS name: atlas-nats.ssu-atlas-ai.svc.cluster.local
+# Short form:  atlas-nats
+#
+# Workload Job env:
+#   NATS_URL=nats://atlas-nats:4222
+apiVersion: v1
+kind: Service
+metadata:
+  name: atlas-nats
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: atlas-nats-leaf
+    app.kubernetes.io/component: messaging
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: atlas-nats-leaf
+  ports:
+    - name: client
+      port: 4222
+      targetPort: client
+    - name: monitor
+      port: 8222
+      targetPort: monitor

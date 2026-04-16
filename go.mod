@@ -1,4 +1,4 @@
-module github.com/ahb-sjsu/atlas-burst
+module github.com/ahb-sjsu/nats-bursting
 
 go 1.23
 

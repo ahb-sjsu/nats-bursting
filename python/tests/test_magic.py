@@ -10,9 +10,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from atlas_burst.client import SubmitResult
-from atlas_burst.descriptor import StatusEvent
-from atlas_burst.magic import BurstMagic, _build_descriptor, _run_locally
+from nats_bursting.client import SubmitResult
+from nats_bursting.descriptor import StatusEvent
+from nats_bursting.magic import BurstMagic, _build_descriptor, _run_locally
 
 # The magic's IPython decorators require IPython to be importable at
 # module load, not at call time. Skip if not installed.
@@ -39,10 +39,10 @@ def test_build_descriptor_sets_image_and_cell_env() -> None:
     args.gpu = 1
     desc = _build_descriptor("print('hi')", args)
     assert desc.image == "python:3.12-slim"
-    assert desc.env["ATLAS_BURST_CELL"] == "print('hi')"
+    assert desc.env["NATS_BURSTING_CELL"] == "print('hi')"
     assert desc.resources.gpu == 1
     assert desc.resources.memory == "4Gi"
-    assert desc.labels.get("atlas-burst.io/origin") == "magic"
+    assert desc.labels.get("nats-bursting.io/origin") == "magic"
     # sh -c wrapper so env var interpolation works
     assert desc.command[:2] == ["sh", "-c"]
 
@@ -58,7 +58,7 @@ def test_magic_when_busy_skips_burst_if_gpu_has_headroom(capsys) -> None:
     shell = _FakeShell()
     fake_client = MagicMock(spec_set=["submit_and_wait"])
     m = BurstMagic(shell=shell, client=fake_client)
-    with patch("atlas_burst.magic.gpu_is_busy", return_value=False):
+    with patch("nats_bursting.magic.gpu_is_busy", return_value=False):
         m.burst("", "print('local')")
     assert shell.cells == ["print('local')"]
     fake_client.submit_and_wait.assert_not_called()

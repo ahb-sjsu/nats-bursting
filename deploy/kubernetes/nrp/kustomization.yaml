@@ -1,0 +1,25 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ssu-atlas-ai
+
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: nats-bursting
+    includeSelectors: false
+
+resources:
+  - rbac.yaml
+  - nats-leaf-configmap.yaml
+  - nats-leaf-deployment.yaml
+  - nats-leaf-service.yaml
+  # nats-leaf-secret.yaml is a template only. Create the real Secret
+  # imperatively so credentials never hit git:
+  #
+  #   kubectl create secret generic atlas-nats-leaf-creds \
+  #     --namespace ssu-atlas-ai \
+  #     --from-literal=user=ssu-atlas-ai-leaf \
+  #     --from-literal=password='<plaintext>'
+  #
+  # Uncomment only if you're deploying to a dev cluster with throwaway creds.
+  # - nats-leaf-secret.yaml

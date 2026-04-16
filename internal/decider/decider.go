@@ -6,7 +6,7 @@ package decider
 import (
 	"fmt"
 
-	"github.com/ahb-sjsu/atlas-burst/internal/config"
+	"github.com/ahb-sjsu/nats-bursting/internal/config"
 )
 
 // Decision is the outcome of evaluating cluster state against

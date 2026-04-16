@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 
-from atlas_burst.descriptor import (
+from nats_bursting.descriptor import (
     JobDescriptor,
     Resources,
     StatusEvent,

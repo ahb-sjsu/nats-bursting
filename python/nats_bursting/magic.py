@@ -1,7 +1,7 @@
 """``%%burst`` IPython cell magic.
 
 Packages the cell source into a Python-script ``JobDescriptor``,
-submits it via an ``atlas_burst.Client``, and prints the resulting
+submits it via an ``nats_bursting.Client``, and prints the resulting
 Kubernetes Job name. Full log streaming is a follow-up — for now
 users get the Job name and run ``kubectl logs -f job/<name>``
 themselves.
@@ -9,7 +9,7 @@ themselves.
 Design
 ------
 The magic defers choosing a NATS URL / credentials to environment
-variables (``ATLAS_BURST_NATS_URL`` and ``ATLAS_BURST_NATS_CREDS``)
+variables (``NATS_BURSTING_NATS_URL`` and ``NATS_BURSTING_NATS_CREDS``)
 so a user's notebook stays portable across machines.
 
 Argument parsing uses IPython's ``magic_arguments`` so ``%%burst?``
@@ -20,7 +20,7 @@ Usage
 
 ::
 
-    %load_ext atlas_burst.magic
+    %load_ext nats_bursting.magic
 
     %%burst --gpu 1 --memory 16Gi --image python:3.12-slim
     import torch
@@ -45,9 +45,9 @@ import os
 import uuid
 from typing import Optional
 
-from atlas_burst.client import Client
-from atlas_burst.descriptor import JobDescriptor, Resources
-from atlas_burst.probe import gpu_is_busy
+from nats_bursting.client import Client
+from nats_bursting.descriptor import JobDescriptor, Resources
+from nats_bursting.probe import gpu_is_busy
 
 _HAS_IPYTHON = False
 try:
@@ -60,7 +60,7 @@ try:
 
     _HAS_IPYTHON = True
 except ImportError:  # pragma: no cover — optional dep
-    # Stub fallbacks so non-Jupyter imports of atlas_burst still work.
+    # Stub fallbacks so non-Jupyter imports of nats_bursting still work.
     def cell_magic(func):  # type: ignore[misc]
         return func
 
@@ -101,8 +101,8 @@ class BurstMagic(Magics):  # type: ignore[misc]
     def _client(self) -> Client:
         if self._client_override is not None:
             return self._client_override
-        url = os.environ.get("ATLAS_BURST_NATS_URL", "nats://localhost:4222")
-        creds = os.environ.get("ATLAS_BURST_NATS_CREDS") or None
+        url = os.environ.get("NATS_BURSTING_NATS_URL", "nats://localhost:4222")
+        creds = os.environ.get("NATS_BURSTING_NATS_CREDS") or None
         return Client(nats_url=url, nats_creds=creds)
 
     @magic_arguments()
@@ -122,9 +122,9 @@ class BurstMagic(Magics):  # type: ignore[misc]
     @argument("--dry-run", action="store_true", help="Print descriptor, don't submit.")
     @cell_magic
     def burst(self, line: str, cell: str):
-        """Run the cell via atlas-burst on Nautilus."""
+        """Run the cell via nats-bursting on Nautilus."""
         if not _HAS_IPYTHON:  # pragma: no cover
-            raise RuntimeError("atlas_burst.magic requires IPython")
+            raise RuntimeError("nats_bursting.magic requires IPython")
 
         args = parse_argstring(self.burst, line)
 
@@ -166,10 +166,10 @@ def _run_locally(cell: str, shell) -> None:
 
 def _build_descriptor(cell: str, args) -> JobDescriptor:
     name = f"burst-{uuid.uuid4().hex[:12]}"
-    env = {"ATLAS_BURST_CELL": cell}
-    # Run the cell via: python -c "$ATLAS_BURST_CELL"
+    env = {"NATS_BURSTING_CELL": cell}
+    # Run the cell via: python -c "$NATS_BURSTING_CELL"
     # Env limit is 1 MiB, which fits any realistic notebook cell.
-    command = ["sh", "-c", 'python -c "$ATLAS_BURST_CELL"']
+    command = ["sh", "-c", 'python -c "$NATS_BURSTING_CELL"']
     return JobDescriptor(
         name=name,
         image=args.image,
@@ -180,10 +180,10 @@ def _build_descriptor(cell: str, args) -> JobDescriptor:
             memory=args.memory,
             gpu=int(args.gpu or 0),
         ),
-        labels={"atlas-burst.io/origin": "magic"},
+        labels={"nats-bursting.io/origin": "magic"},
     )
 
 
 def load_ipython_extension(ipython):  # pragma: no cover — integration path
-    """IPython entry point: ``%load_ext atlas_burst.magic`` calls this."""
+    """IPython entry point: ``%load_ext nats_bursting.magic`` calls this."""
     ipython.register_magics(BurstMagic)

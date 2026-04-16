@@ -1,6 +1,6 @@
-// atlas-burst is the controller that bridges Atlas's local NATS bus
+// nats-bursting is the controller that bridges Atlas's local NATS bus
 // to a remote Kubernetes cluster (e.g. NRP Nautilus). See
-// https://github.com/ahb-sjsu/atlas-burst for the design.
+// https://github.com/ahb-sjsu/nats-bursting for the design.
 package main
 
 import (
@@ -12,9 +12,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ahb-sjsu/atlas-burst/internal/config"
-	"github.com/ahb-sjsu/atlas-burst/internal/natsbridge"
-	"github.com/ahb-sjsu/atlas-burst/internal/submitter"
+	"github.com/ahb-sjsu/nats-bursting/internal/config"
+	"github.com/ahb-sjsu/nats-bursting/internal/natsbridge"
+	"github.com/ahb-sjsu/nats-bursting/internal/submitter"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -47,7 +47,7 @@ func main() {
 	}
 
 	log := newLogger(cfg.LogLevel)
-	log.Info("atlas-burst starting",
+	log.Info("nats-bursting starting",
 		"nats", cfg.NATS.URL,
 		"namespace", cfg.K8s.Namespace,
 		"kubeconfig", cfg.K8s.Kubeconfig,
@@ -74,7 +74,7 @@ func main() {
 		log.Error("bridge run", "err", err)
 		os.Exit(1)
 	}
-	log.Info("atlas-burst stopped")
+	log.Info("nats-bursting stopped")
 }
 
 func newLogger(level string) *slog.Logger {

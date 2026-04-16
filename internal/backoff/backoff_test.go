@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ahb-sjsu/atlas-burst/internal/config"
+	"github.com/ahb-sjsu/nats-bursting/internal/config"
 )
 
 func tinyPoliteness() config.Politeness {

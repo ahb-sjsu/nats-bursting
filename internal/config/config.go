@@ -1,4 +1,4 @@
-// Package config holds runtime configuration for the atlas-burst
+// Package config holds runtime configuration for the nats-bursting
 // controller. Populated from CLI flags first, environment variables
 // second, optional YAML file third (precedence in that order).
 package config
@@ -39,7 +39,7 @@ type K8sConfig struct {
 	Namespace  string `yaml:"namespace"`
 
 	// InClusterAuth, when true, uses the pod's service-account token
-	// instead of a kubeconfig file. Used when atlas-burst itself runs
+	// instead of a kubeconfig file. Used when nats-bursting itself runs
 	// inside the target cluster.
 	InClusterAuth bool `yaml:"in_cluster_auth"`
 }

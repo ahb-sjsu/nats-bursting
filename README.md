@@ -1,7 +1,7 @@
-# atlas-burst
+# nats-bursting
 
-[![CI](https://github.com/ahb-sjsu/atlas-burst/actions/workflows/ci.yml/badge.svg)](https://github.com/ahb-sjsu/atlas-burst/actions/workflows/ci.yml)
-[![Go Report](https://goreportcard.com/badge/github.com/ahb-sjsu/atlas-burst)](https://goreportcard.com/report/github.com/ahb-sjsu/atlas-burst)
+[![CI](https://github.com/ahb-sjsu/nats-bursting/actions/workflows/ci.yml/badge.svg)](https://github.com/ahb-sjsu/nats-bursting/actions/workflows/ci.yml)
+[![Go Report](https://goreportcard.com/badge/github.com/ahb-sjsu/nats-bursting)](https://goreportcard.com/report/github.com/ahb-sjsu/nats-bursting)
 
 **AI bursting controller** — listens on a NATS queue for compute job
 requests from a workstation ("Atlas") and dispatches them to a remote
@@ -9,7 +9,7 @@ Kubernetes cluster ("Nautilus") with built-in politeness backoff.
 
 ## What it does
 
-`atlas-burst` is the bridge between an always-on personal workstation
+`nats-bursting` is the bridge between an always-on personal workstation
 running cognitive workloads (e.g. local LLMs, real-time inference)
 and an elastic shared HPC Kubernetes cluster. It implements **AI
 bursting** — the AI equivalent of cloud bursting:
@@ -36,7 +36,7 @@ via `client-go`, and streams status events back as NATS messages
 
 ## Politeness
 
-`atlas-burst` reuses the CSMA/CA-inspired politeness model from
+`nats-bursting` reuses the CSMA/CA-inspired politeness model from
 [polite-submit](https://github.com/ahb-sjsu/polite-submit). Before
 each submission it probes:
 
@@ -46,7 +46,7 @@ each submission it probes:
 
 …and backs off exponentially when any threshold is exceeded. The same
 politeness logic ports cleanly across schedulers (Slurm via
-polite-submit, Kubernetes via atlas-burst).
+polite-submit, Kubernetes via nats-bursting).
 
 ## Status
 
@@ -60,9 +60,9 @@ publish, status echo back via NATS subscribe.
 The Atlas-side submit path is shipped as a Python package living
 under `python/`. It provides:
 
-- `atlas_burst.Client` — synchronous-feeling submit API over NATS
-- `atlas_burst.JobDescriptor` — mirrors the Go submitter struct
-- `atlas_burst.gpu_is_busy()` — local GPU probe via `nvidia-smi`
+- `nats_bursting.Client` — synchronous-feeling submit API over NATS
+- `nats_bursting.JobDescriptor` — mirrors the Go submitter struct
+- `nats_bursting.gpu_is_busy()` — local GPU probe via `nvidia-smi`
 - `%%burst` IPython cell magic — package a notebook cell as a Job,
   submit it to Nautilus when the local GPU is busy
 
@@ -71,7 +71,7 @@ pip install -e ./python
 ```
 
 ```python
-%load_ext atlas_burst.magic
+%load_ext nats_bursting.magic
 %%burst --gpu 1 --memory 16Gi
 import torch
 print(torch.cuda.is_available())
@@ -82,38 +82,37 @@ See `python/README.md` for the full client docs.
 ## Architecture
 
 ```
-                                Tailscale Funnel
-   ┌─────────────────┐         (public NATS endpoint)         ┌────────────────────────┐
-   │      Atlas      │                                        │  Nautilus K8s pod      │
-   │  (workstation)  │ ──────► nats://atlas-funnel:4222 ◄──── │  - atlas-burst worker  │
-   │                 │                                        │  - your job            │
-   │  publishes:     │                                        │                        │
-   │  burst.submit   │                                        │  publishes:            │
-   │  consumes:      │                                        │  burst.status.<id>     │
-   │  burst.status.* │                                        │  burst.result.<id>     │
-   └─────────────────┘                                        └────────────────────────┘
+                                 NATS leaf bridge
+   ┌─────────────────┐         (TLS over DuckDNS + NAT)        ┌────────────────────────┐
+   │      Atlas      │                                         │  NRP pod (ssu-atlas-ai)│
+   │  (workstation)  │ ◄──── tls://atlas-sjsu.duckdns.org:7422 │  - your workload       │
+   │  NATS hub :4222 │        leaf connection (outbound)       │  - atlas-nats leaf svc │
+   │                 │                                         │                        │
+   │  agi.* fabric   │  ◄──── subjects bridged ──────►         │  subscribes to agi.*,  │
+   │  burst.submit   │                                         │  publishes responses   │
+   │  burst.status.* │                                         │  like a local node     │
+   └─────────────────┘                                         └────────────────────────┘
 ```
 
 ## Quick Start (once it's built)
 
 ```bash
 # As a controller running on Atlas (submits to Nautilus)
-atlas-burst controller \
+nats-bursting controller \
   --nats nats://localhost:4222 \
   --kubeconfig ~/.kube/nautilus.yaml \
   --namespace your-ns
 
-# As an in-pod runner inside a Nautilus Job (publishes status back)
-atlas-burst runner \
-  --nats nats://atlas-funnel:4222 \
-  --job-id "$JOB_ID"
+# As an in-pod workload inside NRP (participates in the agi.* fabric
+# via the in-cluster NATS leaf service)
+# — your pod just connects to nats://atlas-nats:4222 and pub/sub as usual.
 ```
 
 ## Requirements
 
 - Go 1.23+
-- A reachable NATS server (e.g. via Tailscale Funnel — see
-  `docs/tailscale-funnel.md`)
+- A reachable NATS server (Atlas's local `:4222`, bridged to NRP via a
+  leaf node — see `docs/nats-leafnode-duckdns.md`)
 - A Kubernetes cluster you have a kubeconfig for (e.g. NRP Nautilus)
 
 ## License

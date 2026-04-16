@@ -1,7 +1,7 @@
-# atlas-burst (Python client)
+# nats-bursting (Python client)
 
 Atlas-side Python client + IPython cell magic for the
-[atlas-burst](https://github.com/ahb-sjsu/atlas-burst) controller.
+[nats-bursting](https://github.com/ahb-sjsu/nats-bursting) controller.
 
 The Go controller (in the parent directory) listens on a NATS bus and
 dispatches Kubernetes Jobs to a remote cluster (e.g. NRP Nautilus).
@@ -12,8 +12,8 @@ descriptions to the controller and wait for an acknowledgement.
 ## Install
 
 ```bash
-pip install -e atlas-burst/python                        # local checkout
-pip install 'git+https://github.com/ahb-sjsu/atlas-burst.git#subdirectory=python'  # from GitHub
+pip install -e nats-bursting/python                        # local checkout
+pip install 'git+https://github.com/ahb-sjsu/nats-bursting.git#subdirectory=python'  # from GitHub
 ```
 
 Optional extras: `[ipython]` for the cell magic, `[dev]` for tests + lint.
@@ -23,7 +23,7 @@ Optional extras: `[ipython]` for the cell magic, `[dev]` for tests + lint.
 ### 1. Library API
 
 ```python
-from atlas_burst import Client, JobDescriptor, Resources
+from nats_bursting import Client, JobDescriptor, Resources
 
 client = Client(nats_url="tls://atlas-xxxx.ts.net:443")
 result = client.submit_and_wait(
@@ -41,7 +41,7 @@ print(result.k8s_job_name)
 ### 2. Jupyter `%%burst` cell magic
 
 ```python
-%load_ext atlas_burst.magic
+%load_ext nats_bursting.magic
 
 %%burst --gpu 1 --memory 16Gi
 import torch
@@ -64,8 +64,8 @@ busy threshold. Useful flags:
 | `--timeout S` | Submit-ack timeout in seconds |
 | `--dry-run` | Print the JobDescriptor JSON, don't submit |
 
-Cell source is shipped to the pod via the `ATLAS_BURST_CELL`
-environment variable and run with `python -c "$ATLAS_BURST_CELL"`.
+Cell source is shipped to the pod via the `NATS_BURSTING_CELL`
+environment variable and run with `python -c "$NATS_BURSTING_CELL"`.
 Anything that fits in a 1 MiB env var fits in a cell, which is
 every realistic notebook cell.
 
@@ -74,8 +74,8 @@ every realistic notebook cell.
 The magic reads two env vars so notebooks stay portable:
 
 ```bash
-export ATLAS_BURST_NATS_URL="tls://atlas-xxxx.ts.net:443"
-export ATLAS_BURST_NATS_CREDS="/path/to/nats.creds"  # optional
+export NATS_BURSTING_NATS_URL="tls://atlas-xxxx.ts.net:443"
+export NATS_BURSTING_NATS_CREDS="/path/to/nats.creds"  # optional
 ```
 
 ## What's missing (yet)
@@ -104,5 +104,5 @@ IPython magic.
 ## Architecture
 
 See `../docs/design.md` for the full picture and
-`../docs/tailscale-funnel.md` for how to expose Atlas's NATS to
-Nautilus pods.
+`../docs/nats-leafnode-duckdns.md` for how Atlas's NATS fabric
+extends into NRP via a leaf-node bridge.

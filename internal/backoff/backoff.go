@@ -1,5 +1,5 @@
 // Package backoff implements exponential-with-jitter wait scheduling
-// for the atlas-burst controller. Mirrors the polite-submit Python
+// for the nats-bursting controller. Mirrors the polite-submit Python
 // BackoffController: each call to NextWait() returns an increasing
 // duration up to MaxBackoff, with +/-25% jitter to avoid thundering
 // herds when many controllers all wake at once.
@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ahb-sjsu/atlas-burst/internal/config"
+	"github.com/ahb-sjsu/nats-bursting/internal/config"
 )
 
 // Controller tracks attempt count and total wait, applies thresholds,
