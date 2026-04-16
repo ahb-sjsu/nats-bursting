@@ -5,6 +5,8 @@
 [![Go Report](https://goreportcard.com/badge/github.com/ahb-sjsu/nats-bursting)](https://goreportcard.com/report/github.com/ahb-sjsu/nats-bursting)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+
+
 **Cloud bursting for AI workloads, over a NATS bus.**
 
 `nats-bursting` lets a single workstation treat a shared Kubernetes cluster
