@@ -59,10 +59,10 @@ func TestSubmitMessageRoundTrip(t *testing.T) {
 // path surfaces an error before reaching Submit().
 func TestSubmitMessageRejectsGarbage(t *testing.T) {
 	for _, bad := range []string{
-		"",                                  // empty
-		"not json",                          // unparseable
-		`{"job_id": 42, "descriptor": {}}`,  // wrong type for job_id
-		`{"descriptor": {"name": "ok"}}`,    // missing job_id (valid JSON but empty string field)
+		"",                                 // empty
+		"not json",                         // unparseable
+		`{"job_id": 42, "descriptor": {}}`, // wrong type for job_id
+		`{"descriptor": {"name": "ok"}}`,   // missing job_id (valid JSON but empty string field)
 	} {
 		var msg SubmitMessage
 		err := json.Unmarshal([]byte(bad), &msg)
