@@ -18,17 +18,19 @@ spec:
       containers:
       - name: telemetry
         image: python:3.12-slim
-        command:
-        - bash
-        - -c
+        command: ["python3", "-c"]
+        args:
         - |
-          apt-get update -qq && apt-get install -y -qq curl >/dev/null
-          curl -sSL https://raw.githubusercontent.com/ahb-sjsu/nats-bursting/main/deploy/kubernetes/nrp/nrp-telemetry.py > /tmp/telemetry.py
-          pip install --quiet kubernetes 2>/dev/null || true
-          exec python3 /tmp/telemetry.py
+          import urllib.request, subprocess, sys, os
+          urllib.request.urlretrieve(
+              'https://raw.githubusercontent.com/ahb-sjsu/nats-bursting/main/deploy/kubernetes/nrp/nrp-telemetry.py',
+              '/tmp/telemetry.py')
+          # kubectl not available in this pod — use K8s API directly
+          os.environ['NATS_URL'] = os.environ.get('NATS_URL', 'nats://atlas-nats:4222')
+          exec(open('/tmp/telemetry.py').read())
         env:
         - name: NATS_URL
-          value: "nats://atlas-nats-leaf:4222"
+          value: "nats://atlas-nats:4222"
         - name: NAMESPACE
           value: "ssu-atlas-ai"
         - name: INTERVAL

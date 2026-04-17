@@ -54,32 +54,40 @@ def nats_publish(subject, payload):
 
 
 def get_pod_status():
-    """Query the K8s API for pod status in our namespace."""
+    """Query the K8s API for pod status using in-cluster serviceaccount."""
     try:
-        out = subprocess.run(
-            ["kubectl", "get", "pods", "-n", NAMESPACE,
-             "-l", "app.kubernetes.io/managed-by=nats-bursting",
-             "-o", "json"],
-            capture_output=True, text=True, timeout=15,
-        )
-        if out.returncode != 0:
-            return None
-        data = json.loads(out.stdout)
+        import urllib.request, ssl
+        token_path = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+        ca_path = "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        ns_path = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+
+        with open(token_path) as f:
+            token = f.read().strip()
+        with open(ns_path) as f:
+            ns = f.read().strip()
+
+        ctx = ssl.create_default_context(cafile=ca_path)
+        url = f"https://kubernetes.default.svc/api/v1/namespaces/{ns}/pods?labelSelector=app.kubernetes.io/managed-by=nats-bursting"
+        req = urllib.request.Request(url, headers={"Authorization": f"Bearer {token}"})
+        resp = urllib.request.urlopen(req, context=ctx, timeout=10)
+        data = json.loads(resp.read())
+
         phases = {}
         batches = {}
         for pod in data.get("items", []):
             phase = pod.get("status", {}).get("phase", "Unknown")
             phases[phase] = phases.get(phase, 0) + 1
-            batch = pod.get("metadata", {}).get("labels", {}).get(
-                "neurogolf.io/batch", pod.get("metadata", {}).get("labels", {}).get(
-                    "nemotron.io/type", "other"))
+            labels = pod.get("metadata", {}).get("labels", {})
+            batch = labels.get("neurogolf.io/batch",
+                        labels.get("nemotron.io/type", "other"))
             batches[batch] = batches.get(batch, 0) + 1
         return {
             "total": sum(phases.values()),
             "phases": phases,
             "batches": batches,
         }
-    except Exception:
+    except Exception as e:
+        print(f"[nrp-telemetry] pod query failed: {e}", flush=True)
         return None
 
 
