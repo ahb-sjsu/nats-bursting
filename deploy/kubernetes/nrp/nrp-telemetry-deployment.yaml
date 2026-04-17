@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nrp-telemetry
+  namespace: ssu-atlas-ai
+  labels:
+    app: nrp-telemetry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nrp-telemetry
+  template:
+    metadata:
+      labels:
+        app: nrp-telemetry
+    spec:
+      containers:
+      - name: telemetry
+        image: python:3.12-slim
+        command:
+        - bash
+        - -c
+        - |
+          apt-get update -qq && apt-get install -y -qq curl >/dev/null
+          curl -sSL https://raw.githubusercontent.com/ahb-sjsu/nats-bursting/main/deploy/kubernetes/nrp/nrp-telemetry.py > /tmp/telemetry.py
+          pip install --quiet kubernetes 2>/dev/null || true
+          exec python3 /tmp/telemetry.py
+        env:
+        - name: NATS_URL
+          value: "nats://atlas-nats-leaf:4222"
+        - name: NAMESPACE
+          value: "ssu-atlas-ai"
+        - name: INTERVAL
+          value: "30"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+      restartPolicy: Always
