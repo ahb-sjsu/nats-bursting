@@ -22,9 +22,6 @@ jobs:
     runs-on: ubuntu-latest
     # See https://docs.pypi.org/trusted-publishers/ — the pypi-publish
     # action exchanges GitHub's OIDC token for a short-lived PyPI token.
-    environment:
-      name: pypi
-      url: https://pypi.org/p/nats-bursting
     permissions:
       id-token: write  # required for OIDC trusted publishing
       contents: read
