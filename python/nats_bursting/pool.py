@@ -80,28 +80,41 @@ class PoolDescriptor:
 # ─── Manifest generation ─────────────────────────────────────────────
 
 def pool_manifest(desc: PoolDescriptor) -> str:
-    """Render a Deployment manifest (YAML string) from a PoolDescriptor."""
-    env_lines: list[str] = []
+    """Render a Deployment manifest (YAML string) from a PoolDescriptor.
+
+    Built line-by-line (no textwrap.dedent) so indentation is predictable
+    and multi-line env entries don't collapse under common-prefix stripping.
+    """
+    # env entries
+    env_entries: list[list[str]] = []
+    seen: set[str] = set()
     for k, v in desc.env.items():
-        env_lines.append(f"        - name: {k}\n          value: {json.dumps(v)}")
+        env_entries.append([f"- name: {k}", f"  value: {json.dumps(v)}"])
+        seen.add(k)
     for k, (secret, key) in desc.env_from_secrets.items():
-        env_lines.append(
-            f"        - name: {k}\n"
-            f"          valueFrom:\n"
-            f"            secretKeyRef:\n"
-            f"              name: {secret}\n"
-            f"              key: {key}"
-        )
-    # Inject required env (NATS_URL + consumer_group + stream)
+        env_entries.append([
+            f"- name: {k}",
+            "  valueFrom:",
+            "    secretKeyRef:",
+            f"      name: {secret}",
+            f"      key: {key}",
+        ])
+        seen.add(k)
+    # Inject required env unless the caller set them
     for k, v in (
         ("NATS_URL", desc.env.get("NATS_URL", "nats://atlas-nats:4222")),
         ("NATS_CONSUMER_GROUP", desc.consumer_group),
         ("NATS_STREAM", desc.stream),
         ("NATS_SUBJECTS", ",".join(desc.subjects)),
     ):
-        if k not in desc.env and k not in desc.env_from_secrets:
-            env_lines.append(f"        - name: {k}\n          value: {json.dumps(v)}")
-    env_block = "\n".join(env_lines) or "        []"
+        if k not in seen:
+            env_entries.append([f"- name: {k}", f"  value: {json.dumps(v)}"])
+
+    # Each env line sits at 8-space indent (under `env:` which is at 8).
+    env_block_lines: list[str] = []
+    for entry in env_entries:
+        for ln in entry:
+            env_block_lines.append("        " + ln)
 
     resources = {
         "requests": {"cpu": desc.cpu, "memory": desc.memory},
@@ -112,53 +125,53 @@ def pool_manifest(desc: PoolDescriptor) -> str:
         resources["limits"]["nvidia.com/gpu"] = str(desc.gpu)
 
     pre_install_sh = " && ".join(desc.pre_install) if desc.pre_install else "true"
-    # The worker *command* is split: we install prereqs in bash, then exec
-    # the entry. This keeps image re-use high — same base image, different
-    # installed deps per project.
-    bash_script = textwrap.dedent(f"""
-        set -e
-        pip install --quiet nats-py
-        {pre_install_sh}
-        exec {' '.join(desc.entry)}
-    """).strip()
+    bash_lines = [
+        "set -e",
+        "pip install --quiet nats-py",
+        pre_install_sh,
+        f"exec {' '.join(desc.entry)}",
+    ]
+    # 14-space indent under `args: - |`
+    bash_block_lines = ["              " + ln for ln in bash_lines]
 
-    return textwrap.dedent(f"""\
-    apiVersion: apps/v1
-    kind: Deployment
-    metadata:
-      name: {desc.name}
-      namespace: {desc.namespace}
-      labels:
-        app: {desc.name}
-        nats-bursting.role: pool-worker
-    spec:
-      replicas: {desc.replicas}
-      strategy:
-        type: RollingUpdate
-        rollingUpdate:
-          maxUnavailable: 2
-          maxSurge: 2
-      selector:
-        matchLabels:
-          app: {desc.name}
-      template:
-        metadata:
-          labels:
-            app: {desc.name}
-            nats-bursting.role: pool-worker
-        spec:
-          restartPolicy: Always
-          containers:
-          - name: worker
-            image: {desc.image}
-            resources: {json.dumps(resources)}
-            env:
-    {env_block}
-            command: ["/bin/bash", "-c"]
-            args:
-            - |
-              {bash_script.replace(chr(10), chr(10)+'              ')}
-    """)
+    out: list[str] = [
+        "apiVersion: apps/v1",
+        "kind: Deployment",
+        "metadata:",
+        f"  name: {desc.name}",
+        f"  namespace: {desc.namespace}",
+        "  labels:",
+        f"    app: {desc.name}",
+        "    nats-bursting.role: pool-worker",
+        "spec:",
+        f"  replicas: {desc.replicas}",
+        "  strategy:",
+        "    type: RollingUpdate",
+        "    rollingUpdate:",
+        "      maxUnavailable: 2",
+        "      maxSurge: 2",
+        "  selector:",
+        "    matchLabels:",
+        f"      app: {desc.name}",
+        "  template:",
+        "    metadata:",
+        "      labels:",
+        f"        app: {desc.name}",
+        "        nats-bursting.role: pool-worker",
+        "    spec:",
+        "      restartPolicy: Always",
+        "      containers:",
+        "      - name: worker",
+        f"        image: {desc.image}",
+        f"        resources: {json.dumps(resources)}",
+        "        env:",
+        *env_block_lines,
+        '        command: ["/bin/bash", "-c"]',
+        "        args:",
+        "        - |",
+        *bash_block_lines,
+    ]
+    return "\n".join(out) + "\n"
 
 
 # ─── Atlas-side dispatch ─────────────────────────────────────────────
