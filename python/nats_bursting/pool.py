@@ -262,7 +262,13 @@ class TaskDispatcher:
 
     async def collect(self, ids: list[str], timeout: float = 60) -> dict:
         """Collect results keyed by task id, waiting up to ``timeout``
-        seconds per remaining task. Missing results return ``None``."""
+        seconds. Missing results return ``None``.
+
+        NOTE: nats-py's ``Subscription.next_msg()`` has a 1-second default
+        internal timeout. Pass the remaining deadline explicitly so a long
+        outer ``timeout`` actually takes effect instead of the loop exiting
+        after the first 1-second idle window.
+        """
         import asyncio
 
         pending = set(ids)
@@ -270,12 +276,14 @@ class TaskDispatcher:
         loop = asyncio.get_event_loop()
         deadline = loop.time() + timeout
         while pending and loop.time() < deadline:
+            remaining = max(0.1, deadline - loop.time())
             try:
-                msg = await asyncio.wait_for(
-                    self._result_sub.next_msg(), timeout=max(1, deadline - loop.time())
-                )
-            except asyncio.TimeoutError:
-                break
+                msg = await self._result_sub.next_msg(timeout=remaining)
+            except (asyncio.TimeoutError, TimeoutError):
+                # Either we ran out of time or nats-py's internal timeout
+                # fired — both mean "nothing available in the window".
+                # Loop so the `while` header re-checks the deadline.
+                continue
             try:
                 p = json.loads(msg.data.decode())
             except json.JSONDecodeError:
