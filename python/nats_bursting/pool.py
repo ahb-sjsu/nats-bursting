@@ -31,6 +31,7 @@ from typing import Any
 
 # ─── Data classes ────────────────────────────────────────────────────
 
+
 @dataclass
 class PoolDescriptor:
     """High-level description of a persistent worker pool.
@@ -65,9 +66,9 @@ class PoolDescriptor:
     #: Commands to run before the worker entry, e.g. ``["pip install foo"]``.
     pre_install: list[str] = field(default_factory=list)
     #: The entrypoint. Typically fetches project code and execs a worker.
-    entry: list[str] = field(default_factory=lambda: [
-        "python3", "-u", "-m", "nats_bursting.worker_entry"
-    ])
+    entry: list[str] = field(
+        default_factory=lambda: ["python3", "-u", "-m", "nats_bursting.worker_entry"]
+    )
     #: Env vars passed to the pod. ``NATS_URL`` defaults to the in-cluster
     #: leaf service at ``nats://atlas-nats:4222``.
     env: dict[str, str] = field(default_factory=dict)
@@ -76,6 +77,7 @@ class PoolDescriptor:
 
 
 # ─── Manifest generation ─────────────────────────────────────────────
+
 
 def pool_manifest(desc: PoolDescriptor) -> str:
     """Render a Deployment manifest (YAML string) from a PoolDescriptor.
@@ -90,13 +92,15 @@ def pool_manifest(desc: PoolDescriptor) -> str:
         env_entries.append([f"- name: {k}", f"  value: {json.dumps(v)}"])
         seen.add(k)
     for k, (secret, key) in desc.env_from_secrets.items():
-        env_entries.append([
-            f"- name: {k}",
-            "  valueFrom:",
-            "    secretKeyRef:",
-            f"      name: {secret}",
-            f"      key: {key}",
-        ])
+        env_entries.append(
+            [
+                f"- name: {k}",
+                "  valueFrom:",
+                "    secretKeyRef:",
+                f"      name: {secret}",
+                f"      key: {key}",
+            ]
+        )
         seen.add(k)
     # Inject required env unless the caller set them
     for k, v in (
@@ -116,7 +120,7 @@ def pool_manifest(desc: PoolDescriptor) -> str:
 
     resources = {
         "requests": {"cpu": desc.cpu, "memory": desc.memory},
-        "limits":   {"cpu": desc.cpu, "memory": desc.memory},
+        "limits": {"cpu": desc.cpu, "memory": desc.memory},
     }
     if desc.gpu:
         resources["requests"]["nvidia.com/gpu"] = str(desc.gpu)
@@ -174,22 +178,27 @@ def pool_manifest(desc: PoolDescriptor) -> str:
 
 # ─── Atlas-side dispatch ─────────────────────────────────────────────
 
-async def publish_task(nc, subject: str, payload: dict,
-                       stream: str = "TASKS") -> int:
+
+async def publish_task(nc, subject: str, payload: dict, stream: str = "TASKS") -> int:
     """Publish one task onto the JetStream work queue.
 
     ``nc`` is an open :class:`nats.aio.client.Client`.
     Returns the stream sequence number on success.
     """
     from nats.js.api import RetentionPolicy, StreamConfig
+
     js = nc.jetstream()
     try:
         await js.stream_info(stream)
     except Exception:
-        await js.add_stream(StreamConfig(
-            name=stream, subjects=[subject.split(".", 1)[0] + ".>"],
-            retention=RetentionPolicy.WORK_QUEUE, max_msgs=100_000,
-        ))
+        await js.add_stream(
+            StreamConfig(
+                name=stream,
+                subjects=[subject.split(".", 1)[0] + ".>"],
+                retention=RetentionPolicy.WORK_QUEUE,
+                max_msgs=100_000,
+            )
+        )
     ack = await js.publish(subject, json.dumps(payload).encode())
     return ack.seq
 
@@ -213,9 +222,13 @@ class TaskDispatcher:
             results = await td.collect(ids, timeout=120)
     """
 
-    def __init__(self, nats_url: str, stream: str = "TASKS",
-                 result_prefix: str = "results.",
-                 durable: bool = True):
+    def __init__(
+        self,
+        nats_url: str,
+        stream: str = "TASKS",
+        result_prefix: str = "results.",
+        durable: bool = True,
+    ):
         self.nats_url = nats_url
         self.stream = stream
         self.result_prefix = result_prefix
@@ -225,6 +238,7 @@ class TaskDispatcher:
 
     async def __aenter__(self):
         import nats
+
         self._nc = await nats.connect(self.nats_url)
         self._result_sub = await self._nc.subscribe(self.result_prefix + ">")
         return self
@@ -235,6 +249,7 @@ class TaskDispatcher:
 
     async def submit_many(self, subject: str, payloads: list[dict]) -> list[str]:
         import uuid
+
         ids = []
         for p in payloads:
             tid = p.setdefault("id", uuid.uuid4().hex[:12])
@@ -249,14 +264,16 @@ class TaskDispatcher:
         """Collect results keyed by task id, waiting up to ``timeout``
         seconds per remaining task. Missing results return ``None``."""
         import asyncio
+
         pending = set(ids)
         out: dict[str, Any] = {}
         loop = asyncio.get_event_loop()
         deadline = loop.time() + timeout
         while pending and loop.time() < deadline:
             try:
-                msg = await asyncio.wait_for(self._result_sub.next_msg(),
-                                             timeout=max(1, deadline - loop.time()))
+                msg = await asyncio.wait_for(
+                    self._result_sub.next_msg(), timeout=max(1, deadline - loop.time())
+                )
             except asyncio.TimeoutError:
                 break
             try:

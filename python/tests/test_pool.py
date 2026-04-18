@@ -7,8 +7,11 @@ from nats_bursting import PoolDescriptor, pool_manifest
 
 def test_manifest_basics():
     desc = PoolDescriptor(
-        name="demo-pool", namespace="demo-ns", replicas=4,
-        cpu="1", memory="2Gi",
+        name="demo-pool",
+        namespace="demo-ns",
+        replicas=4,
+        cpu="1",
+        memory="2Gi",
     )
     yaml = pool_manifest(desc)
     assert "kind: Deployment" in yaml
@@ -19,27 +22,39 @@ def test_manifest_basics():
 
 
 def test_manifest_gpu_requested():
-    yaml = pool_manifest(PoolDescriptor(
-        name="gpu-pool", namespace="ns", replicas=2, gpu=1,
-    ))
+    yaml = pool_manifest(
+        PoolDescriptor(
+            name="gpu-pool",
+            namespace="ns",
+            replicas=2,
+            gpu=1,
+        )
+    )
     assert '"nvidia.com/gpu": "1"' in yaml
 
 
 def test_manifest_secret_env():
-    yaml = pool_manifest(PoolDescriptor(
-        name="sec", namespace="ns",
-        env_from_secrets={"TOKEN": ("my-secret", "token-key")},
-    ))
+    yaml = pool_manifest(
+        PoolDescriptor(
+            name="sec",
+            namespace="ns",
+            env_from_secrets={"TOKEN": ("my-secret", "token-key")},
+        )
+    )
     assert "secretKeyRef" in yaml
     assert "my-secret" in yaml
     assert "token-key" in yaml
 
 
 def test_required_env_injected_by_default():
-    yaml = pool_manifest(PoolDescriptor(
-        name="x", namespace="y", consumer_group="grp",
-        subjects=["tasks.solve.>"],
-    ))
+    yaml = pool_manifest(
+        PoolDescriptor(
+            name="x",
+            namespace="y",
+            consumer_group="grp",
+            subjects=["tasks.solve.>"],
+        )
+    )
     # The renderer must ensure workers can reach NATS and agree on stream
     assert "NATS_URL" in yaml
     assert "NATS_CONSUMER_GROUP" in yaml

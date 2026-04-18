@@ -67,31 +67,41 @@ class Worker:
     """
 
     handlers: Mapping[str, TaskHandler]
-    nats_url: str = field(default_factory=lambda: _get("NATS_URL",
-                                                       "nats://atlas-nats:4222"))
+    nats_url: str = field(
+        default_factory=lambda: _get("NATS_URL", "nats://atlas-nats:4222")
+    )
     stream: str = field(default_factory=lambda: _get("NATS_STREAM", "TASKS"))
-    subjects: list[str] = field(default_factory=lambda:
-                                _get("NATS_SUBJECTS", "tasks.>").split(","))
-    consumer_group: str = field(default_factory=lambda:
-                                _get("NATS_CONSUMER_GROUP", "workers"))
-    result_prefix: str = field(default_factory=lambda:
-                               _get("NATS_RESULT_PREFIX", "results."))
-    durable: bool = field(default_factory=lambda:
-                          _get("NATS_DURABLE", "1") not in ("0", "false", "False"))
+    subjects: list[str] = field(
+        default_factory=lambda: _get("NATS_SUBJECTS", "tasks.>").split(",")
+    )
+    consumer_group: str = field(
+        default_factory=lambda: _get("NATS_CONSUMER_GROUP", "workers")
+    )
+    result_prefix: str = field(
+        default_factory=lambda: _get("NATS_RESULT_PREFIX", "results.")
+    )
+    durable: bool = field(
+        default_factory=lambda: _get("NATS_DURABLE", "1") not in ("0", "false", "False")
+    )
     ack_wait_s: int = 300
     fetch_timeout_s: int = 30
 
     async def _ensure_stream(self, js):
         from nats.js.api import RetentionPolicy, StreamConfig
+
         try:
             await js.stream_info(self.stream)
         except Exception:
             log.info(f"creating stream {self.stream}")
-            await js.add_stream(StreamConfig(
-                name=self.stream, subjects=self.subjects,
-                retention=RetentionPolicy.WORK_QUEUE, max_msgs=100_000,
-                max_age=86400 * 7,
-            ))
+            await js.add_stream(
+                StreamConfig(
+                    name=self.stream,
+                    subjects=self.subjects,
+                    retention=RetentionPolicy.WORK_QUEUE,
+                    max_msgs=100_000,
+                    max_age=86400 * 7,
+                )
+            )
 
     async def _handle(self, nc, data: bytes, ack_callback=None) -> None:
         """Shared handler: used by both JS and core-NATS modes."""
@@ -116,34 +126,43 @@ class Worker:
                 else:
                     result = maybe or {}
             except Exception as e:
-                result = {"error": str(e)[:500],
-                          "traceback": traceback.format_exc()[:1000]}
+                result = {
+                    "error": str(e)[:500],
+                    "traceback": traceback.format_exc()[:1000],
+                }
         result["task_id"] = task_id
         result["task_type"] = task_type
         result["worker"] = os.environ.get("HOSTNAME", "anon")
         result["ts"] = datetime.utcnow().isoformat() + "Z"
         result["duration_s"] = round(time.time() - t0, 2)
-        await nc.publish(self.result_prefix + str(task_id),
-                         json.dumps(result, default=str).encode())
+        await nc.publish(
+            self.result_prefix + str(task_id), json.dumps(result, default=str).encode()
+        )
         if ack_callback:
             await ack_callback(ok=True)
         log.info(f"[{task_id}] {task_type} done in {result['duration_s']}s")
 
     async def _run_jetstream(self, nc):
         from nats.js.api import AckPolicy, ConsumerConfig, DeliverPolicy
+
         js = nc.jetstream()
         await self._ensure_stream(js)
         durable_name = f"{self.consumer_group}-consumer"
         subject_filter = self.subjects[0] if len(self.subjects) == 1 else ">"
         sub = await js.pull_subscribe(
-            subject=subject_filter, durable=durable_name,
+            subject=subject_filter,
+            durable=durable_name,
             config=ConsumerConfig(
-                ack_policy=AckPolicy.EXPLICIT, ack_wait=self.ack_wait_s,
-                max_deliver=3, deliver_policy=DeliverPolicy.ALL,
+                ack_policy=AckPolicy.EXPLICIT,
+                ack_wait=self.ack_wait_s,
+                max_deliver=3,
+                deliver_policy=DeliverPolicy.ALL,
             ),
         )
-        log.info(f"worker ready (JetStream) group={self.consumer_group} "
-                 f"subjects={self.subjects} handlers={list(self.handlers)}")
+        log.info(
+            f"worker ready (JetStream) group={self.consumer_group} "
+            f"subjects={self.subjects} handlers={list(self.handlers)}"
+        )
         stopping = {"flag": False}
 
         def _stop(*_):
@@ -169,6 +188,7 @@ class Worker:
                         await _msg.ack()
                     else:
                         await _msg.nak()
+
                 await self._handle(nc, msg.data, _ack)
 
     async def _run_core(self, nc):
@@ -189,15 +209,19 @@ class Worker:
         for subj in self.subjects:
             await nc.subscribe(subj, queue=self.consumer_group, cb=_cb)
 
-        log.info(f"worker ready (core NATS queue) group={self.consumer_group} "
-                 f"subjects={self.subjects} handlers={list(self.handlers)}")
+        log.info(
+            f"worker ready (core NATS queue) group={self.consumer_group} "
+            f"subjects={self.subjects} handlers={list(self.handlers)}"
+        )
         await done.wait()
 
     async def run(self) -> None:
         import nats
+
         log.info(f"connecting NATS: {self.nats_url} durable={self.durable}")
-        nc = await nats.connect(self.nats_url, max_reconnect_attempts=-1,
-                                reconnect_time_wait=2)
+        nc = await nats.connect(
+            self.nats_url, max_reconnect_attempts=-1, reconnect_time_wait=2
+        )
         try:
             if self.durable:
                 await self._run_jetstream(nc)
