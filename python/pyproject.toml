@@ -65,6 +65,14 @@ addopts = "-q --strict-markers"
 [tool.coverage.run]
 branch = true
 source = ["nats_bursting"]
+# The async NATS runtime modules need an integration harness (live NATS
+# server + JetStream) to exercise. Unit tests can only cover their data
+# surfaces. Omit until integration tests exist — runtime coverage for
+# these is better measured by the live worker pools on NRP.
+omit = [
+    "nats_bursting/worker.py",
+    "nats_bursting/worker_entry.py",
+]
 
 [tool.coverage.report]
 show_missing = true
