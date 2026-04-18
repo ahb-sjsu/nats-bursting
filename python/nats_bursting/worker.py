@@ -83,6 +83,14 @@ class Worker:
     durable: bool = field(
         default_factory=lambda: _get("NATS_DURABLE", "1") not in ("0", "false", "False")
     )
+    # Optional HTTP webhook — POST each result here in addition to publishing
+    # on NATS. Useful when NATS leaf-node interest propagation is asymmetric
+    # (tasks flow hub→spoke but results don't flow back). The webhook server
+    # can re-publish on the hub's local NATS so subscribers see results
+    # transparently.
+    result_webhook_url: str = field(
+        default_factory=lambda: _get("RESULT_WEBHOOK_URL", "")
+    )
     ack_wait_s: int = 300
     fetch_timeout_s: int = 30
 
@@ -138,6 +146,23 @@ class Worker:
         await nc.publish(
             self.result_prefix + str(task_id), json.dumps(result, default=str).encode()
         )
+        # Optional: also POST to the HTTP webhook so results reach the
+        # dispatch origin even when NATS leaf routing is asymmetric.
+        if self.result_webhook_url:
+            try:
+                import urllib.request
+
+                req = urllib.request.Request(
+                    self.result_webhook_url,
+                    data=json.dumps(result, default=str).encode(),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                # Short timeout — webhook is best-effort; NATS publish is
+                # authoritative.
+                await asyncio.to_thread(urllib.request.urlopen, req, timeout=10)
+            except Exception as e:
+                log.warning(f"[{task_id}] webhook POST failed: {e}")
         if ack_callback:
             await ack_callback(ok=True)
         log.info(f"[{task_id}] {task_type} done in {result['duration_s']}s")
