@@ -199,18 +199,29 @@ async def publish_task(nc, subject: str, payload: dict,
 class TaskDispatcher:
     """Tiny wrapper: open NATS, publish many, optionally collect results.
 
+    ``durable=True`` (default) routes through JetStream — requires the
+    stream to exist on the NATS server you connect to AND be reachable
+    from the worker's NATS server (i.e. shared JS context). Best for
+    same-server or JS-domain-federated setups.
+
+    ``durable=False`` uses core NATS publish — crosses leaf-node
+    boundaries transparently, works when dispatcher and workers live
+    on different NATS servers without JS federation.
+
     ::
 
-        async with TaskDispatcher(nats_url) as td:
+        async with TaskDispatcher(nats_url, durable=False) as td:
             ids = await td.submit_many("tasks.solve", [{...}, {...}])
             results = await td.collect(ids, timeout=120)
     """
 
     def __init__(self, nats_url: str, stream: str = "TASKS",
-                 result_prefix: str = "results."):
+                 result_prefix: str = "results.",
+                 durable: bool = True):
         self.nats_url = nats_url
         self.stream = stream
         self.result_prefix = result_prefix
+        self.durable = durable
         self._nc = None
         self._result_sub = None
 
@@ -229,7 +240,10 @@ class TaskDispatcher:
         ids = []
         for p in payloads:
             tid = p.setdefault("id", uuid.uuid4().hex[:12])
-            await publish_task(self._nc, subject, p, stream=self.stream)
+            if self.durable:
+                await publish_task(self._nc, subject, p, stream=self.stream)
+            else:
+                await self._nc.publish(subject, json.dumps(p).encode())
             ids.append(tid)
         return ids
 
