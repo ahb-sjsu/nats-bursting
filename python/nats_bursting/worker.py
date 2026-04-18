@@ -29,15 +29,16 @@ It never sleeps-to-idle: if the queue is empty it blocks inside
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 import os
 import signal
 import time
 import traceback
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Awaitable, Callable, Mapping
 
 log = logging.getLogger("nats_bursting.worker")
 
@@ -81,7 +82,7 @@ class Worker:
     fetch_timeout_s: int = 30
 
     async def _ensure_stream(self, js):
-        from nats.js.api import StreamConfig, RetentionPolicy
+        from nats.js.api import RetentionPolicy, StreamConfig
         try:
             await js.stream_info(self.stream)
         except Exception:
@@ -129,7 +130,7 @@ class Worker:
         log.info(f"[{task_id}] {task_type} done in {result['duration_s']}s")
 
     async def _run_jetstream(self, nc):
-        from nats.js.api import ConsumerConfig, DeliverPolicy, AckPolicy
+        from nats.js.api import AckPolicy, ConsumerConfig, DeliverPolicy
         js = nc.jetstream()
         await self._ensure_stream(js)
         durable_name = f"{self.consumer_group}-consumer"
@@ -144,10 +145,13 @@ class Worker:
         log.info(f"worker ready (JetStream) group={self.consumer_group} "
                  f"subjects={self.subjects} handlers={list(self.handlers)}")
         stopping = {"flag": False}
-        def _stop(*_): stopping["flag"] = True
+
+        def _stop(*_):
+            stopping["flag"] = True
+
         for sig in (signal.SIGINT, signal.SIGTERM):
-            try: signal.signal(sig, _stop)
-            except ValueError: pass
+            with contextlib.suppress(ValueError):
+                signal.signal(sig, _stop)
         while not stopping["flag"]:
             try:
                 msgs = await sub.fetch(1, timeout=self.fetch_timeout_s)
@@ -158,19 +162,26 @@ class Worker:
                 await asyncio.sleep(2)
                 continue
             for msg in msgs:
-                async def _ack(ok):
-                    if ok: await msg.ack()
-                    else:  await msg.nak()
+                # Bind msg per-iteration so the closure doesn't capture
+                # the loop variable.
+                async def _ack(ok, _msg=msg):
+                    if ok:
+                        await _msg.ack()
+                    else:
+                        await _msg.nak()
                 await self._handle(nc, msg.data, _ack)
 
     async def _run_core(self, nc):
         """Core-NATS queue-group mode — no persistence, crosses leaf
         boundaries transparently."""
         done = asyncio.Event()
-        def _stop(*_): done.set()
+
+        def _stop(*_):
+            done.set()
+
         for sig in (signal.SIGINT, signal.SIGTERM):
-            try: signal.signal(sig, _stop)
-            except ValueError: pass
+            with contextlib.suppress(ValueError):
+                signal.signal(sig, _stop)
 
         async def _cb(msg):
             await self._handle(nc, msg.data)
