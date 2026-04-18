@@ -11,10 +11,45 @@
 
 `nats-bursting` lets a single workstation treat a shared Kubernetes cluster
 (e.g. NRP Nautilus) as elastic extra GPU capacity — without leaving the
-familiar NATS event loop. Your cognitive workloads publish `JobDescriptor`
-messages on a local NATS subject; a small Go controller dispatches them
-to the remote cluster with built-in politeness backoff; the pods join the
-same NATS fabric as first-class subscribers and publish responses back.
+familiar NATS event loop. Your cognitive workloads publish messages on a
+local NATS subject; a small Go controller (or a Python worker loop)
+carries them into the cluster; the pods join the same NATS fabric as
+first-class subscribers and publish responses back.
+
+## Two shapes, one bus
+
+You can use the cluster in two complementary ways:
+
+```mermaid
+flowchart LR
+  subgraph Ephemeral["Ephemeral bursts — one-shot Jobs"]
+    direction TB
+    A1["%%burst / Client.submit"] -->|publish JobDescriptor| N1[("NATS bus")]
+    N1 --> C1["nats-bursting (Go)"]
+    C1 -->|create Job| K1["K8s Job"]
+    K1 -->|exit| KE["Job disappears"]
+  end
+  subgraph Persistent["Persistent pools — long-lived workers"]
+    direction TB
+    A2["TaskDispatcher.submit_many"] -->|publish tasks| N2[("NATS JetStream queue")]
+    N2 --> W1["Worker #1"]
+    N2 --> W2["Worker #2"]
+    N2 --> Wn["… Worker #N"]
+    W1 & W2 & Wn -->|publish results| N2
+  end
+```
+
+|                     | Ephemeral burst         | Persistent pool            |
+| ------------------- | ----------------------- | -------------------------- |
+| K8s object          | `Job` (one-shot)        | `Deployment` (always-on)   |
+| Cold start per task | **yes** — pod boots     | **no** — worker is warm    |
+| Best for            | rare, heavy, long tasks | frequent small tasks       |
+| Scaling model       | one Job per task        | N replicas + backpressure  |
+| Classes             | `JobDescriptor`, `Client` | `PoolDescriptor`, `Worker` |
+
+Both shapes share the same NATS fabric, the same leaf-node
+connectivity, and the same "pods are first-class subscribers" property.
+Pick the one that fits your workload; use both if you want.
 
 ```python
 %load_ext nats_bursting.magic
@@ -151,6 +186,138 @@ print(torch.matmul(x, x).norm())
 
 Cell source rides in the `NATS_BURSTING_CELL` env var and runs under
 `python -c "$NATS_BURSTING_CELL"` inside the pod.
+
+## Persistent worker pools
+
+When a workload consists of **many small tasks** rather than a few big
+ones, ephemeral Jobs waste time on cold starts. A `PoolDescriptor`
+describes N always-on pods pulling from a JetStream work queue — no
+per-task ramp-up, full cluster-wide parallelism.
+
+### What does a pool do?
+
+```mermaid
+sequenceDiagram
+    participant App as Atlas app
+    participant JS as NATS JetStream<br/>work queue
+    participant W as Worker pod<br/>(replica 1 of N)
+    participant R as Results subject
+
+    App->>JS: publish tasks.solve {task_num=42}
+    App->>JS: publish tasks.solve {task_num=77}
+    Note over JS: queue depth = 2
+    W->>JS: fetch(1)
+    JS-->>W: {task_num=42}
+    W->>W: handler(task) — call LLM, verify
+    W->>R: publish results.<id> {status: "solved"}
+    W->>JS: ack
+    W->>JS: fetch(1)
+    JS-->>W: {task_num=77}
+    Note over W: another replica picked this one first<br/>in parallel
+    App->>R: collect(ids)
+```
+
+The important properties:
+
+- **One stream, many workers.** All N replicas share a single durable
+  consumer, so every message is delivered to exactly one worker.
+- **Backpressure is free.** If all workers are busy, tasks queue up in
+  JetStream with at-least-once persistence. When a worker becomes free it
+  pulls the next one.
+- **No sleep-to-idle.** `sub.fetch(timeout)` blocks on the socket until
+  a task arrives — this satisfies NRP's "Jobs may not sleep" policy
+  because the pod is blocked in a receive, not in `time.sleep`.
+- **Crashes heal themselves.** Unacked tasks are redelivered after
+  `ack_wait`. Dead pods are respawned by the Deployment.
+
+### Quick start
+
+Ship a handler module + a thin entrypoint on your pod image:
+
+```python
+# my_project/worker_main.py
+from nats_bursting import run_worker
+
+def handle_solve(task: dict) -> dict:
+    return {"status": "solved", "answer": task["x"] ** 2}
+
+if __name__ == "__main__":
+    run_worker(handlers={"solve": handle_solve})
+```
+
+Render the Deployment manifest from Python:
+
+```python
+from nats_bursting import PoolDescriptor, pool_manifest
+
+yaml = pool_manifest(PoolDescriptor(
+    name="square-pool",
+    namespace="ssu-atlas-ai",
+    replicas=8,                                  # 8 warm workers
+    cpu="1", memory="2Gi",                       # stay in NRP swarm mode
+    consumer_group="square-workers",
+    subjects=["tasks.>"],
+    pre_install=["pip install --quiet my-project"],
+    entry=["python3", "-u", "-m", "my_project.worker_main"],
+))
+print(yaml)
+# kubectl apply -f <(python -c "print(open('pool.yaml').read())")
+```
+
+Dispatch tasks and collect results from Atlas:
+
+```python
+import asyncio
+from nats_bursting import TaskDispatcher
+
+async def main():
+    async with TaskDispatcher("nats://localhost:4222") as td:
+        ids = await td.submit_many(
+            "tasks.solve",
+            [{"type": "solve", "x": i} for i in range(100)],
+        )
+        results = await td.collect(ids, timeout=60)
+        for tid, r in results.items():
+            print(tid, r)
+
+asyncio.run(main())
+```
+
+### When to pick a pool vs. an ephemeral burst
+
+```mermaid
+flowchart TD
+    Q{"How long is each task?"}
+    Q -->|"&gt; 10 min, GPU-heavy"| Burst["Ephemeral burst<br/>%%burst / JobDescriptor"]
+    Q -->|"&lt; a few minutes"| F{"How many tasks?"}
+    F -->|"&lt; 10 per hour"| Burst
+    F -->|"&gt;= 10 per hour"| Pool["Persistent pool<br/>PoolDescriptor / Worker"]
+    F -->|"bursty (spiky)"| Mix["Use both:<br/>pool for baseline +<br/>burst for spikes"]
+```
+
+Rough rule of thumb: if your per-task cold start (image pull, model
+download, etc.) is longer than the task itself, use a pool.
+
+### NRP-specific tuning
+
+NRP Nautilus has two policy regimes:
+
+- **Swarm mode** (preferred): all pods lightweight (≤ 1 CPU, ≤ 2Gi
+  memory, ≤ 40% GPU). Unlimited replicas.
+- **Heavy mode**: up to 4 pods at full GPU. No mixing.
+
+Pool replicas fit cleanly in swarm mode. Keep `cpu="1"` and
+`memory="2Gi"` and you can scale to dozens of replicas without running
+into the heavy-pod cap. Only A100s are hard-quota-limited (request the
+access form); every other GPU class (V100, L4, L40, A10, consumer
+cards) is available on demand.
+
+For GPU pool workers, add `gpu=1` to the `PoolDescriptor`; request a
+specific model with a node selector if you care which card you land on.
+
+More detail, including the full task lifecycle, ack/redelivery
+semantics, and the handler contract, is in
+[`docs/pools.md`](docs/pools.md).
 
 ## Politeness defaults
 

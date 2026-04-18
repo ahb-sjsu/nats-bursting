@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nats-bursting"
-version = "0.1.0"
-description = "Cloud bursting for AI workloads over a NATS bus — Python client + IPython %%burst magic"
+version = "0.2.0"
+description = "Cloud bursting for AI workloads over a NATS bus — ephemeral Jobs + persistent worker pools + IPython %%burst magic"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Andrew H. Bond", email = "andrew.bond@sjsu.edu" }]
