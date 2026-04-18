@@ -26,10 +26,8 @@ and redelivered on ack timeout.
 from __future__ import annotations
 
 import json
-import textwrap
 from dataclasses import dataclass, field
 from typing import Any
-
 
 # ─── Data classes ────────────────────────────────────────────────────
 
@@ -183,7 +181,7 @@ async def publish_task(nc, subject: str, payload: dict,
     ``nc`` is an open :class:`nats.aio.client.Client`.
     Returns the stream sequence number on success.
     """
-    from nats.js.api import StreamConfig, RetentionPolicy
+    from nats.js.api import RetentionPolicy, StreamConfig
     js = nc.jetstream()
     try:
         await js.stream_info(stream)

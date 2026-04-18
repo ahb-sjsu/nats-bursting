@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from nats_bursting import PoolDescriptor, pool_manifest
 
 
@@ -52,6 +50,10 @@ def test_required_env_injected_by_default():
 
 def test_imports_exposed_via_top_level_package():
     from nats_bursting import (  # noqa: F401
-        PoolDescriptor, Worker, TaskDispatcher, pool_manifest, run_worker,
+        PoolDescriptor,
+        TaskDispatcher,
+        Worker,
+        pool_manifest,
         publish_task,
+        run_worker,
     )

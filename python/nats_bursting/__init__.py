@@ -43,7 +43,12 @@ from __future__ import annotations
 
 from nats_bursting.client import Client, SubmitResult
 from nats_bursting.descriptor import JobDescriptor, Resources
-from nats_bursting.pool import PoolDescriptor, TaskDispatcher, pool_manifest, publish_task
+from nats_bursting.pool import (
+    PoolDescriptor,
+    TaskDispatcher,
+    pool_manifest,
+    publish_task,
+)
 from nats_bursting.probe import gpu_is_busy, probe_local_gpu
 from nats_bursting.worker import Worker, run_worker
 
