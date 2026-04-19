@@ -91,6 +91,12 @@ class Worker:
     result_webhook_url: str = field(
         default_factory=lambda: _get("RESULT_WEBHOOK_URL", "")
     )
+    #: Exit cleanly after N seconds with no tasks arriving. 0 = run forever
+    #: (Deployment-shape). Positive = Job-shape: process the queue as long
+    #: as there's work, then exit so the Job completes.
+    exit_on_idle_s: int = field(
+        default_factory=lambda: int(_get("NATS_EXIT_ON_IDLE_S", "0"))
+    )
     ack_wait_s: int = 300
     fetch_timeout_s: int = 30
 
@@ -220,6 +226,7 @@ class Worker:
         """Core-NATS queue-group mode — no persistence, crosses leaf
         boundaries transparently."""
         done = asyncio.Event()
+        last_activity = {"t": time.time()}
 
         def _stop(*_):
             done.set()
@@ -229,10 +236,29 @@ class Worker:
                 signal.signal(sig, _stop)
 
         async def _cb(msg):
+            last_activity["t"] = time.time()
             await self._handle(nc, msg.data)
+            last_activity["t"] = time.time()
 
         for subj in self.subjects:
             await nc.subscribe(subj, queue=self.consumer_group, cb=_cb)
+
+        # Job-shape: exit when idle for exit_on_idle_s seconds. When 0,
+        # this task is a no-op and the worker runs forever (Deployment).
+        async def _idle_watchdog():
+            if self.exit_on_idle_s <= 0:
+                return
+            while not done.is_set():
+                await asyncio.sleep(5)
+                idle = time.time() - last_activity["t"]
+                if idle >= self.exit_on_idle_s:
+                    log.info(
+                        f"idle {idle:.0f}s >= exit_on_idle_s "
+                        f"{self.exit_on_idle_s} — exiting cleanly"
+                    )
+                    done.set()
+
+        asyncio.create_task(_idle_watchdog())
 
         log.info(
             f"worker ready (core NATS queue) group={self.consumer_group} "
