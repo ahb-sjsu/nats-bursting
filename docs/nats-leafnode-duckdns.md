@@ -11,6 +11,32 @@ Atlas and bridges subjects bidirectionally. Workload pods inside
 NRP connect to the in-cluster leaf service and never need to know
 about the bridge.
 
+```mermaid
+flowchart LR
+    subgraph NRP[NRP ssu-atlas-ai]
+      WP[Workload pods]
+      LSVC[atlas-nats svc :4222]
+      LP[NATS leaf pod<br/>Deployment]
+    end
+
+    subgraph ATLAS[Atlas]
+      AGI[agi.* subsystems]
+      HUB[NATS hub :4222]
+      LISTEN[Leaf listener :7422<br/>TLS internal]
+      NAT[Router :7422 NAT<br/>atlas-sjsu.duckdns.org]
+    end
+
+    WP --> LSVC
+    LSVC --> LP
+    LP -->|TLS outbound only<br/>tls://atlas-sjsu.duckdns.org:7422| NAT
+    NAT --> LISTEN
+    LISTEN <--> HUB
+    AGI <--> HUB
+```
+
+<details>
+<summary>ASCII version</summary>
+
 ```
 ┌─────────────── NRP (ssu-atlas-ai) ───────────────┐        ┌──────────── Atlas ─────────────┐
 │                                                  │        │                                │
@@ -25,6 +51,8 @@ about the bridge.
                                                             │    (NAT port forward)          │
                                                             └────────────────────────────────┘
 ```
+
+</details>
 
 ## Why this rather than Tailscale Funnel or Matrix
 
