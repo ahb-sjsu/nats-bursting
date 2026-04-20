@@ -12,18 +12,18 @@ NRP connect to the in-cluster leaf service and never need to know
 about the bridge.
 
 ```
-┌─────────────── NRP (ssu-atlas-ai) ───────────────┐        ┌──────────── Atlas ────────────┐
-│                                                   │        │                                │
-│  Workload pods                                    │        │  agi.* subsystems              │
-│     │                                             │        │       ↕                        │
-│     │ nats://atlas-nats.ssu-atlas-ai.svc:4222     │        │  NATS hub :4222                │
-│     ▼                                             │        │     ▲                          │
-│  NATS leaf pod ─────── TLS leaf connection ───────────────►│  Leaf listener :7422 (internal)│
-│  (Deployment)      tls://atlas-sjsu.duckdns.org:7422       │     ▲                          │
-│                         outbound only                      │     │                          │
-└───────────────────────────────────────────────────┘        │  Router :7422 → Atlas :7422   │
-                                                             │    (NAT port forward)          │
-                                                             └────────────────────────────────┘
+┌─────────────── NRP (ssu-atlas-ai) ───────────────┐        ┌──────────── Atlas ─────────────┐
+│                                                  │        │                                │
+│  Workload pods                                   │        │  agi.* subsystems              │
+│     │                                            │        │       ↕                        │
+│     │ nats://atlas-nats.ssu-atlas-ai.svc:4222    │        │  NATS hub :4222                │
+│     ▼                                            │        │     ▲                          │
+│  NATS leaf pod ─────── TLS leaf connection ──────────────►│  Leaf listener :7422 (internal)│
+│  (Deployment)      tls://atlas-sjsu.duckdns.org:7422      │     ▲                          │
+│                         outbound only             │       │                                │
+└───────────────────────────────────────────────────┘       │  Router :7422 → Atlas :7422    │
+                                                            │    (NAT port forward)          │
+                                                            └────────────────────────────────┘
 ```
 
 ## Why this rather than Tailscale Funnel or Matrix
