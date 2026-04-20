@@ -15,6 +15,45 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    subgraph ATLAS[Atlas workstation]
+      PUB[agi.* subsystems<br/>publish burst.submit<br/>with JobDescriptor]
+      HUB[NATS hub :4222]
+      NB[nats-bursting Go binary]
+
+      subgraph INT[internal/]
+        DEC[decider<br/>self-limit -> courtesy -> util]
+        BO[backoff<br/>exponential + jitter]
+        PR[prober<br/>client-go reads]
+        SUB[submitter<br/>client-go Job create]
+        BR[natsbridge<br/>Subscribe -> Publish]
+      end
+      STAT[burst.status.id]
+    end
+
+    LEAF[NATS leaf :7422 TLS]
+
+    subgraph NRP[NRP ssu-atlas-ai]
+      LP[NATS leaf pod]
+      WP[Workload pods<br/>subscribe agi.* publish responses]
+      K8S[Kubernetes API]
+    end
+
+    PUB --> HUB --> NB
+    NB --> DEC
+    DEC --> BO
+    DEC --> PR
+    DEC --> SUB
+    NB --> BR
+    BR --> STAT
+    HUB <-->|leaf link| LP --> WP
+    SUB --> K8S --> WP
+```
+
+<details>
+<summary>ASCII version</summary>
+
 ```
    ┌───────── Atlas (workstation) ─────────┐            ┌── NRP (ssu-atlas-ai) ───┐
    │                                       │            │                         │
@@ -33,6 +72,8 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
    │     5. publish burst.status.<id>      │            │                         │
    └───────────────────────────────────────┘            └─────────────────────────┘
 ```
+
+</details>
 
 ### Components
 
