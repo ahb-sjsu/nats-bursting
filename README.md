@@ -91,6 +91,29 @@ Features:
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    subgraph ATLAS[Workstation Atlas]
+      PY[Python / IPython<br/>nats_bursting client]
+      HUB[NATS hub JetStream<br/>nats://localhost:4222]
+      NB[nats-bursting Go<br/>1. subscribe burst.submit<br/>2. probe k8s<br/>3. politeness<br/>4. client-go create<br/>5. publish status]
+    end
+
+    subgraph NRP[Shared K8s NRP Nautilus]
+      LP[NATS leaf pod<br/>outbound dial only]
+      BP[Burst pods<br/>subscribe agi.*<br/>publish responses]
+      API[K8s API / Jobs]
+    end
+
+    PY --> HUB --> NB
+    HUB <-->|TLS over DuckDNS + NAT| LP
+    LP --> BP
+    NB -->|HTTPS| API --> BP
+```
+
+<details>
+<summary>ASCII version</summary>
+
 ```
   Workstation ("Atlas")                             Shared K8s (e.g. NRP Nautilus)
  ┌───────────────────────┐                         ┌──────────────────────────┐
@@ -111,6 +134,8 @@ Features:
  │   5. publish status   │                         │                          │
  └───────────────────────┘                         └──────────────────────────┘
 ```
+
+</details>
 
 For the full design, see [`docs/design.md`](docs/design.md). For the
 leaf-node connectivity runbook, see
