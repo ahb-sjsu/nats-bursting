@@ -16,7 +16,7 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
 ## Architecture
 
 ```
-   ┌───────── Atlas (workstation) ─────────┐            ┌── NRP (ssu-atlas-ai) ──┐
+   ┌───────── Atlas (workstation) ─────────┐            ┌── NRP (ssu-atlas-ai) ───┐
    │                                       │            │                         │
    │   atlas subsystems publish:           │            │  Workload pods:         │
    │     burst.submit { JobDescriptor }    │            │   - subscribe agi.*     │
@@ -25,9 +25,9 @@ equivalent of cloud bursting: hot path stays local, cold path bursts.
    │   NATS hub :4222  ◄─── leaf link ─────────────────►│                         │
    │                       (TLS, :7422)    │            │  NATS leaf pod          │
    │                                       │            │   bridges subjects      │
-   │   nats-bursting (Go binary):            │            │   into the namespace    │
+   │   nats-bursting (Go binary):          │            │   into the namespace    │
    │     1. consume burst.submit           │            │                         │
-   │     2. probe k8s state                │            │  nats-bursting creates    │
+   │     2. probe k8s state                │            │  nats-bursting creates  │
    │     3. politeness decision            │ kubeconfig │  Jobs via K8s API       │
    │     4. client-go Job create  ──────────────────►   │                         │
    │     5. publish burst.status.<id>      │            │                         │
