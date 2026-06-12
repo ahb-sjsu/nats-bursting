@@ -4,6 +4,7 @@
 [![PyPI](https://img.shields.io/pypi/v/nats-bursting.svg)](https://pypi.org/project/nats-bursting/)
 [![Go Report](https://goreportcard.com/badge/github.com/ahb-sjsu/nats-bursting)](https://goreportcard.com/report/github.com/ahb-sjsu/nats-bursting)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20660069.svg)](https://doi.org/10.5281/zenodo.20660069)
 
 
 
