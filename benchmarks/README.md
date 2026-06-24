@@ -52,6 +52,19 @@ python benchmarks/bench_transport.py --compress  # with turboquant-pro codec
 Reports p50/p99 round-trip and msgs/s per payload size, so you can see the fabric cost
 the burst rides on and where compression flips from cost to win on a *real* bus.
 
+**Measured on Atlas** (dedicated `nats-server` on loopback, 800 iters, dim 1024, 3-bit):
+
+| batch | raw p50 / p99 / msgs·s⁻¹ | compressed p50 / p99 / msgs·s⁻¹ | round-trip speedup |
+|---|---|---|---|
+| 1   | 0.52 / 1.01 ms / 1768 | 0.38 / 0.90 ms / 2261 | 1.4× |
+| 32  | 1.69 / 3.12 ms / 561  | 0.40 / 1.37 ms / 2127 | **4.2×** |
+| 256 | 6.99 / 11.34 ms / 137 | 1.20 / 2.61 ms / 783  | **5.8×** |
+
+Even on a loopback bus (no network bottleneck), the ~10× smaller payload gives ~6× lower
+round-trip and throughput for large batches — payload size dominates round-trip cost. This
+measures transport of an already-encoded payload; per-message encode cost is in Tier 1, so
+the deployment rule stays: compress when the link (or the bus) is the bottleneck.
+
 ## Tier 3 — cluster (NRP; policy-gated)
 
 ```bash
