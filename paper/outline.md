@@ -8,9 +8,9 @@ paper, ACM format, ~6 pp. Alt: IEEE eScience short paper, or an SC workshop (wor
 Audience: the ACCESS/NRP research-computing community that already lives this pain.
 
 **Status:** Tier 1 (random **+ real-embedding check**), Tier 2 (loopback **+ real network
-hop**), and Tier-3 cold-start have real numbers (committed in `benchmarks/`); the remaining
-Tier-3 modes (warm-pool, scaling, overhead, GPU-util) are the open runs. A threats-to-validity
-section (§5) anticipates the reviewer objections.
+hop**), and Tier 3 (cold-start **+ warm-pool + scaling**) all have real numbers (committed in
+`benchmarks/`); remaining: a true cold image-pull, a GPU-image/GPU-util run, and a compute-bound
+scaling load. A threats-to-validity section (§5) anticipates the reviewer objections.
 
 ---
 
@@ -61,11 +61,13 @@ Three tiers, by infrastructure (mirror `benchmarks/`).
   co-existing on the production bus): the compression win **scales with payload** — 1.2× (4 KB)
   → 3.6× (64 KB) → **8.4× (256 KB)**, converging on the ~10× ratio as the link dominates. This
   *demonstrates* the Tier-1 crossover on a real link, not just on loopback or in the model.
-- **4.3 Cluster (Tier 3, cold-start measured on NRP).** Ephemeral CPU-Job cold-start
-  (ignored-range, one pod at a time, auto-cleaned): submit→complete **median ~6.6 s**
-  (5.1–7.6 s, n=5), pod schedule→container-start ~1–3 s. *Still to run:* warm-pool latency,
-  throughput vs N replicas (JetStream backpressure), burst-path vs raw-`kubectl` overhead, and
-  GPU utilization with batch-probe sizing — all policy-gated, short, cleaned-up.
+- **4.3 Cluster (Tier 3, measured on NRP).** Ephemeral-Job cold-start: **median ~6.6 s**
+  (5.1–7.6 s, n=5), schedule→run ~1–3 s. **Warm-pool + scaling** (N queue-group worker pods,
+  driver on Atlas hub, 1 KB tasks): latency **~67 ms** (vs 6.6 s cold start → ~100× overhead
+  removed); throughput **plateaus ~930/s by 2 workers** — for trivial I/O tasks the ceiling is
+  concurrency÷RTT (Little's law 64/67 ms ≈ 955/s), not worker count (worker-scaling needs a
+  compute-bound load). *Still to run:* true cold image pull, GPU-image + GPU-util under
+  batch-probe, compute-bound scaling.
 
 ## 5. Threats to validity (anticipated, with mitigations)
 State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.)
@@ -79,8 +81,11 @@ State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.
   payload (1.2×→3.6×→8.4×); encode cost still excluded (reported in Tier 1) → not free; one
   tailscale path so far, a characterized datacenter link would pin absolute bandwidth.
 - **Cold-start realism (Tier 3):** warm node + cached image + `kubectl wait` detection inflate
-  the total → report the K8s schedule→run breakdown; cold-pull + GPU-image + NATS-join runs
-  planned.
+  the total → report the K8s schedule→run breakdown; *warm-pool (~67 ms) + NATS-join now
+  measured*; cold image-pull + GPU-image runs remain.
+- **Scaling honesty (Tier 3):** throughput plateaus at ~2 workers because trivial tasks are
+  concurrency÷RTT-bound (Little's law), not worker-bound → stated explicitly; compute-bound
+  worker-scaling is the named next run, not an overclaim.
 - **Small n / single cluster:** report median+range, point-in-time; more reps + replication
   planned; scoped as a practice study, not a universal claim.
 - **Cluster citizenship:** policy-safe by construction (ignored-range, ≤1 pod, exit-0 Jobs,
@@ -111,8 +116,9 @@ State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.
 ---
 
 ## To do before submission
-- Run Tier 3 on NRP (short, policy-checked) → fill §4.3 with real cold-start / warm-pool /
-  scaling / overhead numbers + a GPU-util figure.
+- ~~Run Tier 3 on NRP — cold-start, warm-pool, scaling, overhead~~ **DONE** (cold ~6.6 s;
+  warm-pool ~67 ms; scaling plateaus ~930/s). Remaining: a GPU-image run + GPU-util figure and a
+  compute-bound scaling load to show worker-count scaling.
 - ~~Re-run Tier 2 over a real network hop~~ **DONE** (remote workstation→Atlas, ~2 Mbps;
   8.4× at 256 KB). Optional: repeat on a characterized datacenter link to pin absolute bandwidth.
 - Confirm PEARC (or eScience) deadline + ACM template; recruit a co-author if useful.
