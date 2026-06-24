@@ -129,6 +129,161 @@ def measure_cold_start_kubectl(
     return rows
 
 
+def measure_warm_pool_kubectl(
+    workers=(1, 2, 4),
+    namespace="ssu-atlas-ai",
+    nats_url="nats://127.0.0.1:4222",
+    in_cluster_nats="nats://atlas-nats:4222",
+    tasks=400,
+    payload_bytes=1024,
+    concurrency=64,
+):
+    """Warm-pool latency + throughput + scaling (produced the README numbers).
+
+    For each worker count N (kept <=4 to stay in the safe NRP util tier), creates a Job of N
+    ignored-range (cpu=1/mem=2Gi) queue-group subscriber pods on the bus, waits until they
+    answer, then drives `tasks` requests at `concurrency` from the hub and records throughput
+    + p50/p99. Bounded-lifetime workers, auto-cleaned. Run this ON the host that reaches the
+    NATS hub (e.g. the Atlas box); needs kubectl + nats-py. Returns list of dicts.
+
+    Note: for trivial I/O tasks throughput is concurrency/RTT-bound (Little's law), not
+    worker-bound, so it plateaus; the warm-pool latency (no cold start) is the headline.
+    """
+    import asyncio
+    import base64
+    import json
+    import statistics
+    import subprocess
+
+    import nats
+
+    worker_src = (
+        "import asyncio, nats\n"
+        "async def main():\n"
+        f"    nc=await nats.connect('{in_cluster_nats}', connect_timeout=15,"
+        " max_reconnect_attempts=5)\n"
+        "    async def work(m):\n"
+        "        try: await nc.publish(m.reply, m.data)\n"
+        "        except Exception: pass\n"
+        "    await nc.subscribe('bench.work', queue='w', cb=work,"
+        " pending_bytes_limit=256*1024*1024)\n"
+        "    await asyncio.sleep(150)\n"
+        "    await nc.drain()\n"
+        "asyncio.run(main())\n"
+    )
+    b64 = base64.b64encode(worker_src.encode()).decode()
+
+    def manifest(n):
+        cmd = f"pip install -q nats-py >/dev/null 2>&1 && echo {b64} | base64 -d | python -"
+        return json.dumps(
+            {
+                "apiVersion": "batch/v1",
+                "kind": "Job",
+                "metadata": {"name": "bench-pool", "namespace": namespace},
+                "spec": {
+                    "parallelism": n,
+                    "completions": n,
+                    "ttlSecondsAfterFinished": 60,
+                    "backoffLimit": 0,
+                    "activeDeadlineSeconds": 240,
+                    "template": {
+                        "spec": {
+                            "restartPolicy": "Never",
+                            "containers": [
+                                {
+                                    "name": "w",
+                                    "image": "python:3.12-slim",
+                                    "command": ["bash", "-lc", cmd],
+                                    "resources": {
+                                        "requests": {"cpu": "1", "memory": "2Gi"},
+                                        "limits": {"cpu": "1", "memory": "2Gi"},
+                                    },
+                                }
+                            ],
+                        }
+                    },
+                },
+            }
+        )
+
+    def k(*args, inp=None):
+        return subprocess.run(
+            ["kubectl", "-n", namespace, *args],
+            input=inp,
+            capture_output=True,
+            text=True,
+        )
+
+    async def measure(n):
+        nc = await nats.connect(nats_url, connect_timeout=10)
+        payload = b"x" * payload_bytes
+        ready = False
+        for _ in range(60):
+            try:
+                await nc.request("bench.work", b"ping", timeout=3)
+                ready = True
+                break
+            except Exception:
+                await asyncio.sleep(2)
+        if not ready:
+            await nc.drain()
+            return {"workers": n, "error": "no workers ready"}
+        await asyncio.sleep(5)  # let remaining replicas connect
+        for _ in range(10):
+            await nc.request("bench.work", payload, timeout=15)
+        sem = asyncio.Semaphore(concurrency)
+        lat = []
+
+        async def one():
+            async with sem:
+                s = time.perf_counter()
+                try:
+                    await nc.request("bench.work", payload, timeout=20)
+                    lat.append((time.perf_counter() - s) * 1e3)
+                except Exception:
+                    pass
+
+        t0 = time.perf_counter()
+        await asyncio.gather(*[one() for _ in range(tasks)])
+        wall = time.perf_counter() - t0
+        await nc.drain()
+        lat.sort()
+        return {
+            "workers": n,
+            "tasks": len(lat),
+            "throughput_per_s": round(len(lat) / wall, 1),
+            "p50_ms": round(statistics.median(lat), 2),
+            "p99_ms": round(lat[int(0.99 * len(lat))], 2),
+        }
+
+    async def run_all():
+        out = []
+        for n in workers:
+            if n > 4:
+                raise ValueError("keep workers <=4 to stay in the safe NRP util tier")
+            k("delete", "job", "bench-pool", "--wait=true")
+            time.sleep(2)
+            k("apply", "-f", "-", inp=manifest(n))
+            for _ in range(60):
+                r = k(
+                    "get",
+                    "pods",
+                    "-l",
+                    "job-name=bench-pool",
+                    "--field-selector=status.phase=Running",
+                    "-o",
+                    "name",
+                )
+                if r.stdout.count("pod/") >= n:
+                    break
+                time.sleep(2)
+            out.append(await measure(n))
+            k("delete", "job", "bench-pool", "--wait=false")
+        return out
+
+    return asyncio.run(run_all())
+
+
 def bench_cold_start(client, descriptor, reps):
     """Ephemeral Job-shape round trip via the NATS controller (full burst path; needs a
     deployed nats-bursting controller). Complements measure_cold_start_kubectl, which
@@ -193,13 +348,24 @@ def main():
         )
         return
 
-    # --- modes still requiring a deployed controller + warm pool (future work) ---
-    # GPU bursts: size each pod with batch-probe.probe_batch_size(...) and govern the
-    # local driver with batch-probe.ThermalController; submit via nats_bursting.Client /
-    # TaskDispatcher (see bench_cold_start / bench_warm_pool above).
+    if a.mode in ("warm", "scale"):
+        # Real warm-pool / scaling: N queue-group worker pods, driven from the hub.
+        # Run this on the host that reaches the NATS hub (e.g. Atlas).
+        workers = (1,) if a.mode == "warm" else (1, 2, 4)
+        rows = measure_warm_pool_kubectl(workers=workers, namespace=a.namespace)
+        for r in rows:
+            print(" ", r)
+        print(
+            "NOTE: trivial I/O tasks -> throughput is concurrency/RTT-bound (Little's law), "
+            "not worker-bound; warm-pool latency vs ~6.6s cold-start is the headline. "
+            "GPU sizing for compute-bound bursts is delegated to batch-probe."
+        )
+        return
+
+    # --- overhead mode: still to wire (burst-path submit vs raw kubectl) ---
     print(
-        f"[scaffold] mode={a.mode}: needs a deployed nats-bursting controller + warm pool. "
-        f"cold-start is wired and measured (--mode cold). warm/scale/overhead are next."
+        f"[scaffold] mode={a.mode}: not yet wired. cold/warm/scale are measured "
+        f"(--mode cold|warm|scale). 'overhead' (burst-path vs raw kubectl) is next."
     )
 
 
