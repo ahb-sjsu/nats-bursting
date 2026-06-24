@@ -1,0 +1,20 @@
+{
+  "description": "Tier-2 NATS transport over a real network hop (not loopback).",
+  "setup": {
+    "client": "remote workstation (NATS client only, no local subscriber)",
+    "responder": "echo responder on Atlas, co-existing on the production :4222 bus on an isolated subject",
+    "path": "tailscale (likely DERP-relayed)",
+    "rtt_ms_approx": 90,
+    "effective_bandwidth_mbps_approx": 2.0,
+    "dim": 1024,
+    "bits": 3,
+    "iters": 40,
+    "note": "raw batch capped <1MB to respect the production bus default max_payload"
+  },
+  "results": [
+    {"batch": 1,  "raw_kb": 4.0,   "raw_p50_ms": 84.56,  "compressed_kb": 0.4,  "compressed_p50_ms": 71.48,  "speedup": 1.2},
+    {"batch": 16, "raw_kb": 64.0,  "raw_p50_ms": 382.84, "compressed_kb": 6.1,  "compressed_p50_ms": 105.01, "speedup": 3.6},
+    {"batch": 64, "raw_kb": 256.0, "raw_p50_ms": 1119.43,"compressed_kb": 24.5, "compressed_p50_ms": 133.92, "speedup": 8.4}
+  ],
+  "finding": "On a bandwidth-limited real link the compression win scales with payload toward the raw ratio (~10x): 1.2x at 4KB (latency-bound) to 8.4x at 256KB (link-bound). Demonstrates the Tier-1 crossover on a real network, not just loopback or the analytic model."
+}

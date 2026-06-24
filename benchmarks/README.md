@@ -65,6 +65,24 @@ round-trip and throughput for large batches — payload size dominates round-tri
 measures transport of an already-encoded payload; per-message encode cost is in Tier 1, so
 the deployment rule stays: compress when the link (or the bus) is the bottleneck.
 
+**Measured over a real network hop** (client on a remote workstation → responder on Atlas,
+co-existing on the production `:4222` bus over a tailscale path; ~90 ms RTT, ~2 Mbps effective
+— a realistic *cross-site / WAN burst* link; dim 1024, 3-bit, 40 iters):
+
+| batch | raw (p50) | compressed (p50) | round-trip speedup |
+|---|---|---|---|
+| 1   | 4 KB → 85 ms   | 0.4 KB → 71 ms | 1.2× |
+| 16  | 64 KB → 383 ms | 6 KB → 105 ms  | **3.6×** |
+| 64  | 256 KB → 1119 ms | 24 KB → 134 ms | **8.4×** |
+
+This is the result loopback can't show: on a **bandwidth-limited real link** the win is no
+longer marginal at small sizes — it scales with payload toward the raw compression ratio
+(**8.4× at 256 KB**, approaching the ~10× ratio as the link fully dominates). Tiny payloads
+stay latency-bound (1.2×), exactly as the Tier-1 crossover predicts. So the crossover is now
+*demonstrated on a real link*, not just modeled. (Caveat: one specific tailscale path, likely
+relayed; a characterized datacenter link would pin the bandwidth, but the qualitative result —
+compression's benefit grows with payload on a link-bound path — is robust.)
+
 ## Tier 3 — cluster (NRP; policy-gated)
 
 ```bash
@@ -85,19 +103,23 @@ range; one pod at a time; auto-cleaned): submit→complete **5.1 / 6.1 / 6.6 / 7
 
 We state these up front so the numbers are read correctly; each has a planned fix.
 
-1. **Synthetic vs. real data (Tier 1).** Ratios/cosine use random Gaussian vectors;
-   real embeddings differ. *Mitigation:* turboquant-pro's compression is independently
-   validated on real embeddings and model activations elsewhere; rerun Tier 1 on a real
-   embedding set to confirm. Cosine is a fidelity proxy, **not** a downstream-task
-   guarantee — don't over-read it (the same "cosine ≠ task quality" caveat as tq-pro).
+1. **Synthetic vs. real data (Tier 1).** Ratios/cosine use random Gaussian vectors.
+   *Addressed:* we reran Tier 1 on **real bge-small-en-v1.5 embeddings** (20newsgroups,
+   n=3000) and got **identical** ratio and cosine — within 0.001 at 2/3/4-bit
+   (`results_compression_real.json`). The codec's fidelity is *distribution-agnostic*
+   (consistent with TurboQuant's random-rotation guarantee), so the random-vector numbers
+   are representative — not optimistic, not pessimistic. Cosine remains a fidelity proxy,
+   **not** a downstream-task guarantee — don't over-read it ("cosine ≠ task quality").
 2. **Analytic vs. measured transfer (Tier 1).** The transfer-time table is analytic
-   (bytes ÷ bandwidth). *Mitigation:* Tier 2 measures the real NATS round-trip; the WAN
-   crossover claim is the analytic encode-vs-transfer model, to be confirmed on a real link.
-3. **Loopback transport (Tier 2).** Measured on loopback (no network bottleneck), which
-   *understates* compression's benefit — so it is a conservative lower bound, not an
-   inflated one. Encode cost is **excluded** from the Tier-2 loop (payload pre-encoded)
-   and reported in Tier 1; don't read Tier-2 speedups as free. *Planned:* a
-   workstation→NRP hop to show the real-link crossover.
+   (bytes ÷ bandwidth). *Addressed:* Tier 2 now measures the real NATS round-trip both on
+   loopback **and over a real ~2 Mbps network hop** — the crossover the analytic model
+   predicted is observed directly (8.4× at 256 KB).
+3. **Loopback transport (Tier 2).** The loopback table understates the network benefit
+   (it is a conservative lower bound). *Addressed:* a real workstation→Atlas hop is now
+   measured and shows the win scaling with payload (1.2× → 3.6× → 8.4×). Encode cost is
+   still **excluded** from the transport loop (payload pre-encoded) and reported in Tier 1,
+   so don't read these as free. *Remaining:* the real link is one tailscale (likely relayed)
+   path; a characterized datacenter link would pin the absolute bandwidth.
 4. **Cold-start realism (Tier 3).** Warm node + cached image, so ~6.6 s reflects
    schedule+create+API detection, **not** a cold image pull; the K8s schedule→run
    breakdown (1–3 s) isolates the cluster-side cost, and `kubectl wait` detection inflates
