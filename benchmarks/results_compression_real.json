@@ -1,0 +1,14 @@
+{
+  "description": "Tier-1 compression fidelity on REAL transformer embeddings vs random Gaussian, to test whether the synthetic-data benchmark is representative.",
+  "model": "BAAI/bge-small-en-v1.5",
+  "source": "20newsgroups (3000 docs, headers/footers/quotes removed)",
+  "dim": 384,
+  "n": 3000,
+  "normalized": true,
+  "rows": [
+    {"bits": 2, "random_ratio": 14.8, "random_cos": 0.940, "real_ratio": 14.8, "real_cos": 0.939},
+    {"bits": 3, "random_ratio": 10.1, "random_cos": 0.978, "real_ratio": 10.1, "real_cos": 0.977},
+    {"bits": 4, "random_ratio": 7.7,  "random_cos": 0.995, "real_ratio": 7.7,  "real_cos": 0.994}
+  ],
+  "finding": "Real and random give identical ratio and cosine (within 0.001). The codec's fidelity is distribution-agnostic -- consistent with TurboQuant's random-rotation guarantee -- so the synthetic-data Tier-1 numbers are representative, neither optimistic nor pessimistic. This empirically answers the 'you used random data' critique (it does not matter), rather than the weaker 'real is even better' claim."
+}

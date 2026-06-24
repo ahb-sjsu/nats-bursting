@@ -7,9 +7,10 @@ GPU-Aware Pipeline for Effective, Policy-Safe Use of NRP Nautilus*
 paper, ACM format, ~6 pp. Alt: IEEE eScience short paper, or an SC workshop (workflows/clouds).
 Audience: the ACCESS/NRP research-computing community that already lives this pain.
 
-**Status:** Tiers 1–2 + Tier-3 cold-start have real numbers (committed in `benchmarks/`); the
-remaining Tier-3 modes (warm-pool, scaling, overhead, GPU-util) are the open runs. A
-threats-to-validity section (§5) anticipates the reviewer objections.
+**Status:** Tier 1 (random **+ real-embedding check**), Tier 2 (loopback **+ real network
+hop**), and Tier-3 cold-start have real numbers (committed in `benchmarks/`); the remaining
+Tier-3 modes (warm-pool, scaling, overhead, GPU-util) are the open runs. A threats-to-validity
+section (§5) anticipates the reviewer objections.
 
 ---
 
@@ -52,10 +53,14 @@ Three tiers, by infrastructure (mirror `benchmarks/`).
 - **4.1 Compression (Tier 1, measured).** Ratios 7.9×/10.4×/15.5× (4/3/2-bit, dim 1024),
   cosine 0.995/0.978/0.94. Transfer of a 1 MB batch: 84→8 ms @100 Mbps (net −63 ms incl.
   encode), ~wash @1 Gbps. **Finding:** compression is a knob; it wins when the *link* is the
-  bottleneck (cross-site/WAN bursts), not on a fast LAN.
-- **4.2 Transport (Tier 2, measured on Atlas).** NATS round-trip + throughput, raw vs
-  compressed, per payload size: 256-batch 6.99→1.20 ms p50, 137→783 msgs/s (~6×). Payload size
-  dominates round-trip even on loopback.
+  bottleneck (cross-site/WAN bursts), not on a fast LAN. **Real-data check:** real bge-small
+  embeddings (20newsgroups, n=3000) reproduce the random-vector ratio+cosine within 0.001 —
+  the codec is distribution-agnostic, so the synthetic benchmark is representative.
+- **4.2 Transport (Tier 2, measured — loopback *and* real hop).** Loopback: 256-batch
+  6.99→1.20 ms p50, ~6×. **Real ~90 ms / ~2 Mbps network hop** (remote workstation → Atlas,
+  co-existing on the production bus): the compression win **scales with payload** — 1.2× (4 KB)
+  → 3.6× (64 KB) → **8.4× (256 KB)**, converging on the ~10× ratio as the link dominates. This
+  *demonstrates* the Tier-1 crossover on a real link, not just on loopback or in the model.
 - **4.3 Cluster (Tier 3, cold-start measured on NRP).** Ephemeral CPU-Job cold-start
   (ignored-range, one pod at a time, auto-cleaned): submit→complete **median ~6.6 s**
   (5.1–7.6 s, n=5), pod schedule→container-start ~1–3 s. *Still to run:* warm-pool latency,
@@ -64,12 +69,15 @@ Three tiers, by infrastructure (mirror `benchmarks/`).
 
 ## 5. Threats to validity (anticipated, with mitigations)
 State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.)
-- **Synthetic data / cosine proxy (Tier 1):** random vectors + cosine is a fidelity proxy,
-  not task quality → rerun on real embeddings; don't over-read cosine.
+- **Synthetic data / cosine proxy (Tier 1):** *addressed* — real bge-small embeddings
+  (20newsgroups, n=3000) give identical ratio+cosine to random within 0.001, confirming the
+  codec is distribution-agnostic (TurboQuant random-rotation guarantee); cosine is still a
+  fidelity proxy, not task quality → don't over-read it.
 - **Analytic vs measured transfer (Tier 1):** the WAN-saving table is a model; Tier 2 is the
   real measurement → confirm the crossover on a real link.
-- **Loopback (Tier 2):** understates compression → conservative lower bound; encode cost
-  excluded from the loop (reported in Tier 1) → not free; real workstation→NRP hop planned.
+- **Loopback (Tier 2):** *addressed* — a real ~2 Mbps hop now shows the win scaling with
+  payload (1.2×→3.6×→8.4×); encode cost still excluded (reported in Tier 1) → not free; one
+  tailscale path so far, a characterized datacenter link would pin absolute bandwidth.
 - **Cold-start realism (Tier 3):** warm node + cached image + `kubectl wait` detection inflate
   the total → report the K8s schedule→run breakdown; cold-pull + GPU-image + NATS-join runs
   planned.
@@ -105,7 +113,7 @@ State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.
 ## To do before submission
 - Run Tier 3 on NRP (short, policy-checked) → fill §4.3 with real cold-start / warm-pool /
   scaling / overhead numbers + a GPU-util figure.
-- Re-run Tier 2 over a *real network hop* (workstation→NRP), not just loopback, to show the
-  compression crossover on a production link.
+- ~~Re-run Tier 2 over a real network hop~~ **DONE** (remote workstation→Atlas, ~2 Mbps;
+  8.4× at 256 KB). Optional: repeat on a characterized datacenter link to pin absolute bandwidth.
 - Confirm PEARC (or eScience) deadline + ACM template; recruit a co-author if useful.
 - Author/affiliation; reproducibility appendix (commands + commit hashes).
