@@ -20,6 +20,18 @@ wire; batch-probe maximizes per-pod GPU work; nats-bursting moves them over NATS
     --i-have-checked-nrp-policy, because NRP has hard usage rules (sustained >40% GPU
     util, pod sizing/limits, ban conditions). CHECK THE POLICY, keep runs short, and
     clean up. Measure, do not camp.
+
+Measured cold-start (NRP `ssu-atlas-ai`, 2026; ephemeral CPU Job at cpu=1/mem=2Gi -- the
+policy "ignored" range; warm node, cached `python:3.12-slim`; one pod at a time;
+auto-cleaned). Submit -> Completed, submitting-host wall clock, 5 runs:
+
+    5.13, 6.14, 6.57, 7.44, 7.60 s     (median ~6.6 s)
+
+of which the pod schedule -> container-start (K8s-reported, 1 s resolution) is ~1-3 s; the
+remainder is API + `kubectl wait` detection. Caveats: cached image (a cold pull on a fresh
+node adds pull time; a GPU image adds much more); CPU job (no device init); single cluster;
+no NATS-join yet. `measure_cold_start_kubectl()` below is the policy-safe path that produced
+these; the full burst-ready metric (incl. NATS join) needs a worker image with the client.
 """
 
 import argparse
@@ -36,8 +48,91 @@ def _require_policy_ack(args):
         )
 
 
+_JOB_MANIFEST = """apiVersion: batch/v1
+kind: Job
+metadata: {{name: {name}, namespace: {ns}}}
+spec:
+  ttlSecondsAfterFinished: 90
+  backoffLimit: 0
+  activeDeadlineSeconds: 300
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: w
+        image: {image}
+        command: ["python", "-c", "print('burst ok')"]
+        resources:
+          requests: {{cpu: "1", memory: 2Gi}}
+          limits: {{cpu: "1", memory: 2Gi}}
+"""
+
+
+def measure_cold_start_kubectl(
+    reps=5, namespace="ssu-atlas-ai", image="python:3.12-slim"
+):
+    """Policy-safe ephemeral-Job cold-start measurement (produced the numbers above).
+
+    Submits tiny ignored-range (cpu=1, mem=2Gi) CPU Jobs ONE AT A TIME, times
+    submit->complete on the submitting host's wall clock, and reads the pod's own K8s
+    timestamps for the schedule->container-start breakdown. Auto-cleans via
+    ttlSecondsAfterFinished + delete. Stays within NRP policy (ignored range, <=1 pod,
+    exits 0, cleaned up). Needs a kubectl context on the namespace. Returns list of dicts.
+    """
+    import subprocess
+
+    def k(*a, inp=None):
+        return subprocess.run(
+            ["kubectl", "-n", namespace, *a], input=inp, capture_output=True, text=True
+        )
+
+    def epoch(ts):
+        return subprocess.run(
+            ["date", "-d", ts, "+%s"], capture_output=True, text=True
+        ).stdout.strip()
+
+    rows = []
+    for n in range(1, reps + 1):
+        name = f"bench-cs-{n}"
+        t0 = time.perf_counter()
+        k(
+            "apply",
+            "-f",
+            "-",
+            inp=_JOB_MANIFEST.format(name=name, ns=namespace, image=image),
+        )
+        k("wait", "--for=condition=complete", f"job/{name}", "--timeout=300s")
+        total = round(time.perf_counter() - t0, 2)
+        pod = k(
+            "get",
+            "pods",
+            "-l",
+            f"job-name={name}",
+            "-o",
+            "jsonpath={.items[0].metadata.name}",
+        ).stdout.strip()
+        tc = k(
+            "get", "pod", pod, "-o", "jsonpath={.metadata.creationTimestamp}"
+        ).stdout.strip()
+        tr = k(
+            "get",
+            "pod",
+            pod,
+            "-o",
+            "jsonpath={.status.containerStatuses[0].state.terminated.startedAt}",
+        ).stdout.strip()
+        sched = (int(epoch(tr)) - int(epoch(tc))) if tc and tr else None
+        rows.append(
+            {"run": n, "submit_to_complete_s": total, "schedule_to_run_s": sched}
+        )
+        k("delete", "job", name, "--wait=false")
+    return rows
+
+
 def bench_cold_start(client, descriptor, reps):
-    """Ephemeral Job-shape round trip, pod boot included."""
+    """Ephemeral Job-shape round trip via the NATS controller (full burst path; needs a
+    deployed nats-bursting controller). Complements measure_cold_start_kubectl, which
+    measures the raw K8s Job lifecycle without the controller."""
     lat = []
     for _ in range(reps):
         t = time.perf_counter()
@@ -66,30 +161,45 @@ def main():
     ap.add_argument(
         "--mode", choices=["cold", "warm", "scale", "overhead"], default="cold"
     )
-    ap.add_argument("--reps", type=int, default=10)
+    ap.add_argument("--reps", type=int, default=5)
     ap.add_argument("--gpu", type=int, default=1)
+    ap.add_argument("--namespace", default="ssu-atlas-ai")
     ap.add_argument("--i-have-checked-nrp-policy", action="store_true")
     a = ap.parse_args()
     _require_policy_ack(a)
 
-    # --- batch-probe: size the per-pod workload to the GPU before bursting ---
-    # from batch_probe import probe_batch_size, ThermalController
-    # max_bs = probe_batch_size(model, sample_input, device="cuda", headroom=0.1)
-    # thermal = ThermalController(max_temp_c=82)   # govern the local driver side
-    #
-    # --- nats-bursting: submit ---
-    # from nats_bursting import Client, JobDescriptor, TaskDispatcher
-    # desc = JobDescriptor(image=..., gpu=a.gpu, command=[...])  # confirm fields per descriptor.py
-    # with Client(servers="nats://<nrp-bus>") as client:
-    #     if a.mode == "cold":
-    #         lat = bench_cold_start(client, desc, a.reps)
-    #         ...report p50/p99 cold-start...
-    #
-    # TODO (run on NRP): wire the four modes against the deployed controller + a warm pool,
-    # report cold-start vs warm-pool deltas, scaling curve, and burst-vs-kubectl overhead.
+    if a.mode == "cold":
+        # Real, policy-safe cold-start: tiny ignored-range CPU Jobs, one at a time.
+        import statistics
+
+        rows = measure_cold_start_kubectl(reps=a.reps, namespace=a.namespace)
+        tot = [r["submit_to_complete_s"] for r in rows]
+        sch = [
+            r["schedule_to_run_s"] for r in rows if r["schedule_to_run_s"] is not None
+        ]
+        for r in rows:
+            print(
+                f"  run {r['run']}: submit->complete {r['submit_to_complete_s']}s "
+                f"(schedule->run {r['schedule_to_run_s']}s)"
+            )
+        print(
+            f"submit->complete: median {statistics.median(tot):.2f}s "
+            f"[{min(tot):.2f}, {max(tot):.2f}] over n={len(tot)}; "
+            f"schedule->run median {statistics.median(sch) if sch else 'NA'}s"
+        )
+        print(
+            "NOTE: warm node + cached image; CPU job (no GPU/NATS-join). See module "
+            "docstring + README 'threats to validity'."
+        )
+        return
+
+    # --- modes still requiring a deployed controller + warm pool (future work) ---
+    # GPU bursts: size each pod with batch-probe.probe_batch_size(...) and govern the
+    # local driver with batch-probe.ThermalController; submit via nats_bursting.Client /
+    # TaskDispatcher (see bench_cold_start / bench_warm_pool above).
     print(
-        f"[scaffold] mode={a.mode} reps={a.reps} gpu={a.gpu} — wire against a deployed "
-        f"NRP controller; size pods with batch-probe; keep runs short + clean up."
+        f"[scaffold] mode={a.mode}: needs a deployed nats-bursting controller + warm pool. "
+        f"cold-start is wired and measured (--mode cold). warm/scale/overhead are next."
     )
 
 
