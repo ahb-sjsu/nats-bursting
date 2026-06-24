@@ -99,6 +99,24 @@ not camp.** Per-pod GPU sizing + local thermal governance are delegated to batch
 range; one pod at a time; auto-cleaned): submit→complete **5.1 / 6.1 / 6.6 / 7.4 / 7.6 s**
 (median ~6.6 s, n=5); pod schedule→container-start (K8s-reported) ~1–3 s.
 
+**Measured warm-pool + scaling** (persistent NRP worker pods as queue-group subscribers over
+the leaf bridge; driver on the Atlas hub; 1 KB tasks, 400/run, concurrency 64;
+`results_cluster_pool.json`):
+
+| workers | throughput | p50 | p99 |
+|--------:|-----------:|----:|----:|
+| 1 | 782/s | 71 ms | 113 ms |
+| 2 | 924/s | 68 ms | 80 ms |
+| 4 | 936/s | 67 ms | 78 ms |
+
+Two findings. (1) **Warm-pool latency ~67 ms vs ~6.6 s cold-start** — a persistent pool removes
+the ~100× cold-start penalty (this is also the burst-path-vs-cold-Job *overhead* contrast).
+(2) **Throughput plateaus ~930/s at ≥2 workers**, and honestly so: for trivial I/O-bound tasks
+the ceiling is *concurrency ÷ RTT* (Little's law: 64 / 0.067 s ≈ 955/s), **not** worker count —
+1–2 workers already saturate the ~67 ms WAN link. Worker-count scaling is expected to matter for
+*compute-bound* tasks (where each task occupies a worker); demonstrating that needs a CPU/GPU
+workload and is the natural next run.
+
 ## Methodology & threats to validity (anticipating the critic)
 
 We state these up front so the numbers are read correctly; each has a planned fix.
@@ -123,20 +141,22 @@ We state these up front so the numbers are read correctly; each has a planned fi
 4. **Cold-start realism (Tier 3).** Warm node + cached image, so ~6.6 s reflects
    schedule+create+API detection, **not** a cold image pull; the K8s schedule→run
    breakdown (1–3 s) isolates the cluster-side cost, and `kubectl wait` detection inflates
-   the *total* (which is why we report the breakdown too). CPU job, no GPU init, no
-   NATS-join. *Planned:* fresh-node/cold-pull, a GPU-image run, and the full burst-ready
-   (NATS-join) metric via a worker image.
+   the *total* (which is why we report the breakdown too). CPU job, no GPU init.
+   *Addressed in part:* the **warm-pool** path is now measured (~67 ms, no cold start) and a
+   real **NATS-join** round-trip is exercised by the queue-group workers. *Remaining:*
+   fresh-node/cold image pull and a GPU-image run.
 5. **Statistical rigor.** Small n (5); we report median **and** range, not a single point.
    Cluster load and network vary, so these are point-in-time. *Planned:* more reps across
    sessions; Tier-1 uses a fixed seed.
-6. **Baselines.** Tier 2 carries an internal raw-vs-compressed baseline; Tier 3's
-   burst-path-vs-raw-`kubectl` *overhead* comparison is the next mode to wire.
+6. **Baselines.** Tier 2 carries an internal raw-vs-compressed baseline; Tier 3 now carries
+   the **warm-pool (~67 ms) vs cold-Job (~6.6 s)** overhead contrast. A direct
+   burst-path-vs-raw-`kubectl` micro-benchmark and a compute-bound scaling workload remain.
 7. **Generality.** One cluster, one namespace, specific hardware — scoped as a
    practice/experience study, not a universal claim. Scripts are released for replication.
 8. **Cluster-citizenship (a reviewer of a different kind).** The harness is policy-safe by
-   construction: ignored-range pods, ≤1 concurrent, exit-0 Jobs, `ttlSecondsAfterFinished`
-   + delete, and the `--i-have-checked-nrp-policy` gate — so the methodology itself can't
-   be accused of hoarding or abusing a shared resource.
+   construction: ignored-range pods, **≤4 concurrent** (avoiding the 5+-pod <40%-util rule),
+   exit-0 Jobs, `ttlSecondsAfterFinished` + delete, and the `--i-have-checked-nrp-policy`
+   gate — so the methodology itself can't be accused of hoarding or abusing a shared resource.
 
 ## Results files
 `results_compression.json` (Tier 1) is committed as a reference run; Tiers 2–3 write

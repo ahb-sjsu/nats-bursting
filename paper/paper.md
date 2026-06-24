@@ -117,19 +117,32 @@ Tiny payloads stay latency-bound (1.2×); as payload grows on the bandwidth-limi
 win climbs toward the raw compression ratio (8.4× at 256 KB). This *demonstrates* the Tier-1
 crossover on a real link, not merely in the analytic model.
 
-### 4.3 Cluster cold-start (Tier 3)
+### 4.3 Cluster: cold-start, warm-pool, and scaling (Tier 3)
 
-Submitting ephemeral CPU Jobs to NRP (cpu=1/mem=2 GiB ignored range, one pod at a time,
-auto-cleaned), submit→complete is **median ~6.6 s (5.1–7.6 s, n=5)**, of which the pod
-schedule→container-start (K8s-reported) is ~1–3 s; the remainder is API and `kubectl wait`
-detection. This is the warm-node, cached-image case — the cost of a burst spinning up when the
-cluster is ready.
+**Cold-start.** Submitting ephemeral CPU Jobs to NRP (cpu=1/mem=2 GiB ignored range, one pod
+at a time, auto-cleaned), submit→complete is **median ~6.6 s (5.1–7.6 s, n=5)**, of which the
+pod schedule→container-start (K8s-reported) is ~1–3 s; the rest is API and `kubectl wait`
+detection. This is the warm-node, cached-image case.
 
-**Not yet measured (stated plainly):** warm-pool latency and sustained throughput, throughput
-vs. N pool replicas (JetStream backpressure), burst-path vs. raw-`kubectl` overhead, GPU
-utilization under batch-probe sizing, and a true cold image pull including NATS-join. These are
-the persistent-pool half of the system; they are scoped, policy-gated runs left as the
-immediate next step.
+**Warm-pool and scaling.** A persistent pool of N queue-group worker pods on NRP, driven from
+the Atlas hub over the leaf bridge (1 KB tasks, 400/run, driver concurrency 64):
+
+| workers | throughput | p50 | p99 |
+|--------:|-----------:|----:|----:|
+| 1 | 782/s | 71 ms | 113 ms |
+| 2 | 924/s | 68 ms | 80 ms |
+| 4 | 936/s | 67 ms | 78 ms |
+
+Two findings. (1) Warm-pool per-task latency is **~67 ms vs ~6.6 s cold-start** — a persistent
+pool removes the ~100× cold-start penalty (this is also the burst-path-vs-cold-Job overhead
+contrast). (2) Throughput **plateaus ~930/s by two workers**, and honestly so: for trivial
+I/O-bound tasks the ceiling is *concurrency ÷ RTT* (Little's law, 64 / 0.067 s ≈ 955/s), not
+worker count — one to two workers already saturate the ~67 ms WAN link. Worker-count scaling is
+expected to matter for *compute-bound* tasks, where each task occupies a worker.
+
+**Not yet measured:** a true cold image pull, a GPU-image run, GPU utilization under batch-probe
+sizing, and a compute-bound scaling workload (to show worker-count scaling). These are scoped,
+policy-gated next runs.
 
 ## 5. Threats to validity
 
