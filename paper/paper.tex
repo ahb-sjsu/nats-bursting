@@ -1,0 +1,491 @@
+\documentclass[conference]{IEEEtran}
+% CANOPIE-HPC @ SC26 submission (IEEE proceedings format). Draft.
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[T1]{fontenc}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usepackage[ruled,vlined]{algorithm2e}
+
+\begin{document}
+
+\title{A Polite, Container-Native Bursting Fabric for AI Workloads on Shared Clusters}
+
+\author{\IEEEauthorblockN{Andrew H. Bond}
+\IEEEauthorblockA{San Jos\'e State University\\
+San Jos\'e, CA, USA\\
+andrew.bond@sjsu.edu\\
+ORCID: \texttt{0009-0003-2599-6158}}}
+
+\maketitle
+
+\begin{abstract}
+A researcher with a single workstation and access to a shared, multi-tenant GPU cluster (the
+National Research Platform's Nautilus) faces real friction turning that access into elastic
+capacity: \texttt{kubectl}, YAML, container cold starts, and no feedback loop into the code they
+are already running. We present a \emph{polite, container-native bursting fabric} that makes the
+cluster's GPUs appear as elastic capacity \emph{inside the user's running program}. The fabric,
+\textbf{nats-bursting}, makes containerized cluster pods first-class subscribers on the same NATS
+bus as the workstation---in two shapes, ephemeral Kubernetes Jobs and persistent queue-group
+pools---behind a Go control plane whose \emph{politeness controller} probes live cluster state and
+backs off rather than crowding other tenants, operationalizing shared-cluster citizenship. Its
+NATS leaf-node topology surfaces real orchestration design issues (JetStream vs.\ core-NATS
+delivery, asymmetric subject interest) that we report as an experience. Two supporting components
+make the fabric practical: \textbf{turboquant-pro} compresses the payloads on the wire so bursting
+stays viable over constrained links, and \textbf{batch-probe} right-sizes each pod's GPU batch so
+bursts stay useful and policy-aligned. We quantify the fabric on real infrastructure: a
+containerized burst cold-starts in $\sim$6.6\,s while a warm pool serves at $\sim$67\,ms; over a
+real $\sim$2\,Mbps link, compression cuts round-trip up to $8.4\times$; and batch-probe drives a
+burst to 94\% GPU utilization. We report what is measured and what is not, and release all three
+projects and the reproducible benchmark harness as an artifact.
+\end{abstract}
+
+\begin{IEEEkeywords}
+cloud bursting, Kubernetes, containers, orchestration, NATS, NRP Nautilus, vector quantization,
+KV-cache compression, GPU utilization, thermal control
+\end{IEEEkeywords}
+
+\section{Introduction}
+Shared, multi-tenant Kubernetes clusters such as NRP Nautilus~\cite{nautilus} exist precisely so
+that researchers without their own datacenter can burst. Yet ``use the cluster from my
+workstation'' remains awkward: one writes Kubernetes manifests, submits Jobs, polls for
+completion, and shuttles data in and out---none of it inside the program where the research runs.
+The friction is high enough that elastic capacity often goes unused.
+
+Consider a concrete case. A researcher iterating on an embedding or inference pipeline at their
+workstation wants, for one hour, to fan ten thousand documents across a dozen cluster GPUs, then
+return to interactive work. Today that means authoring a Job manifest, building and pushing a
+container image, submitting, polling, and copying results back---a context switch out of the
+program and into cluster operations. The capability exists; the ergonomics do not. And on a
+\emph{shared} cluster a second obligation rides along: a convenience layer must not crowd out the
+other tenants, or it will (rightly) get its owner throttled or banned.
+
+This paper describes a polite, container-native \emph{bursting fabric} that closes the gap while
+honoring that obligation, and measures it honestly on the real cluster. Its core is the fabric
+itself; two supporting components make remote bursting practical:
+
+\begin{itemize}
+\item \textbf{The bursting fabric} (nats-bursting, \S\ref{sec:bursting})---the primary
+contribution: a Go control plane plus a Python client that make containerized cluster pods
+\emph{first-class subscribers} on the researcher's own NATS bus, in two shapes (ephemeral Jobs,
+persistent pools), behind a \emph{politeness controller} that probes cluster state and backs off
+to yield to other tenants. Its NATS leaf-node topology surfaces concrete orchestration design
+tradeoffs (JetStream vs.\ core-NATS delivery, asymmetric subject interest) we report as an
+experience.
+\item \textbf{Transport optimization} (turboquant-pro, \S\ref{sec:tq})---compressing bus payloads
+so remote bursting stays viable over constrained links, reported at the level a practitioner
+needs: ratios, fidelity, real-link speedup, and a rule for \emph{when} compression helps.
+\item \textbf{Resource management} (batch-probe, \S\ref{sec:bp})---right-sizing each pod's GPU
+batch (and thermally governing the local driver) so bursts remain useful and within a shared
+cluster's utilization policy.
+\end{itemize}
+
+We then quantify the fabric on real infrastructure (\S\ref{sec:eval}), state threats to validity
+(\S\ref{sec:threats}), and reflect on the engineering (\S\ref{sec:discussion}). This is a
+practice/experience paper: a working, open system plus measurements. Its value is the
+orchestration design---particularly the politeness controller that makes ``effective and
+policy-safe'' mechanical rather than aspirational---and the honest characterization of when each
+supporting layer helps.
+
+\section{Background}
+\textbf{NRP Nautilus}~\cite{nautilus} is a shared, opportunistic Kubernetes cluster. Its usage
+policy shapes the design: small/idle pods are tolerated (CPU\,$\le$\,1, mem\,$\le$\,2\,GiB are an
+``ignored'' range), but groups of pods must sustain utilization (5+ pods must each stay under
+40\% GPU), Jobs must run to completion and exit cleanly (no \texttt{sleep}-camping), and requests
+should match usage. ``Effective and policy-safe'' is therefore a container-orchestration design
+target, not a slogan.
+
+\textbf{NATS}~\cite{nats} provides subject-based publish/subscribe and request--reply; \emph{queue
+groups} that round-robin a subject across a set of subscribers; \emph{JetStream}, a persistence
+layer with work-queue streams and durable pull consumers (at-least-once, redelivery); and
+\emph{leaf nodes} that bridge a remote NATS server into a hub. Leaf-node federation is central to
+our design and to two of its sharper engineering decisions (\S\ref{sec:bursting}): JetStream is
+not federated across a leaf link, and subject \emph{interest} can propagate asymmetrically
+hub$\to$spoke.
+
+\textbf{Cloud bursting} spills work from a local resource to a remote one. We use a message bus
+rather than a job queue or RPC because it makes the containerized cluster a \emph{peer} on the
+fabric the application already speaks, so a burst becomes a publish inside the event loop.
+
+\section{nats-bursting: the bursting fabric}\label{sec:bursting}
+
+\begin{figure}[t]\centering
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners, align=center, font=\footnotesize, inner sep=4pt},
+  >=Latex]
+\node[box] (ws) {Workstation\\ NATS hub\\ client / \texttt{\%\%burst}};
+\node[box, right=11mm of ws] (leaf) {Leaf node\\ (in cluster)};
+\node[box, above right=5mm and 9mm of leaf] (ctl) {Go controller\\ probe/decide/submit};
+\node[box, below right=5mm and 9mm of leaf] (pods) {Pods: Job\\ or pool};
+\draw[<->] (ws) -- node[above, font=\scriptsize]{leaf} (leaf);
+\draw[<->] (leaf) -- (ctl);
+\draw[<->] (leaf) -- (pods);
+\node[font=\scriptsize, text width=24mm, align=center, below=2mm of ws]
+  {turboquant-pro compresses payloads; batch-probe sizes the GPU batch};
+\end{tikzpicture}
+\caption{Two shapes, one bus. Ephemeral bursts go workstation$\to$Go controller$\to$Kubernetes
+Job; persistent pools are queue-group worker Deployments the client dispatches to directly. Both
+reach the workstation over an outbound leaf link.}\label{fig:arch}
+\end{figure}
+
+nats-bursting has two halves joined by one bus (Fig.~\ref{fig:arch}): a Go control plane that
+lives next to the cluster and turns NATS messages into Kubernetes objects, and a Python client
+used from notebooks and scripts. Two workload \emph{shapes} share the bus but use different
+control paths.
+
+\subsection{The control plane and its politeness controller}
+The Go controller is event-driven. Its \texttt{natsbridge} subscribes to \texttt{burst.submit},
+and on each request the \texttt{submitter} renders a \texttt{JobDescriptor} into a real
+\texttt{batchv1.Job} via client-go---CPU/memory/\texttt{nvidia.com/gpu}/ephemeral-storage requests
+and limits, a managed-by label, \texttt{RestartPolicyNever}, and foreground-propagation
+cancellation---then publishes a status event. The wire protocol is three subject families:
+\texttt{burst.submit} (requests), \texttt{burst.status.\textless job\textgreater} (a
+\texttt{submitted}/\texttt{error} state machine), and \texttt{burst.result.\textless
+job\textgreater} (reserved for results). The client issues a request--reply on
+\texttt{burst.submit} and falls back to subscribing on the status subject---robust to whichever
+pattern the controller answers with.
+
+The part the rest of this paper's ``policy-safe'' claim rests on is the \emph{politeness
+controller}. A \texttt{prober} reads live cluster state through client-go---total/allocated/idle
+nodes, the caller's own running and pending Jobs, \emph{and other tenants' pending pods}---and
+degrades gracefully when an individual API call is denied by RBAC. A \texttt{decider} then
+evaluates that state against thresholds in a fixed priority order: (1)~\emph{self-limiting}---do
+not exceed your own running/pending caps (defaults 50/20); (2)~\emph{courtesy}---yield when more
+than a threshold of \emph{other} users' pods are queued (default 200); (3)~\emph{utilization}---back
+off when cluster allocation exceeds a fraction (default 0.90). The outcome is
+\texttt{Submit}/\texttt{Backoff}/\texttt{Abort} (Algorithm~\ref{alg:polite}, with thresholds in
+Table~\ref{tab:cfg}). Backoff is capped exponential with jitter applied \emph{after} the cap,
+\begin{equation}
+w_k \;=\; \min\!\bigl(B_0\,m^{\,k},\,B_{\max}\bigr)\cdot\Bigl(1 + \tfrac12\bigl(u-\tfrac12\bigr)\Bigr),
+\quad u\sim\mathcal U[0,1),
+\end{equation}
+i.e.\ $\pm$25\% jitter to decorrelate wake-ups across many controllers (anti-thundering-herd),
+aborting after $K$ attempts. This is what makes ``yield to other tenants'' a mechanism rather than
+a promise: the system measures the shared cluster and defers to it.
+
+\begin{algorithm}[t]
+\caption{Polite admission decision}\label{alg:polite}
+\KwIn{cluster state $s$ (from the prober), thresholds $p$}
+\KwOut{\texttt{Submit} / \texttt{Backoff} / \texttt{Abort}}
+\lIf{$\mathrm{attempts}\ge p.\mathrm{maxAttempts}$}{\Return \texttt{Abort}}
+\lIf{$s.\mathrm{myRunning}\ge p.\mathrm{maxConcurrent}$}{\Return \texttt{Backoff}}
+\lIf{$s.\mathrm{myPending}\ge p.\mathrm{maxPending}$}{\Return \texttt{Backoff}}
+\lIf{$s.\mathrm{othersPending}> p.\mathrm{queueDepth}$}{\Return \texttt{Backoff}}
+\lIf{$s.\mathrm{alloc}/s.\mathrm{total}> p.\mathrm{util}$}{\Return \texttt{Backoff}}
+\Return \texttt{Submit}\;
+\end{algorithm}
+
+\begin{table}[t]\centering\caption{Politeness controller defaults.}\label{tab:cfg}
+\begin{tabular}{lr}\toprule
+parameter & default \\\midrule
+max concurrent jobs (self-limit) & 50 \\
+max pending jobs (self-limit) & 20 \\
+others-pending threshold (courtesy) & 200 \\
+utilization threshold (load) & 0.90 \\
+initial / max backoff & 30\,s / 30\,min \\
+backoff multiplier / max attempts & 2.0 / 20 \\\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{The Python client and the \texttt{\%\%burst} magic}
+The client is a synchronous facade over async NATS, owning one background event loop and a
+\texttt{Transport} seam for deterministic testing. \texttt{JobDescriptor}/\texttt{Resources}
+mirror the Go structs field-for-field. A \texttt{\%\%burst} IPython cell magic makes a burst an
+editor action: by default (\texttt{--when-busy}) it probes the local GPUs through
+\texttt{nvidia-smi} and only offloads when every local GPU is saturated, otherwise running the
+cell in place; \texttt{--always}/\texttt{--never} force the choice, and \texttt{--gpu/--cpu/--image}
+set resources. The cell body is shipped as an environment variable and executed in the pod, so
+no image rebuild is needed for ad-hoc work.
+
+\subsection{Persistent pools, queue groups, and leaf federation}
+The second shape is a persistent pool: a Deployment of always-on workers that subscribe as a NATS
+queue group and stay warm (no per-task cold start, cached models). A \texttt{TaskDispatcher}
+submits many tasks and collects results on \texttt{results.\textgreater}. Two delivery models
+coexist, and the choice is a deliberate accommodation of leaf-node topology. With
+\texttt{durable=True}, tasks go through a JetStream work-queue stream consumed by a durable pull
+consumer shared across replicas (at-least-once, explicit ack/nak, bounded redelivery)---correct
+when dispatcher and workers share a JetStream domain. With \texttt{durable=False}, tasks use core
+NATS queue groups, which cross leaf-node boundaries that JetStream does not. A symmetric subtlety
+appears on the return path: where subject interest propagates only hub$\to$spoke, results
+published spoke-side never reach the hub, so the worker can optionally POST results to a webhook
+that re-publishes them on the hub. The pool's defaults are NRP-quota-aware
+(\texttt{cpu=1/mem=2Gi} to stay in the ``ignored'' swarm range), and the worker blocks inside
+\texttt{fetch()} rather than sleeping---satisfying the ``no sleeping Jobs'' rule---with an
+idle-exit watchdog that lets the same image run as either a Deployment (run forever) or a
+self-terminating Job (exit after idle). These are small decisions, but each is the difference
+between a demo and something that survives contact with a real multi-tenant cluster.
+
+\section{Transport: making bursting viable over constrained links}\label{sec:tq}
+When work bursts to a remote cluster, the payloads---embeddings, KV-cache pages, feature
+tensors---ride the bus, and on a constrained link they, not the cluster, become the bottleneck
+(\S\ref{sec:eval}). turboquant-pro compresses them so remote bursting stays viable; we report only
+what a deployer needs, not the codec's internals.
+
+\textbf{A distribution-free codec.} Each vector is L2-normalized, rotated by a shared,
+seed-deterministic random rotation, and each rotated coordinate is quantized against a fixed
+Lloyd--Max codebook and bit-packed. The rotation is the trick: by concentration of measure it
+makes the coordinates approximately i.i.d.\ Gaussian \emph{regardless of the input
+distribution}~\cite{turboquant}, so one fixed codebook is near-optimal for any data with no
+training or calibration. The NATS codec frames each embedding as an 8-byte header (version, bits,
+dim, norm) plus $\lceil\text{dim}\cdot\text{bits}/8\rceil$ packed bytes; the same construction
+serves KV-cache pages (with more bits on keys, whose error the softmax amplifies) and even
+supports attention computed directly on the compressed codes~\cite{onlinesoftmax,flashattention},
+though that kernel-level work is out of scope here.
+
+\textbf{What a deployer needs.} Compression is $8$--$16\times$ at $4/3/2$ bits with reconstruction
+cosine $0.94$--$0.995$, and is \emph{distribution-agnostic}---real transformer embeddings reproduce
+the random-vector numbers to within 0.001 (\S\ref{sec:eval}). The deployment rule is simple and we
+evidence it: \emph{compress when the link or bus is the bottleneck}. On a fast LAN it is a wash; on
+a real $\sim$2\,Mbps link it cuts NATS round-trip up to $8.4\times$ for large payloads
+(\S\ref{sec:eval}). Encode/decode are cheap relative to a constrained link but not free, so the
+rule---not a blanket ``always compress''---is what we recommend.
+
+\section{Resource management: keeping pods useful and policy-aligned}\label{sec:bp}
+A burst is only worth its slot if each pod actually fills its GPU---a shared cluster rewards high
+utilization and penalizes hoarding---and only sustainable if the node driving the burst does not
+overheat. batch-probe provides both, as a support mechanism for the fabric.
+
+\subsection{OOM-safe batch right-sizing}
+\texttt{probe\_batch\_size} binary-searches the largest batch that fits, building inputs through a
+caller-supplied \texttt{input\_fn(b)} and running a trial at each candidate. In \emph{infer} mode
+the trial is a forward pass under \texttt{no\_grad}; in \emph{train} mode it instantiates an AdamW
+optimizer and runs a full forward/backward/step, so the search reflects \emph{true} peak training
+memory including optimizer moments---a detail most batch finders miss and under-estimate by
+roughly the optimizer-state factor. OOM is caught and distinguished from genuine errors by message
+inspection; an unconditional \texttt{finally} block deletes trial tensors and flushes the
+allocator before the next iteration, which is what keeps the search stable across repeated OOMs
+(Algorithm~\ref{alg:probe}). Headroom is a multiplicative shrink of the largest success
+(default 0.8$\times$).
+
+\begin{algorithm}[t]
+\caption{OOM-safe batch right-sizing (infer mode)}\label{alg:probe}
+\KwIn{model $M$, \texttt{input\_fn}, range $[\mathrm{lo},\mathrm{hi}]$, headroom $h$}
+$best \gets 0$\;
+\While{$\mathrm{lo}\le\mathrm{hi}$}{
+  $b \gets \lfloor(\mathrm{lo}+\mathrm{hi})/2\rfloor$;\ \ cleanup()\;
+  $ok \gets$ forward$\bigl(M,\texttt{input\_fn}(b)\bigr)$ completes without OOM\;
+  free trial tensors;\ \ cleanup() \tcp*{unconditional: release fragments}
+  \lIf{$ok$}{$best\gets b$;\ $\mathrm{lo}\gets b{+}1$}
+  \lElse{$\mathrm{hi}\gets b{-}1$}
+}
+\Return $\max\!\bigl(1,\lfloor best\,(1-h)\rfloor\bigr)$\;
+\end{algorithm} A generic
+\texttt{probe(work\_fn)} extends the same recovery to any framework (Torch/CuPy/JAX) by abstracting
+the memory-pool flush.
+
+\subsection{Thermal-aware throttling}
+On the local orchestration side, \texttt{ThermalController} keeps the workstation driving a burst
+within a thermal budget. Rather than a fixed temperature threshold, it estimates thermal state
+with a two-state Kalman filter~\cite{kalman} (temperature and its rate) and acts on the
+\emph{predicted} trajectory: when it forecasts an overshoot within a short horizon it throttles
+worker-thread count \emph{before} the limit is reached, using the filter's rate estimate as a clean
+derivative. The same temperature oracle backs a one-shot thread-capacity search and an
+admission-gating job manager. We keep this brief deliberately---it is a support mechanism here, not
+the contribution---and note that thermal sensing is currently Linux-only.
+
+\section{Evaluation}\label{sec:eval}
+We evaluate the fabric in three tiers by the infrastructure each needs, plus the GPU-sizing
+demonstration. Every number below is \emph{our own} measurement, reproducible from the released
+harness (\S\ref{sec:artifact}); we do not re-run the supporting projects' internal benchmarks, and
+report only what bears on the bursting use case.
+
+\textbf{Experimental setup.} The workstation is a remote client. The on-premises node (``Atlas'')
+has two NVIDIA GV100 32\,GB GPUs; it runs the NATS hub and the Tier-1/2 measurements. The shared
+cluster is NRP Nautilus (namespace \texttt{ssu-atlas-ai}), reached from Atlas via \texttt{kubectl},
+with a leaf-node pod bridging the cluster to the hub. The Tier-2 ``real hop'' traverses a
+wide-area overlay link ($\sim$90\,ms RTT, $\sim$2\,Mbps effective). All cluster runs use
+ignored-range pods (CPU\,$=$\,1, mem\,$=$\,2\,GiB) and at most four concurrent pods, to stay within
+policy.
+
+\textbf{Measurement protocol.} Latencies are p50/p99 over 40--500 requests after warm-up;
+throughput is the wall-clock rate over the batch. Tier-2 round-trips are timed on the requesting
+host with a single clock; for the real hop the responder runs on Atlas and the requester on the
+remote workstation with \emph{no} co-located subscriber, so every request crosses the wire. Tier-3
+cold-start is timed from Job submission to the Job's completion condition, with the
+schedule$\to$container-start split read from the pod's own Kubernetes timestamps. Codec
+encode/decode is timed in isolation (Tier~1) and excluded from the transport loop.
+
+\subsection{Compression (Tier 1)}
+On dim-1024 vectors the codec gives ratios of $7.9/10.4/15.5\times$ at $4/3/2$-bit with
+reconstruction cosine $0.995/0.978/0.94$ (Fig.~\ref{fig:t1}). Re-running on real
+\texttt{bge-small-en-v1.5} embeddings (20newsgroups, $n{=}3000$, native dim 384) gives
+\emph{identical} ratio and cosine within 0.001 at matched dimension---confirming the
+distribution-agnostic property empirically. The analytic transfer model follows: a 1\,MB batch
+moves in $\sim$84\,ms at 100\,Mbps but $\sim$8\,ms compressed (a $\sim$63\,ms net saving after
+encode) and is a wash at 1\,Gbps---the hypothesis Tier~2 tests. Cosine is a fidelity proxy, not a
+downstream-task guarantee.
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{figures/fig_tier1_compression.pdf}
+\caption{Tier~1: compression ratio and fidelity vs.\ bit-width; real embeddings track random
+within 0.001 cosine.}\label{fig:t1}
+\end{figure}
+
+\subsection{Transport (Tier 2)}
+On a loopback bus (Table~\ref{tab:t2lo}) the $\sim$10$\times$ smaller payload already gives up to
+$\sim$6$\times$ lower round-trip for large batches---payload size dominates even with no network.
+The result loopback cannot show is the \emph{real hop} (Table~\ref{tab:t2}, Fig.~\ref{fig:t2}):
+over a real $\sim$2\,Mbps link the win scales with payload, from $1.2\times$ (4\,KB, latency-bound)
+to $8.4\times$ (256\,KB, link-bound), approaching the raw ratio as the link dominates. This
+demonstrates the crossover on a real link. Encode cost is excluded from the loop (it is in
+Tier~1), so the speedups are not free.
+
+\begin{table}[t]\centering\caption{Tier~2 loopback (3-bit; p50/p99 ms, msg/s).}\label{tab:t2lo}
+\begin{tabular}{rrr}\toprule
+batch & raw & compressed \\\midrule
+1   & 0.52 / 1.01 / 1768 & 0.38 / 0.90 / 2261 \\
+32  & 1.69 / 3.12 / 561  & 0.40 / 1.37 / 2127 \\
+256 & 6.99 / 11.34 / 137 & 1.20 / 2.61 / 783  \\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]\centering\caption{Tier~2 over a real $\sim$2\,Mbps hop (3-bit, p50).}\label{tab:t2}
+\begin{tabular}{rrrr}\toprule
+batch & raw & compressed & speedup \\\midrule
+1  & 4\,KB / 85\,ms   & 0.4\,KB / 71\,ms & $1.2\times$ \\
+16 & 64\,KB / 383\,ms & 6\,KB / 105\,ms  & $3.6\times$ \\
+64 & 256\,KB / 1119\,ms & 24\,KB / 134\,ms & $8.4\times$ \\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{figures/fig_tier2_crossover.pdf}
+\caption{Tier~2: compression speedup grows with payload on a real bandwidth-limited link.}
+\label{fig:t2}
+\end{figure}
+
+\subsection{Cluster: cold-start, warm-pool, scaling (Tier 3)}
+Ephemeral CPU Jobs (ignored range, one at a time, auto-cleaned) cold-start in median $\sim$6.6\,s
+($5.1$--$7.6$\,s, $n{=}5$), of which the K8s schedule$\to$container-start is $\sim$1--3\,s. A
+persistent pool of $N$ queue-group workers driven from the hub (Table~\ref{tab:t3},
+Fig.~\ref{fig:t3}) serves at $\sim$67\,ms per task---removing the $\sim$100$\times$ cold-start
+penalty. Throughput plateaus at $\sim$930/s by two workers, and honestly so: for trivial I/O-bound
+tasks the ceiling is concurrency\,$\div$\,RTT (Little's law, $64/0.067\approx 955$/s), not worker
+count---one to two pods saturate the WAN link. Worker-count scaling is expected to matter for
+\emph{compute-bound} tasks. Finally, batch-probe sized a BERT-base-scale encoder to batch 204 on a
+GV100 and the burst ran at \textbf{94.4\% mean / 100\% peak GPU utilization} at a safe
+61$^\circ$C---far above the $>$40\% policy expectation. (The batch is bounded by a safety-capped
+search, not device memory; the utilization is the result.)
+
+\begin{table}[t]\centering\caption{Tier~3 warm-pool + scaling (1\,KB tasks, concurrency 64).}\label{tab:t3}
+\begin{tabular}{rrrr}\toprule
+workers & throughput & p50 & p99 \\\midrule
+1 & 782/s & 71\,ms & 113\,ms \\
+2 & 924/s & 68\,ms & 80\,ms \\
+4 & 936/s & 67\,ms & 78\,ms \\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=\columnwidth]{figures/fig_tier3_scaling.pdf}
+\caption{Tier~3: warm-pool throughput and latency vs.\ workers; throughput is bounded by
+concurrency$\div$RTT, not pod count, for trivial tasks.}\label{fig:t3}
+\end{figure}
+
+\section{Threats to validity}\label{sec:threats}
+We state these so the numbers are read correctly. \textbf{Synthetic data (Tier 1):} real bge
+embeddings reproduce the random numbers within 0.001; cosine remains a fidelity proxy.
+\textbf{Loopback (Tier 2):} addressed by the real $\sim$2\,Mbps hop ($1.2\!\to\!8.4\times$); it is
+one overlay (likely relayed) path---a characterized datacenter link would pin absolute bandwidth.
+\textbf{Cold-start realism (Tier 3):} warm node + cached image + \texttt{kubectl wait} inflate the
+total; the K8s breakdown isolates the cluster-side cost; warm-pool and a real NATS-join are
+measured, while a cold image pull and a GPU-image run remain. \textbf{Scaling:} the plateau is
+explained by Little's law, not presented as pod-count scaling; a compute-bound load is the named
+next run. \textbf{Portability:} batch-probe's
+thermal sensing is Linux-only and its feedforward is one-sided. \textbf{Cluster citizenship:} the
+harness is policy-safe by construction (ignored-range pods, $\le$4 concurrent, exit-0 Jobs, TTL +
+delete cleanup, an explicit policy gate, and---above the harness---the controller's politeness
+backoff).
+
+\section{Discussion}\label{sec:discussion}
+``Effective'' use is batch-probe sizing pods to high utilization (94\% measured); ``policy-safe''
+is the politeness controller plus the gate, short runs, and cleanup. The deployment rule for
+compression is now evidenced: compress when the link or bus is the bottleneck---a wash on a fast
+LAN, a large and growing win on a real WAN-class link.
+
+\textbf{Lessons learned.} Three points generalize. First, on a multi-tenant cluster the
+\emph{usage policy is a first-class design constraint}: it shaped the politeness controller, the
+ignored-range defaults, and the no-sleep worker as much as any performance goal, and a benchmark
+that strays outside policy is itself a bug. Second, \emph{leaf-node federation leaks into the
+application}: the durable-vs-core dispatch choice and the result webhook both exist only because
+JetStream and subject interest do not cross a leaf link symmetrically---a from-scratch design that
+ignored this would deadlock on the return path. Third, \emph{honest negatives beat flattering
+curves}: reporting the Little's-law plateau and labeling the cold-start as warm-node/cached-image
+makes the result more useful to an operator than a scaling plot that does not hold.
+
+\textbf{When to use which shape.} An ephemeral Job costs a $\sim$6.6\,s cold start but holds no
+resources between bursts---right for occasional or embarrassingly parallel work. A persistent pool
+pays that once and serves at $\sim$67\,ms but occupies its slots---right for interactive or
+sustained workloads, provided it is sized within policy and torn down when idle. The bus makes
+switching a configuration choice, not a rewrite.
+
+\section{Related work}
+\textbf{Bursting and task frameworks.} Spilling local work to remote capacity is long-studied:
+HTCondor flocking~\cite{htcondor} federates pools; Globus Compute/funcX~\cite{funcx} offers a
+federated function-serving fabric; Ray~\cite{ray}, Dask~\cite{dask}, and Parsl~\cite{parsl} build
+task graphs over remote workers. All treat the remote resource as an external system one submits
+to and polls. Message-oriented task systems (Celery, RabbitMQ workers) put a broker between
+producer and consumer, and Kubernetes-native batch layers (Kueue, Volcano) schedule Jobs beneath
+the application. Two things set our approach apart: \emph{orientation}---containerized pods become
+first-class subscribers on the researcher's own bus, so a burst is a publish inside the event loop
+rather than a hand-off---and an explicit \emph{politeness} control loop that probes a shared,
+multi-tenant cluster and backs off to yield to other tenants, which the submit-and-poll model
+leaves to the user.
+
+\textbf{Quantization and attention.} turboquant-pro builds on the random-rotation,
+near-optimal-distortion line of TurboQuant~\cite{turboquant} and the broader embedding/KV-cache
+quantization literature; its compute-on-codes fused decode applies online-softmax and
+IO-aware attention techniques~\cite{onlinesoftmax,flashattention} in the \emph{code} domain so that
+quantized keys and values are never reconstructed. Our paper does not propose a new codec; it
+contributes a measured account of \emph{when} on-wire compression pays for the bursting use case,
+and the systems integration that makes a quantized payload a transparent bus primitive.
+
+\textbf{Resource and thermal control.} OOM-driven batch-size search is folklore; batch-probe makes
+it robust (optimizer-state-aware peak-memory accounting, a unified multi-framework OOM-recovery
+path). Thermal management of CPUs and accelerators is usually fixed-threshold throttling;
+batch-probe instead estimates thermal state with a Kalman filter~\cite{kalman} and acts on the
+\emph{predicted} trajectory, throttling parallelism before overshoot---closer to model-predictive
+control than to a thermostat.
+
+\section{Artifact availability}\label{sec:artifact}
+All three projects are open and on PyPI---\texttt{nats-bursting}~\cite{natsbursting},
+\texttt{turboquant-pro}~\cite{turboquantpro}, and \texttt{batch-probe}~\cite{batchprobe};
+Table~\ref{tab:impl} reports their shipped size. The benchmark harness
+reproduces every measurement here:
+\texttt{bench\_compression.py} (Tier~1, with a real-embedding variant), \texttt{bench\_transport.py}
+and the co-existing real-hop driver (Tier~2), and \texttt{bench\_cluster.py} with
+\texttt{--mode cold|warm|scale} (Tier~3), the last gated behind \texttt{--i-have-checked-nrp-policy}.
+Result files and a \texttt{make\_figures.py} that regenerates every figure are committed alongside.
+
+\begin{table}[t]\centering\caption{Shipped implementation per project (importable package or
+binary; excludes tests, benchmarks, and experiment scripts).}\label{tab:impl}
+\begin{tabular}{llr}\toprule
+project / component & language & LOC \\\midrule
+nats-bursting controller & Go & 752 \\
+nats-bursting client + pools & Python & 1{,}398 \\
+turboquant-pro & Python (+CUDA via CuPy) & 11{,}379 \\
+batch-probe & Python & 1{,}082 \\\midrule
+\textbf{total} & & \textbf{14{,}611} \\\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Conclusion}
+nats-bursting, turboquant-pro, and batch-probe form a small, composable, open pipeline that makes
+a shared, containerized cluster usable from inside the event loop---effectively, and within
+policy by construction. We described each system's architecture, including the politeness
+controller, the compute-on-codes codec, and the Kalman-filtered thermal governor, and quantified
+the composition with real measurements, threats stated and remaining runs scoped. More broadly,
+the pattern---cluster pods as first-class subscribers reached over an outbound leaf link, behind a
+controller that defers to its neighbors---generalizes to any Kubernetes cluster a researcher can
+bridge to, and the policy-safe discipline it enforces is the right default for sharing a
+multi-tenant resource.
+
+\bibliographystyle{IEEEtran}
+\bibliography{paper}
+
+\end{document}

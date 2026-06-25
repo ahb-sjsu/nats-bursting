@@ -1,0 +1,85 @@
+\relax 
+\citation{nautilus}
+\citation{nautilus}
+\providecommand \oddpage@label [2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {I}Introduction}{1}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {II}Background}{1}{}\protected@file@percent }
+\citation{nats}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Two shapes, one bus. Ephemeral bursts go workstation$\to $Go controller$\to $Kubernetes Job; persistent pools are queue-group worker Deployments the client dispatches to directly. Both reach the workstation over an outbound leaf link.}}{2}{}\protected@file@percent }
+\newlabel{fig:arch}{{1}{2}{}{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {III}nats-bursting: the bursting fabric}{2}{}\protected@file@percent }
+\newlabel{sec:bursting}{{III}{2}{}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-A}}The control plane and its politeness controller}{2}{}\protected@file@percent }
+\@writefile{loa}{\contentsline {algocf}{\numberline {1}{\ignorespaces Polite admission decision}}{2}{}\protected@file@percent }
+\newlabel{alg:polite}{{1}{2}{}{algocf.1}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {I}{\ignorespaces Politeness controller defaults.}}{2}{}\protected@file@percent }
+\newlabel{tab:cfg}{{I}{2}{}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-B}}The Python client and the \texttt  {\%\%burst} magic}{2}{}\protected@file@percent }
+\citation{turboquant}
+\citation{onlinesoftmax,flashattention}
+\citation{kalman}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {III-C}}Persistent pools, queue groups, and leaf federation}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {IV}Transport: making bursting viable over constrained links}{3}{}\protected@file@percent }
+\newlabel{sec:tq}{{IV}{3}{}{section.4}{}}
+\@writefile{loa}{\contentsline {algocf}{\numberline {2}{\ignorespaces OOM-safe batch right-sizing (infer mode)}}{3}{}\protected@file@percent }
+\newlabel{alg:probe}{{2}{3}{}{algocf.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {V}Resource management: keeping pods useful and policy-aligned}{3}{}\protected@file@percent }
+\newlabel{sec:bp}{{V}{3}{}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-A}}OOM-safe batch right-sizing}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {V-B}}Thermal-aware throttling}{3}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VI}Evaluation}{4}{}\protected@file@percent }
+\newlabel{sec:eval}{{VI}{4}{}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-A}}Compression (Tier 1)}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-B}}Transport (Tier 2)}{4}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Tier~1: compression ratio and fidelity vs.\ bit-width; real embeddings track random within 0.001 cosine.}}{4}{}\protected@file@percent }
+\newlabel{fig:t1}{{2}{4}{}{figure.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {II}{\ignorespaces Tier~2 loopback (3-bit; p50/p99 ms, msg/s).}}{4}{}\protected@file@percent }
+\newlabel{tab:t2lo}{{II}{4}{}{table.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {\mbox  {VI-C}}Cluster: cold-start, warm-pool, scaling (Tier 3)}{4}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {VII}Threats to validity}{4}{}\protected@file@percent }
+\newlabel{sec:threats}{{VII}{4}{}{section.7}{}}
+\citation{htcondor}
+\citation{funcx}
+\citation{ray}
+\citation{dask}
+\citation{parsl}
+\citation{turboquant}
+\citation{onlinesoftmax,flashattention}
+\@writefile{lot}{\contentsline {table}{\numberline {III}{\ignorespaces Tier~2 over a real $\sim $2\,Mbps hop (3-bit, p50).}}{5}{}\protected@file@percent }
+\newlabel{tab:t2}{{III}{5}{}{table.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Tier~2: compression speedup grows with payload on a real bandwidth-limited link.}}{5}{}\protected@file@percent }
+\newlabel{fig:t2}{{3}{5}{}{figure.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {VIII}Discussion}{5}{}\protected@file@percent }
+\newlabel{sec:discussion}{{VIII}{5}{}{section.8}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {IV}{\ignorespaces Tier~3 warm-pool + scaling (1\,KB tasks, concurrency 64).}}{5}{}\protected@file@percent }
+\newlabel{tab:t3}{{IV}{5}{}{table.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Tier~3: warm-pool throughput and latency vs.\ workers; throughput is bounded by concurrency$\div $RTT, not pod count, for trivial tasks.}}{5}{}\protected@file@percent }
+\newlabel{fig:t3}{{4}{5}{}{figure.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {IX}Related work}{5}{}\protected@file@percent }
+\citation{kalman}
+\citation{natsbursting}
+\citation{turboquantpro}
+\citation{batchprobe}
+\bibstyle{IEEEtran}
+\bibdata{paper}
+\bibcite{nautilus}{1}
+\bibcite{nats}{2}
+\bibcite{turboquant}{3}
+\bibcite{onlinesoftmax}{4}
+\bibcite{flashattention}{5}
+\bibcite{kalman}{6}
+\bibcite{htcondor}{7}
+\bibcite{funcx}{8}
+\bibcite{ray}{9}
+\bibcite{dask}{10}
+\bibcite{parsl}{11}
+\bibcite{natsbursting}{12}
+\bibcite{turboquantpro}{13}
+\bibcite{batchprobe}{14}
+\@writefile{lot}{\contentsline {table}{\numberline {V}{\ignorespaces Shipped implementation per project (importable package or binary; excludes tests, benchmarks, and experiment scripts).}}{6}{}\protected@file@percent }
+\newlabel{tab:impl}{{V}{6}{}{table.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {X}Artifact availability}{6}{}\protected@file@percent }
+\newlabel{sec:artifact}{{X}{6}{}{section.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {XI}Conclusion}{6}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{References}{6}{}\protected@file@percent }
+\gdef \@abspage@last{6}

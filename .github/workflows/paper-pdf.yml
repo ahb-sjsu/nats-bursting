@@ -1,0 +1,52 @@
+name: Paper PDF
+
+# Build the practice paper (paper/paper.tex) into a PDF.
+#  - On any push touching paper/**: compile and upload the PDF as a build
+#    artifact (download it from the Actions run). No commit -> no trigger loop.
+#  - On manual dispatch: compile and commit paper/paper.pdf to the branch, so the
+#    typeset paper is readable in-repo without opening Actions (the [skip ci] tag
+#    and the workflow_dispatch-only guard keep it from re-triggering itself).
+
+on:
+  push:
+    paths:
+      - 'paper/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Compile paper.tex
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile LaTeX (latexmk + bibtex)
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: paper
+          root_file: paper.tex
+          # texlive image already ships acmart + ACM-Reference-Format.bst;
+          # latexmk runs pdflatex -> bibtex -> pdflatex x2 automatically.
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-pdf
+          path: paper/paper.pdf
+          if-no-files-found: error
+
+      - name: Commit PDF (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f paper/paper.pdf
+          if git diff --cached --quiet; then
+            echo "PDF unchanged; nothing to commit."
+            exit 0
+          fi
+          git commit -m "paper: rebuild paper.pdf [skip ci]"
+          git push
