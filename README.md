@@ -376,6 +376,26 @@ Currently alpha. Known gaps (tracked in issues):
 - Cancellation subject (`burst.cancel.*`) not yet wired
 - Per-tenant subject ACLs — single-user today
 
+## Benchmarks
+
+A three-tier harness (`benchmarks/`) measures the burst path on real
+infrastructure; every number is reproducible (`bench_cluster.py --mode
+cold|warm|scale`, gated behind `--i-have-checked-nrp-policy`).
+
+| Tier | What | Result |
+|---|---|---|
+| 1 — compression | turboquant-pro NATS codec | 8–16× smaller payloads at cosine 0.94–0.995; **identical on real vs. random embeddings** (distribution-agnostic) |
+| 2 — transport | NATS round-trip, raw vs. compressed | loopback ~6× for large batches; **real ~2 Mbps hop: 1.2× → 3.6× → 8.4×** as payload grows |
+| 3 — cluster (NRP) | ephemeral Job vs. warm pool | cold-start **~6.6 s** vs. warm-pool **~67 ms**; throughput plateaus ~930/s (concurrency ÷ RTT, Little's law) |
+| GPU sizing | batch-probe on a GV100 | a burst ran at **94% GPU utilization** |
+
+The composition with [**turboquant-pro**](https://pypi.org/project/turboquant-pro)
+(on-wire compression) and [**batch-probe**](https://pypi.org/project/batch-probe)
+(GPU right-sizing + thermal control) is written up as a practice paper in
+[`paper/`](paper/) (targeting CANOPIE-HPC @ SC26). See
+[`benchmarks/README.md`](benchmarks/README.md) for the full tables, the
+measurement method, and threats to validity.
+
 ## Citation
 
 If you use `nats-bursting` in academic work:

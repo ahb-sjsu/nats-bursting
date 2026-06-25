@@ -1,8 +1,9 @@
 # Bursting AI Workloads to a Shared Cluster over NATS: A Compression- and GPU-Aware Pipeline for Effective, Policy-Safe Use of NRP Nautilus
 
-*Draft (practice & experience paper). Target: PEARC — ACM `acmart` format, ~6 pp. This
-markdown draft carries the full argument and the real measured numbers; conversion to
-`acmart` LaTeX + figures is the remaining production step.*
+*Draft (practice & experience paper). **Target: CANOPIE-HPC @ SC26** (IEEE format; paper
+deadline Aug 14, 2026). The submission artifact is `paper.tex` (IEEEtran) + `paper.bib` +
+`figures/`; this markdown carries the same argument in readable form. Alt venues: ECHO @ SC26
+(Aug 15), INDIS (Jul 25).*
 
 ## Abstract
 
@@ -140,9 +141,13 @@ I/O-bound tasks the ceiling is *concurrency ÷ RTT* (Little's law, 64 / 0.067 s 
 worker count — one to two workers already saturate the ~67 ms WAN link. Worker-count scaling is
 expected to matter for *compute-bound* tasks, where each task occupies a worker.
 
-**Not yet measured:** a true cold image pull, a GPU-image run, GPU utilization under batch-probe
-sizing, and a compute-bound scaling workload (to show worker-count scaling). These are scoped,
-policy-gated next runs.
+**Effective use (batch-probe).** The third tool, demonstrated: batch-probe sized a BERT-base-scale
+encoder to batch 204 on a GV100 and the burst ran at **94.4% mean / 100% peak GPU utilization** at
+a safe 61 °C — far above NRP's >40% sustained-util expectation. (The batch number is bounded by a
+safety-capped search range, not device memory; the achieved *utilization* is the result.)
+
+**Not yet measured:** a true cold image pull, a GPU-image cold-start, and a compute-bound scaling
+workload (to show worker-count scaling). These are scoped, policy-gated next runs.
 
 ## 5. Threats to validity
 

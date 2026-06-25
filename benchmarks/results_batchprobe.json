@@ -1,0 +1,18 @@
+{
+  "description": "batch-probe demo: per-pod GPU right-sizing + achieved utilization for an AI burst workload (the 'effective use' half of the pipeline thesis).",
+  "tool": "batch_probe 0.4.0 (probe_batch_size, infer mode)",
+  "model": "BERT-base-scale TransformerEncoder (768d, 12 layers, 12 heads, seq 256)",
+  "gpu": "NVIDIA GV100 32GB (Atlas GPU 1, isolated via CUDA_VISIBLE_DEVICES=1)",
+  "search": {
+    "low": 1, "high": 256, "headroom": 0.2,
+    "note": "high capped at 256 for safety; returned batch ~= high*(1-headroom), bounded by the safety cap, NOT the device memory limit (only 2.4 GB used at batch 204)"
+  },
+  "result": {
+    "max_batch": 204,
+    "mean_util_pct": 94.4,
+    "peak_util_pct": 100,
+    "peak_temp_c": 61,
+    "mem_mib": 2437
+  },
+  "finding": "batch-probe selects a fitting batch and the burst saturates the device: 94.4% mean / 100% peak GPU utilization at a safe 61 C -- far above NRP's >40% sustained-util expectation. This demonstrates the 'effective use' claim; the absolute max-batch number is bounded by the safety-capped search range, not the GPU."
+}

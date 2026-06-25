@@ -117,6 +117,12 @@ the ceiling is *concurrency ÷ RTT* (Little's law: 64 / 0.067 s ≈ 955/s), **no
 *compute-bound* tasks (where each task occupies a worker); demonstrating that needs a CPU/GPU
 workload and is the natural next run.
 
+**Measured GPU right-sizing** (batch-probe; `results_batchprobe.json`): on a GV100, batch-probe
+sized a BERT-base-scale encoder and the burst ran at **94.4% mean / 100% peak GPU utilization**
+at 61 °C — far above NRP's >40% expectation, demonstrating the "effective use" half of the
+pipeline. (The selected batch is bounded by a safety-capped search, not device memory; the
+utilization is the result.)
+
 ## Methodology & threats to validity (anticipating the critic)
 
 We state these up front so the numbers are read correctly; each has a planned fix.

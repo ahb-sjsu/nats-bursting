@@ -3,9 +3,10 @@
 **Working title:** *Bursting AI Workloads to a Shared Cluster over NATS: A Compression- and
 GPU-Aware Pipeline for Effective, Policy-Safe Use of NRP Nautilus*
 
-**Target:** PEARC (Practice & Experience in Advanced Research Computing) — short/technical
-paper, ACM format, ~6 pp. Alt: IEEE eScience short paper, or an SC workshop (workflows/clouds).
-Audience: the ACCESS/NRP research-computing community that already lives this pain.
+**Target:** CANOPIE-HPC @ SC26 (Containers & New Orchestration Paradigms in HPC) — IEEE format,
+paper deadline **Aug 14, 2026**; artifact required (we have it). Alt: ECHO @ SC26 (Aug 15,
+edge–cloud–HPC continuum), INDIS @ SC26 (Jul 25, networking/data-movement angle), or PEARC27
+(2027). Audience: the SC/NRP research-computing community that lives this pain.
 
 **Status:** Tier 1 (random **+ real-embedding check**), Tier 2 (loopback **+ real network
 hop**), and Tier 3 (cold-start **+ warm-pool + scaling**) all have real numbers (committed in
@@ -66,8 +67,9 @@ Three tiers, by infrastructure (mirror `benchmarks/`).
   driver on Atlas hub, 1 KB tasks): latency **~67 ms** (vs 6.6 s cold start → ~100× overhead
   removed); throughput **plateaus ~930/s by 2 workers** — for trivial I/O tasks the ceiling is
   concurrency÷RTT (Little's law 64/67 ms ≈ 955/s), not worker count (worker-scaling needs a
-  compute-bound load). *Still to run:* true cold image pull, GPU-image + GPU-util under
-  batch-probe, compute-bound scaling.
+  compute-bound load). **batch-probe (effective use):** sized an encoder to batch 204 on a GV100
+  → **94.4% mean / 100% peak GPU util** at 61 °C (>> NRP's 40%). *Still to run:* true cold image
+  pull, GPU-image cold-start, compute-bound scaling.
 
 ## 5. Threats to validity (anticipated, with mitigations)
 State these explicitly; reviewers will. (Full version in `benchmarks/README.md`.)
