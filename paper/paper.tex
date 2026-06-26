@@ -233,9 +233,10 @@ makes the coordinates approximately i.i.d.\ Gaussian \emph{regardless of the inp
 distribution}~\cite{turboquant}, so one fixed codebook is near-optimal for any data with no
 training or calibration. The NATS codec frames each embedding as an 8-byte header (version, bits,
 dim, norm) plus $\lceil\text{dim}\cdot\text{bits}/8\rceil$ packed bytes; the same construction
-serves KV-cache pages (with more bits on keys, whose error the softmax amplifies) and even
-supports attention computed directly on the compressed codes~\cite{onlinesoftmax,flashattention},
-though that kernel-level work is out of scope here.
+serves KV-cache \emph{values}, while \emph{keys}---whose error the softmax amplifies---instead use a
+per-channel scheme (per-vector normalization is near-lossless for values but catastrophic for keys),
+and values support attention computed directly on the compressed
+codes~\cite{onlinesoftmax,flashattention}, though that kernel-level work is out of scope here.
 
 \textbf{What a deployer needs.} Compression is $8$--$16\times$ at $4/3/2$ bits with reconstruction
 cosine $0.94$--$0.995$, and is \emph{distribution-agnostic}---real transformer embeddings reproduce
@@ -441,7 +442,7 @@ leaves to the user.
 near-optimal-distortion line of TurboQuant~\cite{turboquant} and the broader embedding/KV-cache
 quantization literature; its compute-on-codes fused decode applies online-softmax and
 IO-aware attention techniques~\cite{onlinesoftmax,flashattention} in the \emph{code} domain so that
-quantized keys and values are never reconstructed. Our paper does not propose a new codec; it
+quantized values are never reconstructed (per-channel keys are reconstructed). Our paper does not propose a new codec; it
 contributes a measured account of \emph{when} on-wire compression pays for the bursting use case,
 and the systems integration that makes a quantized payload a transparent bus primitive.
 

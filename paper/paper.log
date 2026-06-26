@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  25 JUN 2026 13:32
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  25 JUN 2026 17:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -762,33 +762,33 @@ Underfull \hbox (badness 10000) in paragraph at lines 142--152
 LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <10> not available
 (Font)              Font shape `T1/pcr/m/sl' tried instead on input line 195.
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 254--264
+Underfull \hbox (badness 10000) in paragraph at lines 255--265
 []\T1/pcr/m/n/10 probe_batch_size \T1/ptm/m/n/10 binary-searches the largest
  []
 
 
-Underfull \hbox (badness 2073) in paragraph at lines 254--264
+Underfull \hbox (badness 2073) in paragraph at lines 255--265
 \T1/ptm/m/n/10 train-ing mem-ory in-clud-ing op-ti-mizer moments---a de-tail
  []
 
 
-Underfull \hbox (badness 1383) in paragraph at lines 254--264
+Underfull \hbox (badness 1383) in paragraph at lines 255--265
 \T1/ptm/m/n/10 optimizer-state fac-tor. OOM is caught and dis-tin-guished
  []
 
 
-Underfull \hbox (badness 1412) in paragraph at lines 266--266
+Underfull \hbox (badness 1412) in paragraph at lines 267--267
 []\T1/ptm/b/n/10 Algorithm 2: \T1/ptm/m/n/10 OOM-safe batch right-sizing (in-fe
 r
  []
 
 [3]
-Underfull \hbox (badness 10000) in paragraph at lines 314--322
+Underfull \hbox (badness 10000) in paragraph at lines 315--323
 []\T1/ptm/m/n/10 On dim-1024 vec-tors the codec gives ra-tios of
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 314--322
+Underfull \hbox (badness 10000) in paragraph at lines 315--323
 \OT1/cmr/m/n/10 7\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 9\OML/cmm/m/it/10 =\OT1/cmr/
 m/n/10 10\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 4\OML/cmm/m/it/10 =\OT1/cmr/m/n/10 1
 5\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5\OMS/cmsy/m/n/10 ^^B$ \T1/ptm/m/n/10 at $\O
@@ -797,7 +797,7 @@ n/10 2$\T1/ptm/m/n/10 -bit with re-con-struc-tion
  []
 
 
-Underfull \hbox (badness 4316) in paragraph at lines 314--322
+Underfull \hbox (badness 4316) in paragraph at lines 315--323
 \T1/ptm/m/n/10 co-sine $\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 995\
 OML/cmm/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 978\OML/cmm
 /m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 94$ \T1/ptm/m/n/10
@@ -805,18 +805,18 @@ OML/cmm/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 978\OML/cmm
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 314--322
+Underfull \hbox (badness 10000) in paragraph at lines 315--323
 \T1/pcr/m/n/10 bge-small-en-v1.5 \T1/ptm/m/n/10 em-bed-dings (20news-groups,
  []
 
 
-Underfull \hbox (badness 7759) in paragraph at lines 314--322
+Underfull \hbox (badness 7759) in paragraph at lines 315--323
 \OML/cmm/m/it/10 n[]\OT1/cmr/m/n/10 3000$\T1/ptm/m/n/10 , na-tive dim 384) give
 s \T1/ptm/m/it/10 iden-ti-cal \T1/ptm/m/n/10 ra-tio and
  []
 
 
-Underfull \hbox (badness 3364) in paragraph at lines 314--322
+Underfull \hbox (badness 3364) in paragraph at lines 315--323
 \T1/ptm/m/n/10 co-sine within 0.001 at matched dimension---confirming
  []
 
@@ -824,50 +824,50 @@ Underfull \hbox (badness 3364) in paragraph at lines 314--322
 File: figures/fig_tier1_compression.pdf Graphic file (type pdf)
 <use figures/fig_tier1_compression.pdf>
 Package pdftex.def Info: figures/fig_tier1_compression.pdf  used on input line 
-324.
+325.
 (pdftex.def)             Requested size: 252.0pt x 161.28026pt.
 <figures/fig_tier2_crossover.pdf, id=33, 361.35pt x 231.26399pt>
 File: figures/fig_tier2_crossover.pdf Graphic file (type pdf)
 <use figures/fig_tier2_crossover.pdf>
 Package pdftex.def Info: figures/fig_tier2_crossover.pdf  used on input line 35
-7.
+8.
 (pdftex.def)             Requested size: 252.0pt x 161.28026pt.
 <figures/fig_tier3_scaling.pdf, id=34, 361.35pt x 231.26399pt>
 File: figures/fig_tier3_scaling.pdf Graphic file (type pdf)
 <use figures/fig_tier3_scaling.pdf>
-Package pdftex.def Info: figures/fig_tier3_scaling.pdf  used on input line 385.
+Package pdftex.def Info: figures/fig_tier3_scaling.pdf  used on input line 386.
 
 (pdftex.def)             Requested size: 252.0pt x 161.28026pt.
 [4 <./figures/fig_tier1_compression.pdf>] [5 <./figures/fig_tier2_crossover.pdf
 > <./figures/fig_tier3_scaling.pdf>]
-Underfull \hbox (badness 6808) in paragraph at lines 448--454
+Underfull \hbox (badness 6808) in paragraph at lines 449--455
 \T1/ptm/m/n/10 state-aware peak-memory ac-count-ing, a uni-fied multi-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 456--464
+Underfull \hbox (badness 10000) in paragraph at lines 457--465
 []\T1/ptm/m/n/10 All three projects are open and on PyPI---
  []
 
 
-Underfull \hbox (badness 5802) in paragraph at lines 456--464
+Underfull \hbox (badness 5802) in paragraph at lines 457--465
 \T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 [12], \T1/pcr/m/n/10 turboquant-pro
  \T1/ptm/m/n/10 [13], and
  []
 
 
-Underfull \hbox (badness 7851) in paragraph at lines 456--464
+Underfull \hbox (badness 7851) in paragraph at lines 457--465
 \T1/ptm/m/n/10 vari-ant), \T1/pcr/m/n/10 bench_transport.py \T1/ptm/m/n/10 and 
 the co-existing
  []
 
 
-Underfull \hbox (badness 2875) in paragraph at lines 456--464
+Underfull \hbox (badness 2875) in paragraph at lines 457--465
 \T1/pcr/m/n/10 --i-have-checked-nrp-policy\T1/ptm/m/n/10 . Re-sult files and a
  []
 
 
-Underfull \hbox (badness 4543) in paragraph at lines 456--464
+Underfull \hbox (badness 4543) in paragraph at lines 457--465
 \T1/pcr/m/n/10 make_figures.py \T1/ptm/m/n/10 that re-gen-er-ates ev-ery fig-ur
 e are
  []
@@ -920,7 +920,7 @@ nts/type1/urw/courier/ucrro8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX
 /fonts/type1/urw/times/utmbi8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
 X/fonts/type1/urw/times/utmr8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
 X/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (6 pages, 319230 bytes).
+Output written on paper.pdf (6 pages, 319287 bytes).
 PDF statistics:
  279 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

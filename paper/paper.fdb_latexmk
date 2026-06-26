@@ -1,13 +1,13 @@
 # Fdb version 4
-["bibtex paper"] 1782419560.15369 "paper.aux" "paper.bbl" "paper" 1782419565.83703 0
+["bibtex paper"] 1782419560.15369 "paper.aux" "paper.bbl" "paper" 1782433579.8453 0
   "./paper.bib" 1782411445.95055 3986 a43b5550f642faadeebaf213670b0f6d ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/bibtex/bst/ieeetran/IEEEtran.bst" 1440622569 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "paper.aux" 1782419562.81284 6049 2879e6e83db63402c2930cfd73b4d927 "pdflatex"
+  "paper.aux" 1782433575.31085 6049 2879e6e83db63402c2930cfd73b4d927 "pdflatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["pdflatex"] 1782419561.0494 "paper.tex" "paper.pdf" "paper" 1782419565.84241 0
+["pdflatex"] 1782433573.50199 "paper.tex" "paper.pdf" "paper" 1782433579.85254 0
   "C:/Users/abptl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1782349070.34145 187843 6299bb1c1c3692ad471f2e0dfc73f577 ""
   "C:/Users/abptl/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1771613309.01672 13333528 95b7a1fef102f4a60045fb8c628e8496 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458473887 4993 1194fb36dfcb11d9ae9802f2b00b60a3 ""
@@ -168,9 +168,9 @@
   "figures/fig_tier1_compression.pdf" 1782331971.87702 18401 c8af85f4839f0571426b75bbf6e066df ""
   "figures/fig_tier2_crossover.pdf" 1782331971.0696 16737 bb6186140bbeeeb89be5016467a93f07 ""
   "figures/fig_tier3_scaling.pdf" 1782331971.43781 16362 a70ad975b981f374d0e6f282d9eb8288 ""
-  "paper.aux" 1782419562.81284 6049 2879e6e83db63402c2930cfd73b4d927 "pdflatex"
+  "paper.aux" 1782433575.31085 6049 2879e6e83db63402c2930cfd73b4d927 "pdflatex"
   "paper.bbl" 1782419560.80913 3822 bf7650774cb188f10b1fc597ed691844 "bibtex paper"
-  "paper.tex" 1782419542.64658 31542 17839bb9a5784a12366bf9412f4d9187 ""
+  "paper.tex" 1782432594.94681 31691 93e67203ec7e5713bc0a4c5a72b7d7a8 ""
   (generated)
   "paper.aux"
   "paper.log"
