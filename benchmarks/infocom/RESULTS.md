@@ -2,8 +2,17 @@
 
 Runs on the live testbed: driver on the home node, NATS + echo responder on Atlas
 (`nats-server` at `100.68.134.21:4222`, JetStream enabled). Core-NATS request→reply,
-256 B payloads. Raw JSON in `out/`. These are first-pass single-run numbers — honest
-caveats per experiment; the paper needs multi-seed repeats with confidence intervals.
+256 B payloads. Raw JSON in `out/`.
+
+> **Multi-seed update (authoritative for E1/E3/E5).** `out/ms/RESULTS_MULTISEED.md`
+> (5 repeats, mean ± 95% CI, via `multiseed.py`) supersedes the single-run E1/E3/E5
+> numbers below and corrects two single-run artifacts:
+> (1) **E1 throughput** — the single-run 40 msg/s was a low outlier; 5-rep mean is
+> **188 ± 28 msg/s** (consistent with E5 @ window 16 = 158 ± 68).
+> (2) **E3 durability** — durable 81.4 ± 10.6 ms vs non-durable 84.0 ± 6.5 ms publish-ack
+> are **statistically indistinguishable** (overlapping CIs); the WAN RTT dominates the
+> storage cost, so the single-run "durable widens the tail" was noise. RTT medians and
+> the E5 scaling shape both hold up under repeats.
 
 ## E1/E2 — control RTT & throughput by path
 | transport | path | RTT p50 / p95 / p99 (ms) | throughput (msg/s) |
