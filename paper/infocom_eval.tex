@@ -1,0 +1,120 @@
+% nats-bursting -- INFOCOM Evaluation (Section 8). Drop-in; \input after the model.
+% Preamble: \usepackage{booktabs} (optional). References sec:model, sec:controller,
+% sec:thermal, sec:fabric, prop:bound from infocom_model.tex.
+%
+% HONESTY MARKERS: paragraphs tagged %PENDING% describe experiments not yet run;
+% do not present them as results. Numbers below are measured (5-rep mean +/- 95% CI
+% unless noted); see benchmarks/infocom/RESULTS.md and out/ms/.
+
+\section{Evaluation}
+\label{sec:eval}
+
+We evaluate nats-bursting on a production testbed: a home node and an Atlas
+workstation-class node running \texttt{nats-server} with JetStream enabled,
+connected over three paths---co-located (loopback), Tailscale (mesh VPN), and a
+single PAT-forwarded port (\texttt{:4222}). Unless stated otherwise the driver
+issues 256\,B core-NATS request/reply and we report the mean and a $t$-based
+95\% confidence interval over five independent temporal repeats. The study
+answers five questions:
+\textbf{(Q1)} how the federated control path shapes latency and throughput;
+\textbf{(Q2)} what JetStream durability costs;
+\textbf{(Q3)} how the control plane scales with the in-flight window;
+\textbf{(Q4)} the prober detection delay $D$ that governs the bound of
+Prop.~\ref{prop:bound}; and
+\textbf{(Q5)} whether the politeness controller dominates naive and static
+baselines on the goodput--compliance frontier.
+
+\subsection{Control-plane latency and throughput (Q1)}
+\label{sec:eval-rtt}
+Co-located, request/reply RTT is $0.84$\,ms (p50) at $6855$\,msg/s. Over
+Tailscale---one WAN hop to the same responder---RTT rises to $76\pm13$\,ms (p50),
+$171\pm96$ (p95), $302\pm170$ (p99), and closed-loop throughput at a 16-message
+window falls to $188\pm28$\,msg/s. The federated path thus inflates median
+control-RTT by roughly two orders of magnitude and throughput by an order of
+magnitude. Crucially the cost is \emph{round-trip latency}, not server work:
+a synchronous, per-message control loop would be RTT-bound. This is the direct
+empirical motivation for the \emph{epoch-paced} admission controller of
+\S\ref{sec:controller} rather than per-message acknowledgement, and for the
+wide-tail variance ($95\%$ CI on p99 spans $\pm170$\,ms) that any WAN-side
+controller must tolerate.
+%PENDING% The single-port \texttt{:4222} traversal tax (E2) is not yet measured;
+%PENDING% it requires a PAT-forwarding window unavailable during these runs.
+
+\subsection{Durability cost (Q2)}
+\label{sec:eval-durability}
+We compare JetStream publish-to-ack latency for file-backed (durable) and
+memory (non-durable) streams over Tailscale. The medians are
+$81.4\pm10.6$\,ms (durable) and $84.0\pm6.5$\,ms (non-durable), with overlapping
+confidence intervals at every percentile. Over this WAN, file persistence is
+therefore \emph{statistically indistinguishable} from in-memory: the round-trip
+dominates the on-disk write, so durability is effectively free on the latency
+axis. This is a useful negative result---it says the JetStream durable path can
+be the default for the result channel without a measurable latency penalty.
+%PENDING% A server-restart durability test (where memory should not survive and
+%PENDING% file should) is deferred to a controlled maintenance window; the present
+%PENDING% recovery check exercises only client reconnection.
+
+\subsection{Control-plane scaling (Q3)}
+\label{sec:eval-scaling}
+Sweeping the in-flight window $w\in\{1,4,8,16,32\}$, throughput grows
+sub-linearly: $11, 39, 83, 158, 283$\,msg/s respectively (95\% CIs widening from
+$\pm2$ to $\pm128$). The curve is consistent with an RTT- and contention-bound
+closed loop and with the AIMD window dynamics of \S\ref{sec:controller}: useful
+in-flight work scales with the window until queueing and shared-link contention
+flatten the gain---exactly the regime in which additive-increase probing and
+multiplicative back-off are the appropriate control law.
+
+\subsection{Subject interest (Q1, federation)}
+\label{sec:eval-interest}
+On a single server, publishing to a subscribed subject yields $300/300$ delivery
+with zero cross-subject leakage and propagation p50 $169$\,ms, confirming subject
+isolation and correct interest routing.
+%PENDING% The asymmetric leaf-federation interest behavior central to
+%PENDING% \S\ref{sec:fabric} (and the result-webhook return path it motivates)
+%PENDING% requires a two-leaf topology and is not yet measured; the single-server
+%PENDING% result above is a routing sanity check, not the federation claim.
+
+\subsection{Detection delay and the violation bound (Q4)}
+\label{sec:eval-detection}
+The prober's per-call cost (read-only \texttt{nvidia-smi}) is $32.6$\,ms (p50,
+p95 $35.9$). The detection delay $D=\text{poll}+\text{probe}+\text{decision}$
+therefore has a floor of tens of milliseconds. Substituting into
+Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)a)$: for sub-second epochs
+and a moderate window, the predicted steady-state over-admission fraction is
+small and is driven by the probe cost---making $D$ a first-class, measurable knob
+rather than a modeling abstraction.
+%PENDING% The full $D$ under live GPU load (E7 with induced load) is pending a
+%PENDING% thermal-safe window on the shared GPU node.
+
+\subsection{End-to-end goodput versus compliance (Q5)}
+\label{sec:eval-e2e}
+%PENDING% THIS IS THE HEADLINE EXPERIMENT AND IS NOT YET RUN. Do not present as a result.
+\emph{(Design; results pending.)} The end-to-end experiment submits a burst of
+$B$ jobs under three policies---naive (submit-all), static-rate, and the AIMD
+admission controller---into an NRP namespace within fair-use
+(\S\ref{sec:model}: pod cap $K{=}4$, GPU-utilization floor $40\%$). We measure
+burst-completion time, sustained GPU utilization, and the realized over-admission
+rate $\rho$, and we compare the realized $\rho$ against the
+Prop.~\ref{prop:bound} prediction parameterized by the $D$ measured in
+\S\ref{sec:eval-detection}, closing the model$\leftrightarrow$measurement loop.
+The hypothesis is that AIMD dominates both baselines on the goodput--compliance
+frontier: naive violates the cap and the utilization floor under contention;
+static under-utilizes when capacity is available. \textbf{Until this experiment
+is run against a contended, multi-tenant cluster, the central claim of the
+paper---that polite bursting maximizes goodput while bounding policy
+violation---remains unvalidated.}
+
+\subsection{Summary and threats to validity}
+\label{sec:eval-threats}
+The measurements above characterize the \emph{federated control substrate} with
+confidence intervals and even self-correct earlier single-run artifacts (a
+spurious low throughput sample and an apparent durability tail gap both vanished
+under repetition). They do not yet demonstrate the controller in action.
+Principal threats: (i) a single home$\leftrightarrow$node path with \emph{no
+competing tenants}, so the contended capacity $a_t$ of \S\ref{sec:model} is held
+artificially constant; (ii) federation claims measured on one server, not a leaf
+topology; (iii) the AIMD and Kalman controllers (\S\ref{sec:controller},
+\S\ref{sec:thermal}) are analyzed but not yet measured under load; and (iv) no
+comparison against existing bursting systems. \S\ref{sec:eval-e2e} and the leaf,
+partition (E6), and full-$D$ experiments are required before the evaluation
+supports the paper's thesis.
