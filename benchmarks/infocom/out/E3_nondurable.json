@@ -1,0 +1,36 @@
+{
+  "experiment": "E3",
+  "cfg": {
+    "url": "nats://100.68.134.21:4222",
+    "transport": "js-nondurable",
+    "path": "lan",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 200,
+    "concurrency": 1,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "OWNEROW-67O05MG",
+    "git": "4b92108",
+    "ts_unix": 1782758234.9205987
+  },
+  "result": {
+    "publish_ack": {
+      "n_ok": 200,
+      "mean_ms": 87.20722299767658,
+      "p50_ms": 72.72289996035397,
+      "p95_ms": 156.18147007189677,
+      "p99_ms": 356.52348508592695,
+      "sent": 200,
+      "storage": "memory"
+    },
+    "recovery": {
+      "msgs_before": 200,
+      "msgs_after": 300,
+      "survived_restart": 100
+    }
+  }
+}
