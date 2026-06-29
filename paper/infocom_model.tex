@@ -1,0 +1,106 @@
+% nats-bursting -- INFOCOM model sections (drop-in).
+% Preamble (add to main paper if absent):
+%   \usepackage{amsmath,amssymb}
+%   \newtheorem{proposition}{Proposition}
+
+\section{System Model and Problem Formulation}
+\label{sec:model}
+
+A \emph{guest} bursts batch GPU/ML \emph{pods} onto a shared, multi-tenant
+cluster governed by fair-use policy. Time is slotted into control epochs
+$t=0,1,2,\dots$. Let $w_t\in\{0,\dots,K\}$ be the guest's concurrency window
+(in-flight pods), where $K$ is the policy \emph{pod cap}. Let $a_t$ be the number
+of pods the cluster can \emph{productively} run for the guest at epoch $t$; $a_t$
+is set by other tenants, time-varying, and \emph{not directly observable}. The
+useful goodput is $G_t=\min(w_t,a_t)$, while $(w_t-a_t)^{+}$ pods are
+\emph{over-admitted}: they sit pending or idle and pull the guest's sustained
+utilization below the policy floor $U$, marking it a poor citizen. A binary
+\emph{congestion signal} $s_t$ fires when over-admission is detected (a pod
+pending beyond $\tau$, or measured utilization below $U$), with a
+\emph{detection delay} $D$ epochs induced by the prober.
+
+\paragraph{Problem (Polite Bursting).}
+\begin{equation}
+\max_{\{w_t\}}\ \sum_t \min(w_t,a_t)
+\ \ \text{s.t.}\ \
+\underbrace{w_t\le K\ \forall t}_{\text{hard}},\ \
+\underbrace{\rho \triangleq \limsup_{T\to\infty}\tfrac1T\!\!\sum_{t<T}\!\mathbf 1[w_t>a_t]\le \epsilon}_{\text{policy}}.
+\end{equation}
+The constraint is two-sided---stay \emph{below} the cap and \emph{above} the
+utilization floor---distinguishing it from one-sided (loss-only) congestion control.
+
+\section{The Politeness Controller}
+\label{sec:controller}
+Politeness is enforced by control at two scales: a \emph{macro} admission loop
+over the federated messaging fabric, and a \emph{micro} thermal loop at the edge node.
+
+\subsection{Macro tier: admission control (AIMD)}
+The guest adapts its window by additive-increase / multiplicative-decrease:
+\begin{equation}
+w_{t+1}=
+\begin{cases}
+\min(w_t+\alpha,\,K), & s_t=0\ \text{(clean)},\\[2pt]
+\max(\lceil\beta w_t\rceil,\,w_{\min}), & s_t=1\ \text{(congested)},
+\end{cases}
+\quad \alpha>0,\ \beta\in(0,1).
+\end{equation}
+We assume \textbf{(A1)} stationary capacity $a_t\equiv a$, $w_{\min}\le a\le K$;
+\textbf{(A2)} reliable detection within $D$ epochs of an overshoot; \textbf{(A3)}
+fixed $\alpha,\beta,w_{\min},K$.
+
+\begin{proposition}[Hard-cap safety]\label{prop:safety}
+Under the clamped update, $w_t\le K$ for all $t$ deterministically; the pod-cap
+policy is never violated.
+\end{proposition}
+\begin{proof}
+Additive increase is clamped to $K$ and multiplicative decrease cannot increase
+$w_t$; the claim follows by induction on $t$.
+\end{proof}
+
+\begin{proposition}[Steady-state over-admission bound]\label{prop:bound}
+Under \textnormal{(A1)--(A3)} the window forms a periodic sawtooth about $a$, and
+the long-run over-admission fraction satisfies
+\begin{equation}
+\rho \;=\; \frac{D\,\alpha}{(1-\beta)\,(a+D\alpha)}
+\;\approx\; \frac{D\,\alpha}{(1-\beta)\,a}.
+\end{equation}
+Hence for any target $\epsilon\in(0,1)$, choosing $\alpha\le \epsilon(1-\beta)a/D$
+guarantees $\rho\le\epsilon$; as $D\to0$, $\rho\to0$.
+\end{proposition}
+\begin{proof}[Proof sketch]
+After a backoff the window restarts at $\beta(a+D\alpha)$ and rises by $\alpha$
+per clean epoch, reaching $a$ after $\big(a-\beta(a+D\alpha)\big)/\alpha$ epochs
+(no violation), then spends $D$ further epochs above $a$ before detection triggers
+a backoff at peak $a+D\alpha$. Each cycle has $\approx D$ violating epochs out of
+length $L=a(1-\beta)/\alpha + D(1-\beta)$; the ratio gives $\rho$.
+\end{proof}
+
+\paragraph{Goodput--compliance tradeoff.}
+Mean window (hence goodput) rises as $\beta\to1$ while $\rho$ falls as
+$\alpha\to0$; both slow convergence. The pair $(\alpha,\beta)$ thus traces a
+convergence/goodput/compliance Pareto frontier, characterized in
+\S\ref{sec:eval}. Under non-stationary capacity with bounded variation
+$|a_{t+1}-a_t|\le\delta$, the bound loosens by an additive $O(\delta/\alpha)$
+tracking term.
+
+\subsection{Micro tier: Kalman-filtered thermal control}
+\label{sec:thermal}
+At the edge/home node, polite use of shared hardware means holding a thermal
+setpoint while maximizing compute. We model node temperature $T_t$ under load
+$n_t$ (threads / active SMs) as a first-order thermal system with Newtonian
+cooling and process/measurement noise:
+\begin{align}
+T_{t+1} &= T_t + b\,n_t - c\,(T_t - T_{\mathrm{amb}}) + \eta_t, & \eta_t&\sim\mathcal N(0,q),\\
+y_t &= T_t + \nu_t, & \nu_t&\sim\mathcal N(0,r).
+\end{align}
+A Kalman filter maintains $\hat T_t$ via the standard predict/update recursion,
+suppressing sensor noise. The controller applies PID action with feedforward
+\emph{lookahead}: using the model to predict $\hat T_{t+h}$ over horizon $h$, it sets
+\begin{equation}
+n_t = \mathrm{clip}\!\Big(n_{\max} - K_p e_t - K_i\!\!\sum_{k\le t}\! e_k - K_d\,\Delta e_t - K_{\!f}\,(\hat T_{t+h}-T^{\star})\Big),\ \ e_t=\hat T_t-T^{\star},
+\end{equation}
+throttling \emph{before} the setpoint $T^{\star}$ is breached. With a stable plant
+($0<c<1$) and standard PID gain conditions the closed loop is input-to-state
+stable about $T^{\star}$, and the feedforward term curbs overshoot under load
+steps. This is the node-level analogue of the macro admission loop: both maximize
+useful work subject to a shared-resource ceiling.
