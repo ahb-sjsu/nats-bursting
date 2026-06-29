@@ -76,8 +76,21 @@ on the goodput–compliance frontier.
 - **E1–E5, E7** run end-to-end against a live NATS endpoint (and a GPU node for E7).
 - **E6** logs disconnect/reconnect and (for JetStream) message survival; *you*
   induce the partition during the window.
-- **E8** implements the three submit schedulers and the timing/metric structure;
-  the two marked hooks (`submit_one`, `drain_results`) bind to
-  `nats_bursting.client.Client` + your result subject + the on-node prober for
-  GPU-util / violation-rate collection. It requires live cluster access.
+- **E8** submits via the real `nats_bursting.client.Client` and drains
+  `<result_prefix><job_id>` for cold-start / first-result / completion timing;
+  GPU-util + violation rate are sampled on the node by `nats_bursting.probe`. It
+  requires live cluster access and a burst-worker `--image` that publishes a result.
 - Results are raw measurements; nothing is synthesized.
+
+## NRP fair-use compliance (the policy the harness must obey)
+The same policy the paper models also constrains *how we run*:
+- **≤4 pods/user** — E5/E8 keep concurrency ≤ `--kcap 4` (the default).
+- **Utilization vs request must stay in-band** (GPU ≥40%, CPU 20–200%, RAM 20–150%):
+  right-size each job's request (batch-probe) and don't over-admit (the AIMD loop).
+- **No sleep jobs** — the E8 `--image` must do *real work*; a sleep-ending job gets
+  the namespace banned. (The responder's `--work-ms` runs on the *responder* pod, not
+  a submitted Job.)
+- **Free on completion** — submitted Jobs must exit-0; rely on TTL cleanup. Run the
+  long-lived `responder.py` as a **Deployment with minimal request and no GPU** so it
+  never trips the utilization floor.
+- **Storage** — purge harness output volumes; idle volumes are reclaimed after 6 months.
