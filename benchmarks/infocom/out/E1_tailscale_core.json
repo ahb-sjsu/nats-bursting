@@ -1,0 +1,42 @@
+{
+  "experiment": "E1",
+  "cfg": {
+    "url": "nats://100.68.134.21:4222",
+    "transport": "core",
+    "path": "tailscale",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 500,
+    "concurrency": 16,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "OWNEROW-67O05MG",
+    "git": "0f4afda",
+    "ts_unix": 1782757530.8507566
+  },
+  "result": {
+    "rtt": {
+      "n_ok": 500,
+      "mean_ms": 186.69711039960384,
+      "p50_ms": 139.56734992098063,
+      "p95_ms": 485.3875600034366,
+      "p99_ms": 694.8800279945126,
+      "sent": 500,
+      "serial_rate_msgs_s": 5.356237576471707
+    },
+    "throughput": {
+      "n_ok": 500,
+      "mean_ms": 392.80231079179794,
+      "p50_ms": 283.1730000907555,
+      "p95_ms": 1190.3160998248463,
+      "p99_ms": 2711.6688269726,
+      "sent": 500,
+      "concurrency": 16,
+      "wall_s": 12.467384499963373,
+      "throughput_msgs_s": 40.10464263787396
+    }
+  }
+}
