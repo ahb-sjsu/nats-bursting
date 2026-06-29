@@ -1,0 +1,22 @@
+# Controller config (merged onto Defaults() by config.Load). Only the deltas
+# from defaults are set: in-cluster auth, the in-cluster NATS leaf URL, the
+# namespace, and result_prefix aligned to the Python client/worker ("results.").
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nats-bursting-config
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: controller
+data:
+  config.yaml: |
+    nats:
+      url: "nats://atlas-nats:4222"
+      submit_subject: "burst.submit"
+      status_prefix: "burst.status"
+      result_prefix: "results."
+    k8s:
+      namespace: "ssu-atlas-ai"
+      in_cluster_auth: true
+    log_level: "info"
