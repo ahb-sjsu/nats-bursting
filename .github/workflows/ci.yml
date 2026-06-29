@@ -90,6 +90,14 @@ jobs:
         working-directory: python
         run: black --check .
 
+      - name: Type check (ty — advisory)
+        if: matrix.python-version == '3.12'
+        continue-on-error: true
+        working-directory: python
+        run: |
+          pip install ty==0.0.55
+          ty check .
+
       - name: Pytest with coverage
         working-directory: python
         run: pytest --cov=nats_bursting --cov-report=term-missing --cov-report=xml
