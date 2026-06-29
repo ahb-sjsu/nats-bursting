@@ -56,18 +56,33 @@ needs a two-server leaf topology not yet stood up.
 Throughput scales sub-linearly with the window (RTT- and contention-bound), as expected
 for a WAN-bound closed loop — directly supports the AIMD window model.
 
-## E7 — prober detection delay D (Atlas GPU node, read-only nvidia-smi)
-Prober call latency (`probe_local_gpu`): p50 **32.6 ms**, p95 35.9, mean 33.1 ms (n=20),
-GPUs idle (57 °C / 46 °C). This is the probe-call component of D; full detection latency
-`D = poll_interval + probe_call + decision` needs `--induce-load` (a GPU burn), **deferred
-for Atlas thermal safety**. Even so, D ≳ 33 ms feeds directly into Prop. 2:
-`ρ ≈ D·α/((1−β)·a)`.
+## E7 — prober detection delay D (Atlas GV100)
+Two components, both measured (raw: `out/E7_atlas.json`, `out/E7_fullD_atlas.json`):
+- **Per-probe poll cost** (`nvidia-smi`): p50 **~27–33 ms**.
+- **End-to-end detection D** (launch a real load → util ≥ 40% floor, GPU1, 10 reps,
+  thermal-guarded, GPU0/ego-stack untouched, peak 55 °C): **mean 2.46 s, p50 2.48 s**
+  (range 2.29–2.61).
+
+The end-to-end D is **dominated by CUDA cold-start** (the time for a newly-admitted
+load to become *visible* as productive), ~75× the poll cost. This is the D for
+detecting a newly-admitted pod's (un)productivity and is what feeds Prop. 2
+`ρ ≈ D·α/((1−β)·ā)`; for probing *already-running* pods the relevant D is just the
+poll (~27 ms). Reporting both is the honest framing. **The 2.46 s figure makes D a
+first-order term in the bound, not a rounding error** — exactly the systems↔theory
+hinge the paper argues for.
 
 ## Status of the remaining experiments
 - **E2 (duckdns single-port tax)** — pending: PAT not forwarding `:4222` this session.
 - **E6 (partition resilience)** — pending: needs a controlled tailscale/leaf partition we
   won't induce against the production link without coordination.
-- **E7 full D** — pending a thermal-safe GPU-burn window on Atlas.
-- **E8 (end-to-end + baselines)** — pending: submits real pods, so it needs the
-  nats-bursting control plane up + an NRP namespace, and must run inside the fair-use
-  policy (≤4 pods, util bands, no-sleep). Explicit go + setup required before running.
+- **E7 full D** — ✅ **done** (Atlas GV100, above): D mean 2.46 s.
+- **E8 (end-to-end + baselines)** — still pending, and the blocker is now precise:
+  - On **NRP** there is *no nats-bursting control plane deployed*, so `Client.submit`
+    has no consumer to launch guest pods (the live `atlas-nats-leaf` is the only
+    workload). Needs either deploying the controller or a direct-kubectl guest path.
+  - On **Atlas** only **GPU1 is free** (GPU0 hosts the llama/ego stack — untouched),
+    so a faithful *multi-slot pod-contention* goodput–ρ Pareto can't be run there;
+    it needs ≥2 free slots (the cluster, or a 2nd free GPU). A single-GPU
+    compute-contention proxy is possible but strained and not pursued.
+  - All E8 tooling (contention generator, Monitor-instrumented policies, baselines,
+    aggregator) is built, lint/smoke-tested, and ready for whichever path opens.
