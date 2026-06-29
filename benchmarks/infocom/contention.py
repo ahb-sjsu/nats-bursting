@@ -100,47 +100,104 @@ class K8sBackend(Backend):
 
     def __init__(self, image: str, hold_sec: float, ns: str, gpu: int = 1) -> None:
         self.image, self.hold, self.ns, self.gpu = image, hold_sec, ns, gpu
+        self._jobs: list[str] = []  # competitor Job names we created
+        self._seq = 0
+
+    def _kubectl(self, *args: str, inp: str | None = None):
+        return subprocess.run(
+            ["kubectl", "-n", self.ns, *args],
+            input=inp,
+            capture_output=True,
+            text=True,
+        )
+
+    def _job_manifest(self, name: str) -> str:
+        """A Job that pins one GPU with real matmul for hold_sec, then exits 0.
+
+        Real compute (no sleep -> ban-safe), exit-0 + ttlSecondsAfterFinished for
+        clean-up, GPU request to occupy a slot, cpu=1/memory=2Gi in the ignored range.
+        Built line-by-line like nats_bursting.pool.pool_manifest.
+        """
+        hold = int(self.hold)
+        res = {
+            "requests": {"cpu": "1", "memory": "2Gi", "nvidia.com/gpu": str(self.gpu)},
+            "limits": {"cpu": "1", "memory": "2Gi", "nvidia.com/gpu": str(self.gpu)},
+        }
+        burn = [
+            "python3 -u - <<'PYEOF'",
+            "import time, torch",
+            f"t = time.time() + {hold}",
+            "x = torch.randn(4096, 4096, device='cuda')",
+            "while time.time() < t:",
+            "    x = (x @ x).remainder_(7.0).add_(1.0)",
+            "torch.cuda.synchronize(); print('competitor done')",
+            "PYEOF",
+        ]
+        lines = [
+            "apiVersion: batch/v1",
+            "kind: Job",
+            "metadata:",
+            f"  name: {name}",
+            f"  namespace: {self.ns}",
+            "  labels: {infocom: competitor}",
+            "spec:",
+            "  backoffLimit: 0",
+            f"  activeDeadlineSeconds: {hold + 60}",
+            "  ttlSecondsAfterFinished: 30",
+            "  template:",
+            "    metadata:",
+            "      labels: {infocom: competitor}",
+            "    spec:",
+            "      restartPolicy: Never",
+            "      containers:",
+            "      - name: comp",
+            f"        image: {self.image}",
+            f"        resources: {json.dumps(res)}",
+            '        command: ["/bin/bash", "-c"]',
+            "        args:",
+            "        - |",
+            *["          " + ln for ln in burn],
+        ]
+        return "\n".join(lines) + "\n"
+
+    def _prune(self) -> None:
+        """Drop Jobs that are no longer active (completed, failed, or gone)."""
+        alive = []
+        for n in self._jobs:
+            r = self._kubectl("get", "job", n, "-o", "jsonpath={.status.active}")
+            if r.returncode == 0 and r.stdout.strip() not in ("", "0"):
+                alive.append(n)
+        self._jobs = alive
 
     def _count(self) -> int:
-        out = subprocess.run(
-            [
-                "kubectl",
-                "-n",
-                self.ns,
-                "get",
-                "pods",
-                "-l",
-                "infocom=competitor",
-                "--field-selector=status.phase=Running",
-                "-o",
-                "name",
-            ],
-            capture_output=True,
-            text=True,
+        """Realized occupancy = competitor pods actually Running."""
+        r = self._kubectl(
+            "get",
+            "pods",
+            "-l",
+            "infocom=competitor",
+            "--field-selector=status.phase=Running",
+            "-o",
+            "name",
         )
-        return len([x for x in out.stdout.splitlines() if x.strip()])
+        return len([x for x in r.stdout.splitlines() if x.strip()])
 
     def reconcile(self, target: int) -> int:
-        # NOTE: bind to your launcher. Sketch: create (target-running) Jobs that run
-        # the matmul image for hold_sec (exit 0), or delete newest to shrink. Reuse
-        # nats_bursting.pool / a kubectl-create here. Left as the cluster bind point.
-        raise NotImplementedError("wire to kubectl/nats_bursting.pool on the cluster")
+        self._prune()
+        while len(self._jobs) < target:
+            self._seq += 1
+            name = f"infocom-comp-{self._seq}"
+            self._kubectl("apply", "-f", "-", inp=self._job_manifest(name))
+            self._jobs.append(name)
+        while len(self._jobs) > target:  # decrease c(t): drop newest
+            self._kubectl(
+                "delete", "job", self._jobs.pop(), "--ignore-not-found", "--wait=false"
+            )
+        return self._count()
 
     def shutdown(self) -> None:
-        subprocess.run(
-            [
-                "kubectl",
-                "-n",
-                self.ns,
-                "delete",
-                "job",
-                "-l",
-                "infocom=competitor",
-                "--ignore-not-found",
-            ],
-            capture_output=True,
-            text=True,
-        )
+        self._kubectl("delete", "job", "-l", "infocom=competitor", "--ignore-not-found")
+        self._jobs = []
 
 
 def main() -> None:
