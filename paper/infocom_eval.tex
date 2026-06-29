@@ -76,15 +76,19 @@ isolation and correct interest routing.
 
 \subsection{Detection delay and the violation bound (Q4)}
 \label{sec:eval-detection}
-The prober's per-call cost (read-only \texttt{nvidia-smi}) is $32.6$\,ms (p50,
-p95 $35.9$). The detection delay $D=\text{poll}+\text{probe}+\text{decision}$
-therefore has a floor of tens of milliseconds. Substituting into
-Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)a)$: for sub-second epochs
-and a moderate window, the predicted steady-state over-admission fraction is
-small and is driven by the probe cost---making $D$ a first-class, measurable knob
-rather than a modeling abstraction.
-%PENDING% The full $D$ under live GPU load (E7 with induced load) is pending a
-%PENDING% thermal-safe window on the shared GPU node.
+$D$ has two measured components. The prober's per-call cost (read-only
+\texttt{nvidia-smi}) is $27$--$33$\,ms (p50). The \emph{end-to-end} detection delay
+---from launching a real GPU load until it is visible as utilization above the
+$40\%$ floor (10 reps on a GV100, thermally guarded)---is \textbf{$2.46$\,s}
+(mean; p50 $2.48$, range $2.29$--$2.61$), dominated by CUDA cold-start rather than
+the poll. The relevant $D$ depends on the question: detecting a \emph{newly
+admitted} pod's (un)productivity incurs the $\sim\!2.5$\,s cold-start term, while
+probing \emph{already-running} pods costs only the $\sim\!27$\,ms poll.
+Substituting into Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)\bar a)$,
+the $2.46$\,s term makes $D$ a \emph{first-order} contributor to the achievable
+compliance---not a rounding error---which is precisely the systems$\leftrightarrow$theory
+hinge the bound is meant to expose: a guest that admits aggressively (large
+$\alpha$) pays for it in over-admission scaled by this measured cold-start delay.
 
 \subsection{End-to-end goodput versus compliance (Q5)}
 \label{sec:eval-e2e}

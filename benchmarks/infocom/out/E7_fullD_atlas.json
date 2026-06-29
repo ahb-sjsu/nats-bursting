@@ -1,0 +1,10 @@
+{
+  "experiment": "E7-fullD",
+  "node": "atlas-gv100-gpu1",
+  "method": "time from launching a real torch matmul load until nvidia-smi -i1 util>=40%, 10 reps, GPU1 only (GPU0/ego-stack untouched), thermal-guarded",
+  "detection_delay_s": {"reps": 10, "mean": 2.462, "p50": 2.476, "min": 2.293, "max": 2.613,
+    "samples": [2.383, 2.488, 2.502, 2.293, 2.438, 2.478, 2.613, 2.49, 2.475, 2.457]},
+  "probe_call_ms_p50": 26.47,
+  "max_temp_C": 55.0,
+  "note": "D is dominated by CUDA cold-start (new-load visibility), not the 26ms poll; this is the D for detecting a newly-admitted pod's productivity. For probing already-running pods, D ~= poll interval + 26ms."
+}
