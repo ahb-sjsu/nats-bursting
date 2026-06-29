@@ -1,0 +1,63 @@
+# nats-bursting controller for the NRP namespace.
+#
+# Subscribes to burst.submit on the in-cluster NATS leaf (atlas-nats:4222) and
+# creates k8s Jobs via the in-cluster ServiceAccount (see rbac.yaml). Minimal,
+# no-GPU, long-running Deployment — mirrors the tolerated nats-leaf resource
+# pattern. Pairs with rbac.yaml (ServiceAccount/Role/RoleBinding: nats-bursting).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nats-bursting-controller
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nats-bursting
+      app.kubernetes.io/component: controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nats-bursting
+        app.kubernetes.io/component: controller
+    spec:
+      serviceAccountName: nats-bursting
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532        # distroless 'nonroot' uid (numeric, so kubelet can verify)
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: ghcr.io/ahb-sjsu/nats-bursting:0.1.1
+          args:
+            - "--config"
+            - "/etc/nats-bursting/config.yaml"
+            - "--log-level"
+            - "info"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nats-bursting
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            name: nats-bursting-config
