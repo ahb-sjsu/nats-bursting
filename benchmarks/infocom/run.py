@@ -264,52 +264,92 @@ async def e7(a) -> dict[str, Any]:
 
 # ----- E8: end-to-end + baselines (needs live cluster + client) -----
 async def e8(a) -> dict[str, Any]:
-    """Submit a burst of B jobs under {naive, static, aimd} and measure
-    cold-start, submit→first-result, completion, and (if a prober is present)
-    GPU util + over-admission (violation) rate.
+    """End-to-end burst under {naive, static, aimd}: submit B jobs through the real
+    ``nats_bursting.client.Client`` and time cold-start, submit→first-result, and
+    burst-completion by draining results on ``<result_prefix><job_id>``.
 
-    The job-submit hook below binds to the cluster via nats_bursting.client.Client;
-    wire `submit_one` / `result_seen` to your descriptor + result subject.
+    Requires live cluster access: the submitted ``--image`` must be a burst worker
+    that publishes a result to ``<result_prefix><job_id>`` (the bundled worker does).
+    GPU util + over-admission (violation) rate are sampled on the node by
+    ``nats_bursting.probe`` during the run.
     """
+    from nats_bursting.client import Client
+    from nats_bursting.descriptor import JobDescriptor, Resources
+
     B, policy = a.burst, a.baseline
-    # --- scheduler: decide submit times for B jobs under the chosen policy ---
     if policy == "naive":
-        times = [0.0] * B  # all at once
+        sched = [0.0] * B  # all at once
     elif policy == "static":
-        times = [i / max(a.rate, 1e-9) for i in range(B)]  # fixed rate r jobs/s
+        sched = [i / max(a.rate, 1e-9) for i in range(B)]  # fixed rate r jobs/s
     elif policy == "aimd":
-        times = _aimd_schedule(B, a.alpha, a.beta, a.kcap)  # window-paced (model of §4)
+        sched = _aimd_schedule(B, a.alpha, a.beta, a.kcap)  # window-paced (model of §4)
     else:
         raise SystemExit(f"unknown --baseline {policy}")
 
-    submitted, first_result, completed = {}, [None], [0]
+    # --- result draining (async): subscribe BEFORE submitting ---
+    kw = {"user_credentials": a.creds} if a.creds else {}
+    nc = await nats.connect(a.url, **kw)
     t0 = time.perf_counter()
+    first_result: list[Any] = [None]
+    completed = [0]
+    done = asyncio.Event()
 
-    # ---- BIND HERE: replace with nats_bursting.client.Client submit/result ----
-    async def submit_one(job_id: str) -> None:
-        submitted[job_id] = time.perf_counter() - t0
-        # e.g.: SubmitResult = client.submit(descriptor); record k8s_job_name
+    async def on_result(_msg) -> None:
+        if first_result[0] is None:
+            first_result[0] = time.perf_counter() - t0
+        completed[0] += 1
+        if completed[0] >= B:
+            done.set()
 
-    async def drain_results() -> None:
-        # subscribe to the result subject; on each result set first_result / completed[0]++
-        # e.g.: await nc.subscribe(result_prefix + ">", cb=...)
-        return
+    await nc.subscribe(a.result_prefix + ">", cb=on_result)
 
-    # --------------------------------------------------------------------------
+    # --- sync submit client (spins its own bg loop); call via a thread ---
+    client = Client(nats_url=a.url, nats_creds=a.creds, submit_subject=a.submit_subject)
 
-    for i, dt in enumerate(times):
+    def _desc(i: int) -> JobDescriptor:
+        return JobDescriptor(
+            name=f"infocom-{policy}-{i}",
+            image=a.image,
+            command=(a.command.split() if a.command else []),
+            env={"NATS_URL": a.url, "NATS_RESULT_PREFIX": a.result_prefix},
+            resources=Resources(cpu="1", memory="2Gi", gpu=a.gpu),
+            labels={"infocom": policy},
+        )
+
+    submit_times: list[float] = []
+    accepted = [0]
+
+    async def submit(i: int) -> None:
+        res = await asyncio.to_thread(client.submit, _desc(i), f"infocom-{policy}-{i}")
+        submit_times.append(time.perf_counter() - t0)
+        if getattr(res, "accepted", False):
+            accepted[0] += 1
+
+    tasks = []
+    for i, dt in enumerate(sched):
         await asyncio.sleep(max(0.0, dt - (time.perf_counter() - t0)))
-        await submit_one(f"job-{i}")
-    await drain_results()
+        tasks.append(asyncio.create_task(submit(i)))
+    await asyncio.gather(*tasks)
+
+    try:  # wait (bounded) for all results
+        await asyncio.wait_for(done.wait(), timeout=a.duration)
+    except asyncio.TimeoutError:
+        pass
+    completion = time.perf_counter() - t0
+    client.close()
+    await nc.drain()
 
     return {
         "policy": policy,
         "burst": B,
-        "cold_start_s": min(submitted.values()) if submitted else None,
+        "accepted": accepted[0],
+        "cold_start_s": min(submit_times) if submit_times else None,
         "submit_to_first_result_s": first_result[0],
+        "burst_completion_s": (completion if completed[0] >= B else None),
         "completed": completed[0],
-        "note": "Wire submit_one/drain_results to nats_bursting.client.Client + the result "
-        "subject; collect GPU util + violation rate via nats_bursting.probe on the node.",
+        "note": "GPU util + over-admission (violation) rate are sampled on the node via "
+        "nats_bursting.probe during the run; --image must be a burst worker that publishes "
+        "to <result_prefix><job_id>.",
     }
 
 
@@ -397,6 +437,15 @@ def main() -> None:
     ap.add_argument("--alpha", type=int, default=2, help="E8 AIMD additive step")
     ap.add_argument("--beta", type=float, default=0.5, help="E8 AIMD backoff")
     ap.add_argument("--kcap", type=int, default=4, help="E8 pod cap K")
+    ap.add_argument(
+        "--image",
+        default="ghcr.io/ahb-sjsu/nats-bursting-worker:latest",
+        help="E8 job image (must be a burst worker publishing to <result_prefix><job_id>)",
+    )
+    ap.add_argument("--command", default="", help="E8 job command (space-separated)")
+    ap.add_argument("--gpu", type=int, default=1, help="E8 GPUs per job")
+    ap.add_argument("--result-prefix", default="results.", dest="result_prefix")
+    ap.add_argument("--submit-subject", default="burst.submit", dest="submit_subject")
     ap.add_argument("--out", default="out/result.json")
     ap.add_argument("--glob", default="out/*.json", help="tables mode input")
     a = ap.parse_args()
