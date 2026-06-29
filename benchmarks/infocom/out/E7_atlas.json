@@ -1,0 +1,30 @@
+{
+  "experiment": "E7",
+  "cfg": {
+    "url": "nats://localhost:4222",
+    "transport": "core",
+    "path": "lan",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 2000,
+    "concurrency": 1,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "atlas",
+    "git": "",
+    "ts_unix": 1782758360.8661244
+  },
+  "result": {
+    "probe_call_ms": {
+      "n_ok": 20,
+      "mean_ms": 33.06975211016834,
+      "p50_ms": 32.640908844769,
+      "p95_ms": 35.8760226983577,
+      "p99_ms": 37.38905602134764
+    },
+    "note": "D \u2248 poll_interval + probe_call + decision; full detection needs --induce-load on a GPU node."
+  }
+}

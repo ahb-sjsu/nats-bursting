@@ -1,0 +1,85 @@
+{
+  "experiment": "E5",
+  "cfg": {
+    "url": "nats://100.68.134.21:4222",
+    "transport": "core",
+    "path": "tailscale",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 300,
+    "concurrency": 1,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "OWNEROW-67O05MG",
+    "git": "4b92108",
+    "ts_unix": 1782758290.442421
+  },
+  "result": {
+    "sweep": [
+      {
+        "n_ok": 300,
+        "mean_ms": 97.5855656620115,
+        "p50_ms": 87.49599999282509,
+        "p95_ms": 160.61390500981364,
+        "p99_ms": 266.53755202656555,
+        "sent": 300,
+        "concurrency": 1,
+        "wall_s": 29.285323299933225,
+        "throughput_msgs_s": 10.244039204466766,
+        "window": 1
+      },
+      {
+        "n_ok": 300,
+        "mean_ms": 116.82664399423327,
+        "p50_ms": 85.34079999662936,
+        "p95_ms": 271.3404848705977,
+        "p99_ms": 327.7113091084175,
+        "sent": 300,
+        "concurrency": 4,
+        "wall_s": 8.775733700022101,
+        "throughput_msgs_s": 34.185175878712506,
+        "window": 4
+      },
+      {
+        "n_ok": 300,
+        "mean_ms": 126.31626200474177,
+        "p50_ms": 89.90615012589842,
+        "p95_ms": 293.21557994699106,
+        "p99_ms": 526.7065370874479,
+        "sent": 300,
+        "concurrency": 8,
+        "wall_s": 4.83558680000715,
+        "throughput_msgs_s": 62.04004031104486,
+        "window": 8
+      },
+      {
+        "n_ok": 300,
+        "mean_ms": 112.49308799626306,
+        "p50_ms": 110.69029988721013,
+        "p95_ms": 155.8155798702501,
+        "p99_ms": 174.30959888733918,
+        "sent": 300,
+        "concurrency": 16,
+        "wall_s": 2.180012400029227,
+        "throughput_msgs_s": 137.61389613929623,
+        "window": 16
+      },
+      {
+        "n_ok": 300,
+        "mean_ms": 139.38941434180984,
+        "p50_ms": 116.70715012587607,
+        "p95_ms": 257.6666498207487,
+        "p99_ms": 340.854529957287,
+        "sent": 300,
+        "concurrency": 32,
+        "wall_s": 1.351748100016266,
+        "throughput_msgs_s": 221.93484125954384,
+        "window": 32
+      }
+    ],
+    "note": "Go control-plane CPU/mem come from its own /metrics; driver-side sampled here."
+  }
+}
