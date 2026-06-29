@@ -1,0 +1,42 @@
+{
+  "experiment": "E1",
+  "cfg": {
+    "url": "nats://localhost:4222",
+    "transport": "core",
+    "path": "local",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 500,
+    "concurrency": 16,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "atlas",
+    "git": "",
+    "ts_unix": 1782757378.8044708
+  },
+  "result": {
+    "rtt": {
+      "n_ok": 500,
+      "mean_ms": 0.8557991068810225,
+      "p50_ms": 0.8398992940783501,
+      "p95_ms": 1.0894784238189457,
+      "p99_ms": 1.1371787916868925,
+      "sent": 500,
+      "serial_rate_msgs_s": 1167.266109893542
+    },
+    "throughput": {
+      "n_ok": 500,
+      "mean_ms": 1.8838188536465168,
+      "p50_ms": 1.6824179328978062,
+      "p95_ms": 2.5953152216970916,
+      "p99_ms": 5.642569279298186,
+      "sent": 500,
+      "concurrency": 16,
+      "wall_s": 0.07293711230158806,
+      "throughput_msgs_s": 6855.220671920041
+    }
+  }
+}
