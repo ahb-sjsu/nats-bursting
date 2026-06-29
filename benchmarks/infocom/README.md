@@ -120,3 +120,21 @@ Honest scope: `parsl`/`globus` need their framework installed and a
 namespace-launching executor/endpoint (the marked bind points), plus a `--util-cmd`
 (DCGM/Prometheus) for the GPU-util side of ρ — without it only the concurrency/cap
 side is reported. The `local` backend runs here and is for the dry-run only.
+
+## Aggregation & plots (`aggregate.py`)
+Consumes the run.py E8 outputs **and** the `baselines.py` outputs (multiple files per
+label = repeats → mean ± 95% CI) and emits the two headline figures plus a table:
+```bash
+python aggregate.py --glob 'out/*.json' --eps 0.1 \
+    --D <epochs from E7> --contention out/contention_square.jsonl --out-dir out/agg
+# -> out/agg/{pareto.png, money.png, data.csv, SUMMARY.md}
+```
+- **`pareto.png`** — goodput (y) vs over-admission ρ (x) with the ρ=ε feasibility line;
+  the claim succeeds iff `aimd` is alone on the upper-left frontier (high goodput, low ρ)
+  while naive/parsl/globus sit high-ρ.
+- **`money.png`** — for `aimd` runs, measured ρ vs the Prop. 2 prediction
+  `ρ_pred = D·α/((1−β)·ā)` (ā from the contention log), with the y=x line.
+- Validated on synthetic fixtures; matplotlib optional (falls back to CSV + SUMMARY.md).
+- **Note:** E8 policy ρ requires running `run.py -e E8` under the shared `Monitor`
+  (an `over_admission_rho` / `monitor` block in its output); until that's wired, E8
+  rows show goodput/completion and ρ as "n/a (needs monitoring)".
