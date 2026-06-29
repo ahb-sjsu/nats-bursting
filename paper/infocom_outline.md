@@ -13,7 +13,7 @@ orchestration system into a networking / distributed-systems contribution.
 ## Abstract (~200 words)
 Research and AI teams increasingly burst bursty GPU/ML batch workloads onto shared,
 multi-tenant clusters (e.g., the National Research Platform) where they are *guests*: bound by
-fair-use policy — pod caps, sustained-utilization floors, ignored-resource ranges — and
+fair-use policy — a 4-pod cap and per-resource utilization bands (relative to request) — and
 reachable only over constrained, partially-connected WAN paths. Naive submission violates
 policy (risking throttling or bans) and wastes the host's capacity; static rate-limiting wastes
 the guest's throughput. We argue that "being a good guest" is fundamentally a control problem,
@@ -31,7 +31,7 @@ policy-violation rate below [eps]. The system and a reproducible artifact are op
 
 ## Section outline (~13 pp)
 1. Introduction — polite-bursting problem; why naive & static fail; thesis (politeness = control); contributions; artifact.
-2. Background & Motivating Measurement — shared-cluster policy (pod caps, >40% sustained-util, ignored cpu=1/mem=2Gi, exit-0/TTL); WAN reality (single port :4222, Tailscale/duckdns); what naive submission does.
+2. Background & Motivating Measurement — the exact NRP fair-use policy the system targets: **≤4 pods/user**; per *running* pod, utilization vs **request** must stay in-band — **GPU ≥40%, CPU 20–200%, RAM 20–150%**; real work only (**sleep-ending jobs → ban**); **release resources on completion** (Job + right-sized request; Deployment + minimal request for long-running); 6-month idle-volume purge. WAN reality (single port :4222, Tailscale/duckdns). What naive submission does to compliance.
 3. System Model & Problem Formulation — see `infocom_model.tex` (System Model).
 4. The Politeness Controller — macro AIMD admission + micro Kalman-PID thermal; see `infocom_model.tex` (Controller).
 5. Federated Messaging Fabric — NATS leaf nodes; JetStream non-federation, asymmetric subject interest, durable flag, result-webhook; core-NATS vs JetStream mapping.

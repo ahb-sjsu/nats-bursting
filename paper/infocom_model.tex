@@ -19,6 +19,19 @@ utilization below the policy floor $U$, marking it a poor citizen. A binary
 pending beyond $\tau$, or measured utilization below $U$), with a
 \emph{detection delay} $D$ epochs induced by the prober.
 
+\paragraph{Host policy (concrete instance).}
+The reference host (NRP Nautilus) publishes a fair-use policy our formulation
+encodes directly: at most \emph{$K=4$} concurrent pods per user; and, for every
+\emph{running} pod, utilization relative to its \emph{request} must stay within
+published bands---GPU $\ge 40\%$, CPU $\in[20\%,200\%]$, RAM $\in[20\%,150\%]$;
+pods must perform real work (jobs that merely \texttt{sleep} are banned) and
+release their resources on completion. Two design arms map onto this: a request
+right-sizer (\S\ref{sec:thermal}; batch-probe) keeps CPU/RAM/GPU \emph{within} the
+bands by not over-requesting, while the admission controller (\S\ref{sec:controller})
+keeps admitted pods \emph{above} the $40\%$ GPU floor by not over-admitting; clean
+exit plus TTL frees the request. Accordingly we take $U=0.4$ (the GPU floor) and
+$K=4$, and treat a pod that falls below $U$ as over-admitted.
+
 \paragraph{Problem (Polite Bursting).}
 \begin{equation}
 \max_{\{w_t\}}\ \sum_t \min(w_t,a_t)
