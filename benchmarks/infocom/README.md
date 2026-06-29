@@ -94,3 +94,29 @@ The same policy the paper models also constrains *how we run*:
   long-lived `responder.py` as a **Deployment with minimal request and no GPU** so it
   never trips the utilization floor.
 - **Storage** — purge harness output volumes; idle volumes are reclaimed after 6 months.
+
+## Baselines — best-in-class comparison (`baselines.py`)
+funcX/Globus Compute and Parsl have **no admission controller** — they scale workers
+to demand — so the fair test is to push the *same* B-task burst through them and
+record the *same externally-observable* policy metrics (peak concurrency vs cap K,
+util-floor breaches, completion) with a shared `Monitor`, so they land on the **same
+goodput–ρ Pareto** as the run.py E8 policies (naive/static/aimd). Hypothesis (and the
+point of the paper): demand-scaling frameworks complete the burst by **violating** the
+cap/floor under contention; the politeness controller does not.
+
+```bash
+# dry-run (no cluster): shows over-provisioning on a process pool
+python baselines.py --backend local --burst 12 --kcap 4 --max-workers 12 --out out/bl_local.json
+
+# Parsl  (configure a KubernetesProvider in the namespace — the marked bind point)
+python baselines.py --backend parsl  --burst 64 --kcap 4 --namespace ssu-atlas-ai \
+    --util-cmd 'dcgm-or-prometheus-query-printing-0..1' --out out/bl_parsl.json
+
+# Globus Compute / funcX (endpoint whose provider launches pods in the namespace)
+python baselines.py --backend globus --endpoint <ENDPOINT_ID> --burst 64 --kcap 4 \
+    --namespace ssu-atlas-ai --out out/bl_globus.json
+```
+Honest scope: `parsl`/`globus` need their framework installed and a
+namespace-launching executor/endpoint (the marked bind points), plus a `--util-cmd`
+(DCGM/Prometheus) for the GPU-util side of ρ — without it only the concurrency/cap
+side is reported. The `local` backend runs here and is for the dry-run only.
