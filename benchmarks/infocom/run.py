@@ -33,6 +33,7 @@ import numpy as np
 import nats
 
 import harness as H
+from monitor import Monitor, kubectl_pod_counter, util_from_cmd
 
 
 def base_cfg(a) -> H.Cfg:
@@ -325,6 +326,18 @@ async def e8(a) -> dict[str, Any]:
         if getattr(res, "accepted", False):
             accepted[0] += 1
 
+    # --- shared Monitor: guest pods labelled infocom=<policy> in --namespace ---
+    mon = Monitor(
+        kubectl_pod_counter(a.namespace, f"infocom={policy}", "Running"),
+        a.kcap,
+        interval=a.monitor_interval,
+        util_fn=util_from_cmd(a.util_cmd),
+        extra_fns={
+            "pending": kubectl_pod_counter(a.namespace, f"infocom={policy}", "Pending")
+        },
+    )
+    mon.start()
+
     tasks = []
     for i, dt in enumerate(sched):
         await asyncio.sleep(max(0.0, dt - (time.perf_counter() - t0)))
@@ -336,20 +349,27 @@ async def e8(a) -> dict[str, Any]:
     except asyncio.TimeoutError:
         pass
     completion = time.perf_counter() - t0
+    mon.stop()
     client.close()
     await nc.drain()
 
+    m = mon.metrics()
     return {
         "policy": policy,
         "burst": B,
         "accepted": accepted[0],
+        "alpha": a.alpha,
+        "beta": a.beta,
         "cold_start_s": min(submit_times) if submit_times else None,
         "submit_to_first_result_s": first_result[0],
         "burst_completion_s": (completion if completed[0] >= B else None),
         "completed": completed[0],
-        "note": "GPU util + over-admission (violation) rate are sampled on the node via "
-        "nats_bursting.probe during the run; --image must be a burst worker that publishes "
-        "to <result_prefix><job_id>.",
+        "goodput_tasks_per_s": (completed[0] / completion if completion else 0.0),
+        "monitor": m,
+        "over_admission_rho": m.get("over_admission_fraction"),
+        "note": "monitor counts guest pods labelled infocom=<policy> in --namespace; "
+        "over_admission_rho = epochs with a Pending pod or util<floor (needs --util-cmd "
+        "for the GPU-util side); --image must be a burst worker publishing results.",
     }
 
 
@@ -437,6 +457,18 @@ def main() -> None:
     ap.add_argument("--alpha", type=int, default=2, help="E8 AIMD additive step")
     ap.add_argument("--beta", type=float, default=0.5, help="E8 AIMD backoff")
     ap.add_argument("--kcap", type=int, default=4, help="E8 pod cap K")
+    ap.add_argument(
+        "--namespace", default="ssu-atlas-ai", help="E8 monitor pod namespace"
+    )
+    ap.add_argument(
+        "--util-cmd",
+        default=None,
+        dest="util_cmd",
+        help="E8 monitor: shell cmd printing mean GPU util 0..1 (DCGM/Prometheus)",
+    )
+    ap.add_argument(
+        "--monitor-interval", type=float, default=1.0, dest="monitor_interval"
+    )
     ap.add_argument(
         "--image",
         default="ghcr.io/ahb-sjsu/nats-bursting-worker:latest",

@@ -26,10 +26,10 @@ from __future__ import annotations
 
 import argparse
 import json
-import subprocess
-import threading
 import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
+
+from monitor import Monitor, kubectl_pod_counter, util_from_cmd
 
 
 def gpu_task(hold_sec: float = 8.0, size: int = 4096) -> str:
@@ -55,89 +55,6 @@ def gpu_task(hold_sec: float = 8.0, size: int = 4096) -> str:
         while _t.time() < t:
             x = (x @ a) % 7.0 + 1.0
         return "cpu"
-
-
-class Monitor(threading.Thread):
-    """Samples running concurrency (and optional GPU util) every `interval` s."""
-
-    def __init__(self, count_fn, kcap: int, interval: float = 1.0, util_fn=None):
-        super().__init__(daemon=True)
-        self.count_fn, self.kcap, self.interval, self.util_fn = (
-            count_fn,
-            kcap,
-            interval,
-            util_fn,
-        )
-        self._ev = threading.Event()  # not _stop: Thread._stop is an internal method
-        self.samples: list[dict] = []
-        self.t0 = time.time()
-
-    def run(self) -> None:
-        while not self._ev.is_set():
-            u = self.util_fn() if self.util_fn else None
-            self.samples.append(
-                {"t": round(time.time() - self.t0, 3), "n": self.count_fn(), "util": u}
-            )
-            self._ev.wait(self.interval)
-
-    def stop(self) -> None:
-        self._ev.set()
-        self.join(timeout=3)
-
-    def metrics(self) -> dict:
-        ns = [s["n"] for s in self.samples] or [0]
-        utils = [s["util"] for s in self.samples if s["util"] is not None]
-        return {
-            "peak_concurrency": max(ns),
-            "cap": self.kcap,
-            "cap_violation_fraction": sum(1 for n in ns if n > self.kcap) / len(ns),
-            "util_floor_breach_fraction": (
-                sum(1 for u in utils if u < 0.40) / len(utils) if utils else None
-            ),
-            "n_samples": len(ns),
-        }
-
-
-def kubectl_pod_counter(ns: str, label: str | None = None):
-    sel = ["-l", label] if label else []
-
-    def _c() -> int:
-        r = subprocess.run(
-            [
-                "kubectl",
-                "-n",
-                ns,
-                "get",
-                "pods",
-                *sel,
-                "--field-selector=status.phase=Running",
-                "-o",
-                "name",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        return len([x for x in r.stdout.splitlines() if x.strip()])
-
-    return _c
-
-
-def util_from_cmd(cmd: str | None):
-    """Pluggable GPU-util source (e.g. a DCGM/Prometheus query) returning a 0..1
-    float on stdout. Returns None if no command given."""
-    if not cmd:
-        return None
-
-    def _u():
-        try:
-            out = subprocess.run(
-                cmd, shell=True, capture_output=True, text=True, timeout=5
-            )
-            return float(out.stdout.strip())
-        except Exception:
-            return None
-
-    return _u
 
 
 def _record(
