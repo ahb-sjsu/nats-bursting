@@ -308,11 +308,20 @@ async def e8(a) -> dict[str, Any]:
     client = Client(nats_url=a.url, nats_creds=a.creds, submit_subject=a.submit_subject)
 
     def _desc(i: int) -> JobDescriptor:
+        jid = f"infocom-{policy}-{i}"
         return JobDescriptor(
-            name=f"infocom-{policy}-{i}",
+            name=jid,
             image=a.image,
             command=(a.command.split() if a.command else []),
-            env={"NATS_URL": a.url, "NATS_RESULT_PREFIX": a.result_prefix},
+            # NATS_URL is the IN-CLUSTER leaf the worker reaches (not the home --url);
+            # the result on results.<JOB_ID> propagates back to the home driver via the leaf.
+            env={
+                "NATS_URL": a.worker_nats,
+                "NATS_RESULT_PREFIX": a.result_prefix,
+                "JOB_ID": jid,
+                "HOLD_SEC": str(a.e8_hold),
+                "MATMUL_SIZE": str(a.matmul_size),
+            },
             resources=Resources(cpu="1", memory="2Gi", gpu=a.gpu),
             labels={"infocom": policy},
         )
@@ -474,6 +483,20 @@ def main() -> None:
         default="ghcr.io/ahb-sjsu/nats-bursting-worker:latest",
         help="E8 job image (must be a burst worker publishing to <result_prefix><job_id>)",
     )
+    ap.add_argument(
+        "--worker-nats",
+        default="nats://atlas-nats:4222",
+        dest="worker_nats",
+        help="in-cluster NATS URL injected into guest jobs (not the home --url)",
+    )
+    ap.add_argument(
+        "--e8-hold",
+        type=float,
+        default=20.0,
+        dest="e8_hold",
+        help="guest job compute seconds (HOLD_SEC)",
+    )
+    ap.add_argument("--matmul-size", type=int, default=4096, dest="matmul_size")
     ap.add_argument("--command", default="", help="E8 job command (space-separated)")
     ap.add_argument("--gpu", type=int, default=1, help="E8 GPUs per job")
     ap.add_argument("--result-prefix", default="results.", dest="result_prefix")
