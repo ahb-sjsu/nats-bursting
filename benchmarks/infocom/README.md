@@ -4,6 +4,28 @@ Measurement driver for the nats-bursting INFOCOM paper (see
 `paper/infocom_outline.md`). Characterizes the federated NATS control plane and
 validates the §4 admission model on the real testbed.
 
+## Results (headline)
+Full data + honest scope in [`RESULTS.md`](RESULTS.md) (E1–E7) and
+[`RESULTS_E8.md`](RESULTS_E8.md) (admission control); pre-registration in
+[`E8_PREREG.md`](E8_PREREG.md).
+
+- **E1 federation path:** local RTT p50 0.84 ms / 6855 msg/s → Tailscale (1 WAN hop)
+  76 ms / 188±28 msg/s — the control path is RTT-bound (motivates epoch-paced admission).
+- **E3 durability:** JetStream file vs. memory publish-ack are within noise over the WAN.
+- **E5 scaling:** throughput 11→283 msg/s for window 1→32 (sub-linear, RTT-bound).
+- **E7 detection delay D:** per-probe 27 ms; end-to-end 2.46 s (CUDA cold-start dominated)
+  — a first-order term in the Prop. 2 bound.
+- **E8 admission control (goodput vs. politeness):** on a controlled testbed, AIMD holds
+  the budget (over-budget ρ = 0) at **1.72× (GPU, C=2)** and **3.18× (CPU, C=8)** a
+  static baseline's goodput, and matches a greedy baseline without over-admitting; the
+  greedy baseline buys throughput only by over-admitting (ρ = 0.54 / 0.95). Pareto
+  figures in `out/e8_atlas*/agg/` and `../../paper/figures/pareto_{gpu,cpu}.pdf`.
+
+Honest record: the system path is verified end-to-end on NRP; the goodput comparison
+ran on a controlled node because in-situ NRP measurement was dominated by exogenous
+scheduling and cold-image-pull variance (reported as three pre-registered nulls, not
+suppressed). E2 (duckdns single-port tax) and E6 (partition) remain future work.
+
 ## Install
 ```bash
 pip install nats-py numpy        # core; psutil optional (E5 driver sampling); torch optional (E7 --induce-load)
