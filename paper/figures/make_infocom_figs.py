@@ -38,19 +38,28 @@ MARK = {"naive": "s", "aimd": "o", "static": "^"}
 
 def pareto(subdir, title, eps, fname):
     by = load(subdir)
-    fig, ax = plt.subplots(figsize=(3.4, 2.6))
+    fig, ax = plt.subplots(figsize=(3.6, 2.7))
+    gmax = 0.0
     for pol in ["naive", "aimd", "static"]:
         gm, gh = ci(by[pol]["g"])
         rm, rh = ci(by[pol]["rho"])
+        gmax = max(gmax, gm + gh)
         ax.errorbar(rm, gm, xerr=rh, yerr=gh, fmt=MARK[pol], color=COLORS[pol],
-                    capsize=3, ms=8, label=pol, zorder=3)
-        ax.annotate(pol, (rm, gm), textcoords="offset points", xytext=(8, 4), fontsize=9)
+                    capsize=3, ms=7, label=pol, zorder=3)
+        # keep labels off the frame: right-side points label leftward
+        if rm > 0.6:
+            ax.annotate(pol, (rm, gm), textcoords="offset points",
+                        xytext=(-9, 5), ha="right", fontsize=9)
+        else:
+            ax.annotate(pol, (rm, gm), textcoords="offset points",
+                        xytext=(9, 5), ha="left", fontsize=9)
     ax.axvline(eps, ls="--", color="grey", lw=1)
-    ax.text(eps + 0.01, ax.get_ylim()[0], r"$\rho=\epsilon$", color="grey", fontsize=8)
     ax.set_xlabel(r"over-budget rate $\rho$  (lower = more polite)")
     ax.set_ylabel("goodput (tasks/s)")
     ax.set_title(title, fontsize=10)
-    ax.set_xlim(-0.05, 1.05)
+    ax.set_xlim(-0.15, 1.20)       # margins so markers/labels clear the frame
+    ax.set_ylim(0, gmax * 1.32)    # headroom above the top point
+    ax.text(eps + 0.02, gmax * 0.04, r"$\rho=\epsilon$", color="grey", fontsize=8)
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
     for ext in ("pdf", "png"):

@@ -49,8 +49,8 @@ source.
 \section{Introduction}
 \label{sec:intro}
 A growing fraction of machine-learning work is \emph{bursty}: long stretches of
-local development punctuated by short, intense bursts of batch jobs---sweeps,
-fine-tunes, evaluations---that briefly need far more GPUs than any one team owns.
+local development punctuated by short, intense bursts of batch jobs (sweeps,
+fine-tunes, evaluations) that briefly need far more GPUs than a team owns.
 Shared, opportunistic clusters such as the National Research Platform (NRP)
 \cite{nautilus} make that capacity available, but on strict \emph{guest} terms:
 fair-use policy caps concurrent pods, demands sustained utilization of what you
@@ -85,6 +85,7 @@ and static baselines on the goodput--politeness frontier.
 
 \begin{figure}[t]
 \centering
+\resizebox{\columnwidth}{!}{%
 \begin{tikzpicture}[
   font=\footnotesize, node distance=5mm,
   box/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2pt},
@@ -99,7 +100,7 @@ and static baselines on the goodput--politeness frontier.
 \draw[->] (leaf) -- (ctrl);
 \draw[->] (ctrl) -- (pods) node[midway,above]{Job};
 \draw[->] (pods) to[bend right=25] node[midway,below]{results.$\langle$id$\rangle$} (leaf);
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{nats-bursting architecture. The home client submits over a federated
 NATS leaf link; the in-cluster controller admits jobs (pacing concurrency to the
 politeness budget) and launches GPU worker pods, whose results route back through
