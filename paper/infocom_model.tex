@@ -33,11 +33,15 @@ exit plus TTL frees the request. Accordingly we take $U=0.4$ (the GPU floor) and
 $K=4$, and treat a pod that falls below $U$ as over-admitted.
 
 \paragraph{Problem (Polite Bursting).}
+Let $\rho$ denote the long-run over-admission fraction,
 \begin{equation}
-\max_{\{w_t\}}\ \sum_t \min(w_t,a_t)
-\ \ \text{s.t.}\ \
+\rho \triangleq \limsup_{T\to\infty}\tfrac1T\textstyle\sum_{t<T}\mathbf 1[w_t>a_t].
+\end{equation}
+The guest then solves
+\begin{equation}
+\max_{\{w_t\}}\ \sum_t \min(w_t,a_t)\ \ \text{s.t.}\ \
 \underbrace{w_t\le K\ \forall t}_{\text{hard}},\ \
-\underbrace{\rho \triangleq \limsup_{T\to\infty}\tfrac1T\!\!\sum_{t<T}\!\mathbf 1[w_t>a_t]\le \epsilon}_{\text{policy}}.
+\underbrace{\rho \le \epsilon}_{\text{policy}}.
 \end{equation}
 The constraint is two-sided---stay \emph{below} the cap and \emph{above} the
 utilization floor---distinguishing it from one-sided (loss-only) congestion control.
@@ -55,8 +59,8 @@ w_{t+1}=
 \min(w_t+\alpha,\,K), & s_t=0\ \text{(clean)},\\[2pt]
 \max(\lceil\beta w_t\rceil,\,w_{\min}), & s_t=1\ \text{(congested)},
 \end{cases}
-\quad \alpha>0,\ \beta\in(0,1).
 \end{equation}
+with additive step $\alpha>0$ and back-off factor $\beta\in(0,1)$.
 We assume \textbf{(A1)} stationary capacity $a_t\equiv a$, $w_{\min}\le a\le K$;
 \textbf{(A2)} reliable detection within $D$ epochs of an overshoot; \textbf{(A3)}
 fixed $\alpha,\beta,w_{\min},K$.
@@ -110,9 +114,13 @@ A Kalman filter maintains $\hat T_t$ via the standard predict/update recursion,
 suppressing sensor noise. The controller applies PID action with feedforward
 \emph{lookahead}: using the model to predict $\hat T_{t+h}$ over horizon $h$, it sets
 \begin{equation}
-n_t = \mathrm{clip}\!\Big(n_{\max} - K_p e_t - K_i\!\!\sum_{k\le t}\! e_k - K_d\,\Delta e_t - K_{\!f}\,(\hat T_{t+h}-T^{\star})\Big),\ \ e_t=\hat T_t-T^{\star},
+\begin{split}
+n_t = \mathrm{clip}\big(n_{\max} &- K_p e_t - K_i\textstyle\sum_{k\le t} e_k \\
+                       &- K_d\,\Delta e_t - K_{\!f}\,(\hat T_{t+h}-T^{\star})\big),
+\end{split}
 \end{equation}
-throttling \emph{before} the setpoint $T^{\star}$ is breached. With a stable plant
+with tracking error $e_t=\hat T_t-T^{\star}$, throttling \emph{before} the
+setpoint $T^{\star}$ is breached. With a stable plant
 ($0<c<1$) and standard PID gain conditions the closed loop is input-to-state
 stable about $T^{\star}$, and the feedforward term curbs overshoot under load
 steps. This is the node-level analogue of the macro admission loop: both maximize
