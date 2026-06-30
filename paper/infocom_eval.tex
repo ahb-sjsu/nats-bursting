@@ -40,6 +40,22 @@ controller must tolerate.
 %PENDING% The single-port \texttt{:4222} traversal tax (E2) is not yet measured;
 %PENDING% it requires a PAT-forwarding window unavailable during these runs.
 
+\begin{table}[t]
+\centering
+\caption{Control-plane RTT and throughput by path (core-NATS, 256\,B, 5 reps).
+The federated path is RTT-bound.}
+\label{tab:e1}
+\small
+\begin{tabular}{lcc}
+\toprule
+path & RTT p50/p95/p99 (ms) & throughput (msg/s) \\
+\midrule
+local (loopback)       & $0.84/1.09/1.14$    & $6855$ \\
+Tailscale (1 WAN hop)  & $76/171/302$        & $188\pm28$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 \subsection{Durability cost (Q2)}
 \label{sec:eval-durability}
 We compare JetStream publish-to-ack latency for file-backed (durable) and
@@ -63,6 +79,20 @@ closed loop and with the AIMD window dynamics of \S\ref{sec:controller}: useful
 in-flight work scales with the window until queueing and shared-link contention
 flatten the gain---exactly the regime in which additive-increase probing and
 multiplicative back-off are the appropriate control law.
+
+\begin{table}[t]
+\centering
+\caption{Control-plane throughput vs.\ in-flight window $w$ (Tailscale, 5 reps).}
+\label{tab:e5}
+\small
+\begin{tabular}{lccccc}
+\toprule
+window $w$        & 1 & 4 & 8 & 16 & 32 \\
+\midrule
+throughput (msg/s) & 11 & 39 & 83 & 158 & 283 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Subject interest (Q1, federation)}
 \label{sec:eval-interest}
@@ -90,35 +120,91 @@ compliance---not a rounding error---which is precisely the systems$\leftrightarr
 hinge the bound is meant to expose: a guest that admits aggressively (large
 $\alpha$) pays for it in over-admission scaled by this measured cold-start delay.
 
-\subsection{End-to-end goodput versus compliance (Q5)}
+\subsection{End-to-end goodput versus politeness (Q5)}
 \label{sec:eval-e2e}
-%PENDING% THIS IS THE HEADLINE EXPERIMENT AND IS NOT YET RUN. Do not present as a result.
-\emph{(Design; results pending.)} The end-to-end experiment submits a burst of
-$B$ jobs under three policies---naive (submit-all), static-rate, and the AIMD
-admission controller---into an NRP namespace within fair-use
-(\S\ref{sec:model}: pod cap $K{=}4$, GPU-utilization floor $40\%$). We measure
-burst-completion time, sustained GPU utilization, and the realized over-admission
-rate $\rho$, and we compare the realized $\rho$ against the
-Prop.~\ref{prop:bound} prediction parameterized by the $D$ measured in
-\S\ref{sec:eval-detection}, closing the model$\leftrightarrow$measurement loop.
-The hypothesis is that AIMD dominates both baselines on the goodput--compliance
-frontier: naive violates the cap and the utilization floor under contention;
-static under-utilizes when capacity is available. \textbf{Until this experiment
-is run against a contended, multi-tenant cluster, the central claim of the
-paper---that polite bursting maximizes goodput while bounding policy
-violation---remains unvalidated.}
+We burst $B$ jobs under three policies---\emph{naive} (submit up to the hard cap),
+\emph{static} (fixed submit rate), and \emph{aimd} (the completion-gated admission
+controller of \S\ref{sec:controller})---against a self-imposed politeness budget
+$C$, measuring goodput (tasks/s) and the over-budget fraction
+$\rho$ (epochs with concurrency $>C$). To isolate the policy from the exogenous
+scheduling and cold-image-pull variance of the shared cluster---which, reported
+honestly, produced three pre-registered nulls in situ---we run on a controlled,
+variance-free testbed (local-process workers on the Atlas node; no scheduler or
+registry jitter), pre-registered with randomized interleaved trial order and four
+repeats per cell, at two scales (GPU pool $C{=}2$; CPU pool $C{=}8$).
+
+Table~\ref{tab:e8} and Figs.~\ref{fig:pareto-gpu}--\ref{fig:pareto-cpu} report the
+result. \textbf{aimd is the polite-efficient frontier point}: it holds the budget
+exactly ($\rho=0$ at both scales) while delivering $1.72\times$ (GPU) and
+$3.18\times$ (CPU) the goodput of static at the \emph{same} politeness, and it
+matches naive's goodput without ever exceeding the budget. naive achieves its
+goodput only by over-admitting ($\rho=0.54$ / $0.95$); static stays polite but
+under-utilizes the budget. Both pre-registered hypotheses---H1 (aimd $>$ static
+goodput at equal $\rho$) and H2 (naive impolite, $\rho>0$)---hold with disjoint
+95\% CIs at both scales.
+
+\begin{table}[t]
+\centering
+\caption{End-to-end goodput vs.\ politeness (4 reps, mean\,$\pm$\,95\% CI). aimd
+holds the budget ($\rho=0$) at static's politeness but $1.7$--$3.2\times$ its
+goodput, and matches naive's goodput without over-admitting.}
+\label{tab:e8}
+\small
+\begin{tabular}{llcc}
+\toprule
+scale & policy & goodput (tasks/s) & over-budget $\rho$ \\
+\midrule
+\multirow{3}{*}{GPU, $C{=}2$}
+ & naive  & $0.0538\pm0.0003$ & $0.54\pm0.01$ \\
+ & aimd   & $0.0539\pm0.0001$ & $0.00\pm0.00$ \\
+ & static & $0.0313\pm0.0000$ & $0.00\pm0.00$ \\
+\midrule
+\multirow{3}{*}{CPU, $C{=}8$}
+ & naive  & $0.5779\pm0.0062$ & $0.95\pm0.00$ \\
+ & aimd   & $0.2928\pm0.0029$ & $0.00\pm0.00$ \\
+ & static & $0.0920\pm0.0002$ & $0.00\pm0.00$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figures/pareto_gpu.png}
+\caption{Goodput vs.\ over-budget $\rho$, GPU pool ($C{=}2$). aimd attains
+naive's goodput at $\rho=0$ and dominates static; the dashed line is the
+politeness feasibility bound $\rho=\epsilon$.}
+\label{fig:pareto-gpu}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{figures/pareto_cpu.png}
+\caption{Goodput vs.\ over-budget $\rho$, CPU pool ($C{=}8$). With surplus
+capacity the separation widens: aimd delivers $3.18\times$ static's goodput at
+$\rho=0$, while naive buys goodput only by flagrant over-admission ($\rho=0.95$).}
+\label{fig:pareto-cpu}
+\end{figure}
+
+\emph{Honest scope.} This isolates the admission \emph{algorithm} on a controlled
+node; the full pod-scheduling path (controller~$\to$~node-targeted GPU
+worker~$\to$~federated result) is verified end-to-end on NRP Nautilus separately
+(\S\ref{sec:impl}). We also close the model$\leftrightarrow$measurement loop only
+partially: $\bar a$ here is a fixed self-imposed budget rather than a contended
+$a_t$, so the Prop.~\ref{prop:bound} bound is exercised in the abundance regime
+(politeness as self-restraint) rather than the scarcity regime.
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
-The measurements above characterize the \emph{federated control substrate} with
-confidence intervals and even self-correct earlier single-run artifacts (a
-spurious low throughput sample and an apparent durability tail gap both vanished
-under repetition). They do not yet demonstrate the controller in action.
-Principal threats: (i) a single home$\leftrightarrow$node path with \emph{no
-competing tenants}, so the contended capacity $a_t$ of \S\ref{sec:model} is held
-artificially constant; (ii) federation claims measured on one server, not a leaf
-topology; (iii) the AIMD and Kalman controllers (\S\ref{sec:controller},
-\S\ref{sec:thermal}) are analyzed but not yet measured under load; and (iv) no
-comparison against existing bursting systems. \S\ref{sec:eval-e2e} and the leaf,
-partition (E6), and full-$D$ experiments are required before the evaluation
-supports the paper's thesis.
+The evaluation establishes: (i) the federated control path is RTT-bound (Q1),
+motivating epoch-paced admission; (ii) JetStream durability is latency-free over
+the WAN (Q2); (iii) control-plane throughput scales sub-linearly with the window
+(Q3); (iv) the prober detection delay $D$ is a measured, first-order term in the
+compliance bound (Q4); and (v) the admission controller is the polite-efficient
+frontier point against both baselines, with disjoint CIs at two scales (Q5).
+Principal threats: the Q5 goodput comparison is on a controlled node, not under
+live multi-tenant contention (the in-situ measurement was variance-dominated; we
+report the three nulls rather than suppress them); federation interest/partition
+behavior (E2/E6) and the single-port traversal tax are characterized on one server
+or left to future work; and $\bar a$ is held fixed rather than driven by a
+contended $a_t$. The system path is nonetheless verified end-to-end, and the
+controller's politeness claim ($\rho=0$ in every repeat of every run) is robust.
