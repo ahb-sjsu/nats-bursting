@@ -34,3 +34,32 @@ reported**, and **coded aggregation** (analyze by opaque label, unblind last).
 ## Analysis
 Aggregate all 12 trials by policy → mean ± 95% CI (t, df=reps−1). Apply the rules above.
 Report the full per-trial table regardless of outcome.
+
+---
+
+# Pre-registration — Run 2 (compute-dominated), written before running
+
+Run 1 returned a pre-registered NULL: goodput was overhead-bound (per-pod startup
+~20 s ≈ the 10 s compute). Run 2 fixes the *conditions* (not the hypotheses): make
+compute ≫ overhead so concurrency maps to goodput, and pods overlap during the long
+compute so peak concurrency reflects the policy.
+
+## Changes from Run 1 (only conditions)
+- **HOLD_SEC = 90** (was 10) — compute now ~4-5x the ~20 s startup overhead.
+- B = 4, budget C = 2, naive ceiling H = 3 (unchanged); RTX-3090 (pre-flight-checked free).
+- `static` rate = 0.011 jobs/s (≈ 1 per 90 s → expected ~1 concurrent, < budget 2).
+- 3 reps; randomized interleaved order, **seed 43** (fresh); unique `--run-tag`; clean-up between.
+
+## Hypotheses + decision rules — UNCHANGED from Run 1
+- H1: aimd goodput > static goodput, 95% CIs disjoint, both ρ≈0.
+- H2: naive ρ > 0, CI disjoint from aimd/static (≈0).
+- Null/negative reported as such. All trials reported (timeouts included).
+
+---
+
+# Pre-registration — Runs 3 & 4 (Atlas controlled testbed), before running
+Diagnosis after 3 NRP nulls: shared-cluster variance (scheduling + cold image pull)
+dominates. Move to a controlled, variance-free testbed (Atlas local processes).
+- **Run 3 (GPU):** 2x GV100, budget C=2, hard-cap 3, B=4, HOLD=30, seed 44, 4 reps.
+- **Run 4 (CPU):** 48 cores, budget C=8, hard-cap 12, B=12, HOLD=20, 1 thread/proc, seed 45, 4 reps.
+- Hypotheses + decision rules UNCHANGED (H1, H2). All trials reported.

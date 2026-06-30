@@ -1,0 +1,23 @@
+{
+  "experiment": "E8",
+  "cfg": {
+    "kcap": 2,
+    "local": true,
+    "gpus": "1,0"
+  },
+  "result": {
+    "policy": "aimd",
+    "burst": 4,
+    "completed": 4,
+    "burst_completion_s": 74.35831880569458,
+    "goodput_tasks_per_s": 0.053793577695756996,
+    "monitor": {
+      "peak_concurrency": 2,
+      "cap": 2,
+      "cap_violation_fraction": 0.0,
+      "util_floor_breach_fraction": null,
+      "n_samples": 75
+    },
+    "over_admission_rho": 0.0
+  }
+}

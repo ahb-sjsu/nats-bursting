@@ -1,0 +1,42 @@
+{
+  "experiment": "E8",
+  "cfg": {
+    "url": "nats://100.68.134.21:4222",
+    "transport": "core",
+    "path": "lan",
+    "subject": "infocom.echo",
+    "stream": "INFOCOM",
+    "msg_size": 256,
+    "n": 2000,
+    "concurrency": 1,
+    "timeout": 5.0,
+    "creds": null
+  },
+  "meta": {
+    "host": "OWNEROW-67O05MG",
+    "git": "f70999b",
+    "ts_unix": 1782844538.2239244
+  },
+  "result": {
+    "policy": "naive",
+    "burst": 4,
+    "accepted": 0,
+    "alpha": 2,
+    "beta": 0.5,
+    "cold_start_s": 30.277162599842995,
+    "submit_to_first_result_s": 98.21972159994766,
+    "burst_completion_s": 351.3841673999559,
+    "completed": 4,
+    "goodput_tasks_per_s": 0.011383552166273563,
+    "monitor": {
+      "peak_concurrency": 2,
+      "cap": 2,
+      "cap_violation_fraction": 0.0,
+      "util_floor_breach_fraction": null,
+      "n_samples": 79,
+      "over_admission_fraction": 0.7974683544303798
+    },
+    "over_admission_rho": 0.7974683544303798,
+    "note": "monitor counts guest pods labelled infocom=<policy> in --namespace; over_admission_rho = epochs with a Pending pod or util<floor (needs --util-cmd for the GPU-util side); --image must be a burst worker publishing results."
+  }
+}
