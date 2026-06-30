@@ -46,12 +46,13 @@ controller must tolerate.
 The federated path is RTT-bound.}
 \label{tab:e1}
 \small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcc}
 \toprule
-path & RTT p50/p95/p99 (ms) & throughput (msg/s) \\
+path & RTT p50/95/99 (ms) & thr.\ (msg/s) \\
 \midrule
-local (loopback)       & $0.84/1.09/1.14$    & $6855$ \\
-Tailscale (1 WAN hop)  & $76/171/302$        & $188\pm28$ \\
+local      & $0.84/1.09/1.14$ & $6855$ \\
+Tailscale  & $76/171/302$     & $188\pm28$ \\
 \bottomrule
 \end{tabular}
 \end{table}
