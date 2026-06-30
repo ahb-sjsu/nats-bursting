@@ -26,6 +26,11 @@ type JobDescriptor struct {
 	Resources Resources         `json:"resources,omitempty" yaml:"resources,omitempty"`
 	Labels    map[string]string `json:"labels,omitempty" yaml:"labels,omitempty"`
 
+	// NodeSelector constrains scheduling to nodes matching these labels,
+	// e.g. {"nvidia.com/gpu.product": "NVIDIA-A10"} to avoid reserved GPU
+	// types. Rendered into the pod template's nodeSelector.
+	NodeSelector map[string]string `json:"node_selector,omitempty" yaml:"node_selector,omitempty"`
+
 	// BackoffLimit is the K8s Job spec field of the same name —
 	// number of in-pod retries before the Job is marked failed.
 	// Defaults to 0 (fail fast).
@@ -131,6 +136,7 @@ func (d JobDescriptor) ToJob(namespace string) (*batchv1.Job, error) {
 				ObjectMeta: metav1.ObjectMeta{Labels: labels},
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyNever,
+					NodeSelector:  d.NodeSelector,
 					Containers: []corev1.Container{{
 						Name:    "main",
 						Image:   d.Image,

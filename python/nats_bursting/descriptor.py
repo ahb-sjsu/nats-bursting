@@ -48,6 +48,7 @@ class JobDescriptor:
     env: dict[str, str] = field(default_factory=dict)
     resources: Resources = field(default_factory=Resources)
     labels: dict[str, str] = field(default_factory=dict)
+    node_selector: dict[str, str] = field(default_factory=dict)
     backoff_limit: int = 0
 
     def to_dict(self) -> dict:
@@ -59,6 +60,7 @@ class JobDescriptor:
             "env": dict(self.env),
             "resources": self.resources.to_dict(),
             "labels": dict(self.labels),
+            "node_selector": dict(self.node_selector),
             "backoff_limit": self.backoff_limit,
         }
         return d
@@ -82,6 +84,7 @@ class JobDescriptor:
                 ephemeral_storage=res.get("ephemeral_storage", ""),
             ),
             labels=dict(data.get("labels", {}) or {}),
+            node_selector=dict(data.get("node_selector", {}) or {}),
             backoff_limit=int(data.get("backoff_limit", 0) or 0),
         )
 
