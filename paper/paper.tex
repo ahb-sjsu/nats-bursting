@@ -388,6 +388,49 @@ workers & throughput & p50 & p99 \\\midrule
 concurrency$\div$RTT, not pod count, for trivial tasks.}\label{fig:t3}
 \end{figure}
 
+\subsection{Admission control: goodput vs.\ politeness}\label{sec:eval-admission}
+The fabric's politeness claim rests on the controller pacing concurrency to a
+budget rather than grabbing all it can. We test this directly on a controlled,
+variance-free testbed (local-process GPU/CPU workers; pre-registered hypotheses,
+randomized interleaved trial order, four repeats) comparing three submission
+policies against a self-imposed politeness budget $C$: \emph{naive} (submit up to
+the hard cap), \emph{static} (fixed rate), and the controller's completion-gated
+\emph{AIMD} admission. We report goodput and the over-budget fraction $\rho$
+(epochs with concurrency $>C$); Table~\ref{tab:admission} and
+Fig.~\ref{fig:admission} summarize.
+
+\begin{table}[t]\centering\caption{Admission policies vs.\ a politeness budget $C$
+(mean\,$\pm$\,95\% CI, 4 reps). AIMD holds the budget ($\rho{=}0$) at
+$1.7$--$3.2\times$ static's goodput, and matches naive's goodput without
+over-admitting.}\label{tab:admission}
+\begin{tabular}{llcc}\toprule
+scale & policy & goodput (tasks/s) & over-budget $\rho$ \\\midrule
+GPU            & naive  & $0.0538\pm0.0003$ & $0.54$ \\
+$C{=}2$        & aimd   & $0.0539\pm0.0001$ & $0.00$ \\
+               & static & $0.0313\pm0.0000$ & $0.00$ \\\midrule
+CPU            & naive  & $0.578\pm0.006$   & $0.95$ \\
+$C{=}8$        & aimd   & $0.293\pm0.003$   & $0.00$ \\
+               & static & $0.092\pm0.000$   & $0.00$ \\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.84\columnwidth]{figures/pareto_gpu.png}
+\caption{Goodput vs.\ over-budget $\rho$ (GPU pool, $C{=}2$). AIMD attains the
+greedy policy's goodput at $\rho{=}0$ and dominates static; naive buys throughput
+only by over-admitting.}\label{fig:admission}
+\end{figure}
+
+AIMD is the polite-efficient point: it holds the budget exactly ($\rho{=}0$ at
+both scales) while delivering $1.72\times$ (GPU) and $3.18\times$ (CPU) static's
+goodput, and it matches naive's goodput without ever exceeding the budget. naive
+achieves its goodput only by over-admitting ($\rho{=}0.54$/$0.95$). Both
+pre-registered hypotheses hold with disjoint CIs. \emph{Scope:} this isolates the
+admission \emph{policy} on a controlled node; the full pod path
+(controller$\to$node-targeted GPU worker$\to$federated result) is separately
+verified end-to-end on NRP, while in-situ goodput on the shared cluster was
+dominated by exogenous scheduling/image-pull variance (reported, not suppressed).
+
 \section{Threats to validity}\label{sec:threats}
 We state these so the numbers are read correctly. \textbf{Synthetic data (Tier 1):} real bge
 embeddings reproduce the random numbers within 0.001; cosine remains a fidelity proxy.

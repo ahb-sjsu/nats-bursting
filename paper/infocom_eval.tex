@@ -58,11 +58,10 @@ Tailscale (1 WAN hop)  & $76/171/302$        & $188\pm28$ \\
 
 \subsection{Durability cost (Q2)}
 \label{sec:eval-durability}
-We compare JetStream publish-to-ack latency for file-backed (durable) and
-memory (non-durable) streams over Tailscale. The medians are
-$81.4\pm10.6$\,ms (durable) and $84.0\pm6.5$\,ms (non-durable), with overlapping
-confidence intervals at every percentile. Over this WAN, file persistence is
-therefore \emph{statistically indistinguishable} from in-memory: the round-trip
+We compare JetStream publish-to-ack latency for file-backed and in-memory streams
+over Tailscale. The medians are $81.4\pm10.6$\,ms (file) vs.\ $84.0\pm6.5$\,ms
+(memory), overlapping at every percentile. Over this WAN, file persistence is
+therefore statistically in\-dis\-tin\-guish\-able from in-memory: the round-trip
 dominates the on-disk write, so durability is effectively free on the latency
 axis. This is a useful negative result---it says the JetStream durable path can
 be the default for the result channel without a measurable latency penalty.
