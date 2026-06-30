@@ -75,7 +75,9 @@ def normalize(rec: dict, rho_metric: str) -> dict | None:
         comp = r.get("burst_completion_s")
         good = r.get("completed") / comp if comp and r.get("completed") else None
         mon = r.get("monitor", {})
-        rho = r.get("over_admission_rho", mon.get("cap_violation_fraction"))
+        # politeness-budget framing: rho = over-budget concurrency (cap_violation);
+        # falls back to the pending-based over_admission_rho if no monitor block.
+        rho = mon.get("cap_violation_fraction", r.get("over_admission_rho"))
         return {
             "label": r.get("policy", "e8"),
             "source": "e8",
