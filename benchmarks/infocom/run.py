@@ -281,7 +281,7 @@ async def e8(a) -> dict[str, Any]:
     # (window, rate): window caps in-flight (real admission control, completion-gated);
     # rate paces submissions. naive grabs everything; static trickles; aimd holds <= budget.
     if policy == "naive":
-        window, rate = B, None
+        window, rate = min(B, a.hard_cap), None  # grab up to the hard fair-use ceiling
     elif policy == "static":
         window, rate = B, a.rate
     elif policy == "aimd":
@@ -296,7 +296,12 @@ async def e8(a) -> dict[str, Any]:
     first_result: list[Any] = [None]
     completed = [0]
     done = asyncio.Event()
-    expected = {f"infocom-{policy}-{i}" for i in range(B)}  # scope drain to THIS run
+    tag = f"-{a.run_tag}" if a.run_tag else ""
+
+    def jname(i: int) -> str:  # unique per-trial job id (avoids cross-trial collisions)
+        return f"infocom-{policy}{tag}-{i}"
+
+    expected = {jname(i) for i in range(B)}  # scope drain to THIS trial
     seen: set[str] = set()
 
     async def on_result(msg) -> None:
@@ -324,7 +329,7 @@ async def e8(a) -> dict[str, Any]:
     )
 
     def _desc(i: int) -> JobDescriptor:
-        jid = f"infocom-{policy}-{i}"
+        jid = jname(i)
         return JobDescriptor(
             name=jid,
             image=a.image,
@@ -349,7 +354,7 @@ async def e8(a) -> dict[str, Any]:
     submitted = [0]
 
     async def submit(i: int) -> None:
-        res = await asyncio.to_thread(client.submit, _desc(i), f"infocom-{policy}-{i}")
+        res = await asyncio.to_thread(client.submit, _desc(i), jname(i))
         submit_times.append(time.perf_counter() - t0)
         if getattr(res, "accepted", False):
             accepted[0] += 1
@@ -534,6 +539,19 @@ def main() -> None:
         dest="node_selector",
         help="guest pod nodeSelector 'k=v,k2=v2' (e.g. "
         "nvidia.com/gpu.product=NVIDIA-A10 to avoid reserved GPU types)",
+    )
+    ap.add_argument(
+        "--hard-cap",
+        type=int,
+        default=3,
+        dest="hard_cap",
+        help="E8 naive concurrency ceiling (<= fair-use cap; stays compliant)",
+    )
+    ap.add_argument(
+        "--run-tag",
+        default="",
+        dest="run_tag",
+        help="E8 unique per-trial tag in job names (avoids cross-trial collisions)",
     )
     ap.add_argument("--command", default="", help="E8 job command (space-separated)")
     ap.add_argument("--gpu", type=int, default=1, help="E8 GPUs per job")
