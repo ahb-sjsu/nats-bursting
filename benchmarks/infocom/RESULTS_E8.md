@@ -1,49 +1,52 @@
-# E8 — end-to-end goodput vs politeness on NRP (first real run)
+# E8 — end-to-end on NRP: what's shown, and what isn't (honest)
 
-First end-to-end E8 on live NRP A10 GPUs through the full nats-bursting stack:
-home `Client.submit` → Atlas hub → NRP leaf → controller → guest Job (GPU worker:
-real matmul, publishes `results.<job_id>`) → result routed home; the home driver's
-shared `Monitor` samples guest-pod concurrency each second. 3 reps/policy, B=3 jobs,
-budget **C=2**, hard cap K=4, all pods pinned to `nvidia.com/gpu.product=NVIDIA-A10`,
-sequential (≤3 pods at once), real compute + exit-0 (fair-use compliant). Raw JSON in
-`out/E8_*_r*.json`; figure `out/agg_e8/pareto.png`.
+The full nats-bursting stack runs end-to-end on live NRP GPUs (controller → guest Job
+→ GPU worker matmul → result routed home → Monitor). That much is verified. Getting a
+*clean controlled goodput–politeness Pareto* out of it, however, has not succeeded —
+the cluster's overhead and scheduling variance swamp the policy signal at feasible
+scale. This file reports both outcomes straight.
 
-## Regime (important, honest framing)
-NRP allocates GPUs **exclusively** and has **abundant** A10s, so our few pods never
-hit hardware scarcity. We therefore test the **politeness-budget under abundance**
-regime: a guest should self-limit to a budget **C** even when more is free (NRP bans
-over-grabbing / under-utilization). "Over-admission" ρ = fraction of epochs guest
-concurrency exceeds the budget C. (The scarcity/back-off regime of the model is not
-exercised here — we could not manufacture controlled scarcity without admin
-ResourceQuota rights, which the portal identity lacks.)
+## What IS shown
+- **System works**: controller + RBAC + node-targeting (A10/RTX-3090 pinning) + GPU
+  worker (matmul + publish `results.<id>`) + federated result path + concurrency
+  Monitor — all confirmed live.
+- **Polite vs impolite separates** (earlier B=3 run): `naive` exceeded the budget
+  (peak 3, over-budget ρ≈0.61) for ~1.8x goodput; `aimd`/`static` held it (peak 2, ρ=0).
+- **The admission controller works as coded**: the completion-gated limiter holds
+  `aimd` at the budget C=2 (verified, peak 2 every rep).
 
-## Result (3 reps, mean ± 95% CI; over-budget rho)
-| policy | goodput (tasks/s) | over-budget rho | completion (s) | peak conc. |
-|---|---|---|---|---|
-| naive  | 0.10 ± 0.01 | 0.61 ± 0.24 | 31.2 ± 4.0 | 3 |
-| aimd   | 0.05 ± 0.00 | 0.00 ± 0.00 | 55.2 ± 4.9 | 2 |
-| static | 0.05 ± 0.00 | 0.00 ± 0.00 | 55.0 ± 0.0 | 2 |
+## What is NOT shown (pre-registered null)
+Rigorous leaner sweep (RTX-3090, randomized interleaved order seed 42, B=4, C=2, 3 reps;
+pre-registration in `E8_PREREG.md`):
 
-**Finding.** `naive` buys ~1.8x goodput by exceeding the budget (peak 3, ρ≈0.61) —
-the impolite-but-fast corner. The completion-gated controller (`aimd`) and the
-rate-limited `static` hold the budget (peak 2, ρ=0) — the polite region. The
-goodput↔politeness tradeoff is real and measured on production GPUs.
+| policy | goodput (tasks/s) | over-budget ρ | peaks |
+|---|---|---|---|
+| naive  | 0.046 ± 0.001 | 0.12 ± 0.26 | [3, 3, 1] |
+| aimd   | 0.045 ± 0.001 | 0.00 ± 0.00 | [2, 2, 2] |
+| static | 0.043 ± 0.064 | 0.00 ± 0.00 | [1, 2, 2] |
 
-## Honest limitations (this is a first, small run)
-1. **aimd and static do not separate** at B=3/C=2 — both stay ≤2 with the same
-   goodput. The paper's intended "aimd fills the budget better than static's trickle"
-   needs a **larger B and a starker static rate** so static visibly leaves the budget
-   idle while aimd keeps it full. As run, we show *polite vs impolite*, not *aimd > static*.
-2. **Result-delivery flakiness**: 1/9 runs (`aimd_r2`) timed out at 2/3 — one result
-   never arrived. Needs hardening (retry/ack on the result path) before scaling reps.
-3. **Small scale**: B=3, ≤3 pods, short 15 s jobs — fair-use-bounded; CIs are thin.
-4. **Driver, not theory**: an earlier run was discarded — the open-loop policy
-   schedules didn't enforce concurrency (aimd peaked at 3) and the result drain wasn't
-   scoped (counted stray results). Both fixed (completion-gated in-flight limiter +
-   run-scoped drain); this run uses the corrected driver.
+- **H1 (aimd > static goodput at equal politeness): NOT supported.** All policies land
+  at ~0.045 tasks/s — goodput is **overhead-bound**, not concurrency-bound.
+- **H2 (naive impolite, ρ disjoint from 0): NOT supported.** naive ρ CI includes 0
+  (one rep its 3 pods came up staggered → peak 1, not 3).
 
-## What works (verified live)
-Controller + RBAC, node-targeting (A10 pinning), GPU worker (matmul + publish), the
-federated result path, and the concurrency Monitor — all confirmed end-to-end. The
-remaining work is *experimental* (separate aimd/static at scale; harden result
-delivery), not systems plumbing.
+**Why:** per-pod startup (image pull + scheduling + CUDA cold-start ≈ the measured 2.46 s
+D, plus *staggered* pod bring-up) is ~20 s/pod — comparable to or larger than the 10 s
+compute. So (a) completion time is dominated by overhead, erasing the 2-parallel-vs-
+1-parallel goodput gap, and (b) actual concurrency depends on *when* pods happen to come
+up, not just the submission window. The policy signal is real but **below the cluster
+noise floor at this scale**.
+
+## The fix (not yet run)
+Make **compute >> overhead**: long jobs (HOLD ≈ 90–120 s) so per-pod startup is a small
+fraction, completion becomes compute-bound (2-parallel `aimd` ~2x faster than 1-parallel
+`static`), and pods overlap during the long compute (peak concurrency reliably reflects
+the policy). Plus a freer GPU pool (RTX-3090 schedules in <1 s when probed) and a
+hardened result path (publish-retry) to cut the ~1/9 result-loss timeouts. This is an
+**experimental-conditions** fix, not a systems fix — the stack itself is proven.
+
+## Honest bottom line
+On a busy shared cluster with short jobs, the controlled goodput–ρ Pareto is dominated
+by exogenous overhead/scheduling variance — itself a real finding about bursting on
+shared infrastructure. A compute-dominated rerun on free nodes is the path to the clean
+3-way result; until then, only *polite vs impolite* (not *aimd > static*) is demonstrated.
