@@ -278,12 +278,14 @@ async def e8(a) -> dict[str, Any]:
     from nats_bursting.descriptor import JobDescriptor, Resources
 
     B, policy = a.burst, a.baseline
+    # (window, rate): window caps in-flight (real admission control, completion-gated);
+    # rate paces submissions. naive grabs everything; static trickles; aimd holds <= budget.
     if policy == "naive":
-        sched = [0.0] * B  # all at once
+        window, rate = B, None
     elif policy == "static":
-        sched = [i / max(a.rate, 1e-9) for i in range(B)]  # fixed rate r jobs/s
+        window, rate = B, a.rate
     elif policy == "aimd":
-        sched = _aimd_schedule(B, a.alpha, a.beta, a.kcap)  # window-paced (model of §4)
+        window, rate = a.kcap, None
     else:
         raise SystemExit(f"unknown --baseline {policy}")
 
@@ -294,8 +296,18 @@ async def e8(a) -> dict[str, Any]:
     first_result: list[Any] = [None]
     completed = [0]
     done = asyncio.Event()
+    expected = {f"infocom-{policy}-{i}" for i in range(B)}  # scope drain to THIS run
+    seen: set[str] = set()
 
-    async def on_result(_msg) -> None:
+    async def on_result(msg) -> None:
+        jid = (
+            msg.subject[len(a.result_prefix) :]
+            if msg.subject.startswith(a.result_prefix)
+            else msg.subject
+        )
+        if jid not in expected or jid in seen:  # ignore stragglers from other runs
+            return
+        seen.add(jid)
         if first_result[0] is None:
             first_result[0] = time.perf_counter() - t0
         completed[0] += 1
@@ -334,6 +346,8 @@ async def e8(a) -> dict[str, Any]:
     submit_times: list[float] = []
     accepted = [0]
 
+    submitted = [0]
+
     async def submit(i: int) -> None:
         res = await asyncio.to_thread(client.submit, _desc(i), f"infocom-{policy}-{i}")
         submit_times.append(time.perf_counter() - t0)
@@ -352,16 +366,28 @@ async def e8(a) -> dict[str, Any]:
     )
     mon.start()
 
+    # Completion-gated submission: in_flight = submitted - completed must stay < window
+    # (real admission control); `rate` paces submissions. Submits fire as tasks so the
+    # request/reply latency doesn't block the gate.
+    def in_flight() -> int:
+        return submitted[0] - completed[0]
+
+    loop0 = time.perf_counter()
     tasks = []
-    for i, dt in enumerate(sched):
-        await asyncio.sleep(max(0.0, dt - (time.perf_counter() - t0)))
+    for i in range(B):
+        if rate:  # fixed-rate pacing
+            target = loop0 + i / max(rate, 1e-9)
+            await asyncio.sleep(max(0.0, target - time.perf_counter()))
+        while in_flight() >= window and (time.perf_counter() - t0) < a.duration:
+            await asyncio.sleep(0.2)  # in-flight gate (the politeness window)
+        submitted[0] += 1
         tasks.append(asyncio.create_task(submit(i)))
-    await asyncio.gather(*tasks)
 
     try:  # wait (bounded) for all results
         await asyncio.wait_for(done.wait(), timeout=a.duration)
     except asyncio.TimeoutError:
         pass
+    await asyncio.gather(*tasks, return_exceptions=True)
     completion = time.perf_counter() - t0
     mon.stop()
     client.close()
