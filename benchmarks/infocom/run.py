@@ -306,6 +306,10 @@ async def e8(a) -> dict[str, Any]:
 
     # --- sync submit client (spins its own bg loop); call via a thread ---
     client = Client(nats_url=a.url, nats_creds=a.creds, submit_subject=a.submit_subject)
+    # node-targeting: "k=v,k2=v2" -> dict (e.g. nvidia.com/gpu.product=NVIDIA-A10)
+    node_sel = dict(
+        p.split("=", 1) for p in (a.node_selector or "").split(",") if "=" in p
+    )
 
     def _desc(i: int) -> JobDescriptor:
         jid = f"infocom-{policy}-{i}"
@@ -324,6 +328,7 @@ async def e8(a) -> dict[str, Any]:
             },
             resources=Resources(cpu="1", memory="2Gi", gpu=a.gpu),
             labels={"infocom": policy},
+            node_selector=node_sel,
         )
 
     submit_times: list[float] = []
@@ -497,6 +502,13 @@ def main() -> None:
         help="guest job compute seconds (HOLD_SEC)",
     )
     ap.add_argument("--matmul-size", type=int, default=4096, dest="matmul_size")
+    ap.add_argument(
+        "--node-selector",
+        default="",
+        dest="node_selector",
+        help="guest pod nodeSelector 'k=v,k2=v2' (e.g. "
+        "nvidia.com/gpu.product=NVIDIA-A10 to avoid reserved GPU types)",
+    )
     ap.add_argument("--command", default="", help="E8 job command (space-separated)")
     ap.add_argument("--gpu", type=int, default=1, help="E8 GPUs per job")
     ap.add_argument("--result-prefix", default="results.", dest="result_prefix")
