@@ -3,7 +3,7 @@
   "upload_type": "software",
   "description": "Container-native cloud-bursting fabric for AI/ML batch workloads on shared multi-tenant clusters (e.g., NRP Nautilus): a federated NATS leaf-node control plane, an AIMD politeness/admission controller with a measured policy-violation bound, and transport (turboquant-pro) plus Kalman-filtered thermal GPU right-sizing (batch-probe). This release is the snapshot accompanying the IEEE INFOCOM 2027 submission 'Polite Bursting'; it includes the assembled paper (paper/infocom.tex), the E1-E8 measurement harness, and the controlled-testbed goodput-politeness results.",
   "creators": [
-    {"name": "Bond, Andrew H.", "affiliation": "San Jose State University", "orcid": "0009-0009-1769-5099"}
+    {"name": "Bond, Andrew H.", "affiliation": "San Jose State University", "orcid": "0009-0003-2599-6158"}
   ],
   "license": {"id": "MIT"},
   "keywords": ["cloud bursting", "Kubernetes", "NATS", "admission control", "AIMD", "politeness", "NRP Nautilus", "GPU", "multi-tenant"],

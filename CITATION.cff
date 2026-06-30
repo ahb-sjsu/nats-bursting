@@ -6,7 +6,7 @@ authors:
     given-names: Andrew H.
     email: andrew.bond@sjsu.edu
     affiliation: "San Jose State University"
-    orcid: "https://orcid.org/0009-0009-1769-5099"
+    orcid: "https://orcid.org/0009-0003-2599-6158"
 type: software
 version: "0.2.0"
 date-released: "2026-06-30"
@@ -27,7 +27,7 @@ preferred-citation:
   authors:
     - family-names: Bond
       given-names: Andrew H.
-      orcid: "https://orcid.org/0009-0009-1769-5099"
+      orcid: "https://orcid.org/0009-0003-2599-6158"
   collection-title: "Proc. IEEE INFOCOM"
   year: 2027
   notes: "Submission snapshot; venue and DOI pending acceptance."
