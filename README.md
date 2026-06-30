@@ -365,9 +365,11 @@ Override via `config.yaml` (example in
 
 ## Status
 
-End-to-end path proven: cell submission from a workstation → local NATS
-→ Go controller with politeness decision → `client-go` Job creation on
-NRP Nautilus → pod ran on an SDSC node → logs streamed back.
+End-to-end path proven on NRP Nautilus: cell submission from a workstation →
+federated NATS leaf → in-cluster Go controller (politeness decision +
+node-targeting) → `client-go` Job creation → GPU worker ran on an A10 node and
+published its result back over the leaf. The AIMD admission controller is
+empirically validated against naive/static baselines (see Benchmarks).
 
 Currently alpha. Known gaps (tracked in issues):
 
@@ -388,13 +390,19 @@ cold|warm|scale`, gated behind `--i-have-checked-nrp-policy`).
 | 2 — transport | NATS round-trip, raw vs. compressed | loopback ~6× for large batches; **real ~2 Mbps hop: 1.2× → 3.6× → 8.4×** as payload grows |
 | 3 — cluster (NRP) | ephemeral Job vs. warm pool | cold-start **~6.6 s** vs. warm-pool **~67 ms**; throughput plateaus ~930/s (concurrency ÷ RTT, Little's law) |
 | GPU sizing | batch-probe on a GV100 | a burst ran at **94% GPU utilization** |
+| Admission control | naive / static / AIMD vs. a politeness budget | AIMD holds the budget (over-budget ρ = 0) at **1.7–3.2× a static baseline's goodput**, and matches a greedy baseline without over-admitting (pre-registered, randomized, 4 reps) |
 
 The composition with [**turboquant-pro**](https://pypi.org/project/turboquant-pro)
 (on-wire compression) and [**batch-probe**](https://pypi.org/project/batch-probe)
 (GPU right-sizing + thermal control) is written up as a practice paper in
-[`paper/`](paper/) (targeting CANOPIE-HPC @ SC26). See
-[`benchmarks/README.md`](benchmarks/README.md) for the full tables, the
-measurement method, and threats to validity.
+[`paper/`](paper/) (targeting CANOPIE-HPC @ SC26). A second, control-theoretic
+write-up---the AIMD politeness controller, the federated NATS fabric, and the
+goodput–politeness Pareto above---is assembled in
+[`paper/infocom.tex`](paper/infocom.tex) (targeting IEEE INFOCOM); the full E1–E8
+measurement harness, results, and the honest record of what is and isn't
+established live in [`benchmarks/infocom/`](benchmarks/infocom/). See
+[`benchmarks/README.md`](benchmarks/README.md) for the SC26 tables and threats to
+validity.
 
 ## Citation
 
