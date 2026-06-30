@@ -1,0 +1,219 @@
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{proposition}{Proposition}
+
+\begin{document}
+
+\title{Polite Bursting: Feedback-Controlled Admission for AI Workloads
+over a Federated Messaging Fabric on Shared Clusters}
+
+\author{\IEEEauthorblockN{Andrew H. Bond}
+\IEEEauthorblockA{San Jose State University\\
+andrew.bond@sjsu.edu}}
+
+\maketitle
+
+\begin{abstract}
+Research and AI teams increasingly burst bursty GPU/ML batch workloads onto
+shared, multi-tenant clusters (e.g., the National Research Platform) where they
+are \emph{guests}: bound by fair-use policy---pod caps, sustained-utilization
+floors, ignored-resource ranges---and reachable only over constrained,
+partially-connected WAN paths. Naive submission violates policy (risking
+throttling or bans) and wastes the host's capacity; static rate-limiting wastes
+the guest's throughput. We argue that ``being a good guest'' is fundamentally a
+control problem, and present nats-bursting, a container-native bursting fabric
+that maximizes useful goodput while respecting host policy. nats-bursting
+contributes (i) a feedback admission/back-off controller modeled as an AIMD loop
+with a probe-driven estimator, analyzed for safety and a bounded
+policy-violation rate; (ii) a federated NATS leaf-node messaging plane spanning
+home and cluster whose tradeoffs---JetStream non-federation, durability,
+single-port WAN traversal---we characterize through measurement; and (iii)
+bandwidth- and resource-efficient transport via random-rotation quantization and
+OOM-/thermal-safe GPU batch right-sizing, the latter a Kalman-filtered predictive
+controller. We verify the system end-to-end on NRP Nautilus, and on a controlled
+testbed the admission controller is the polite-efficient frontier point: it holds
+the politeness budget exactly while delivering $1.7$--$3.2\times$ the goodput of a
+static baseline at equal politeness, and matches a greedy baseline's goodput
+without ever over-admitting. The system and a reproducible artifact are open
+source.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+A growing fraction of machine-learning work is \emph{bursty}: long stretches of
+local development punctuated by short, intense bursts of batch jobs---sweeps,
+fine-tunes, evaluations---that briefly need far more GPUs than any one team owns.
+Shared, opportunistic clusters such as the National Research Platform (NRP)
+\cite{nautilus} make that capacity available, but on strict \emph{guest} terms:
+fair-use policy caps concurrent pods, demands sustained utilization of what you
+request, bans sleep-only or idle workloads, and reclaims resources on completion.
+The guest is also \emph{networked} as an outsider---often reachable only through a
+single forwarded port or a mesh VPN, with no inbound cluster access.
+
+In this setting the two obvious strategies both fail. \emph{Naive} submission
+fires all work at once: it grabs more than its fair share, leaves pods pending or
+under-utilized, and trips the very thresholds that get a namespace banned.
+\emph{Static} rate-limiting is safe but leaves the budget idle whenever capacity
+is available, wasting the guest's own throughput. Neither adapts.
+
+We argue that being a good guest is a \emph{control} problem, and we build that
+thesis into nats-bursting, a container-native bursting fabric. Our contributions:
+\begin{itemize}
+\item A \textbf{politeness controller} (\S\ref{sec:controller}): a feedback
+admission/back-off loop modeled as AIMD over a probe-driven occupancy estimate,
+with a deterministic hard-cap safety guarantee and a steady-state policy-violation
+bound whose dominant term is the \emph{measured} prober detection delay
+(Prop.~\ref{prop:safety},~\ref{prop:bound}).
+\item A \textbf{federated messaging fabric} (\S\ref{sec:fabric}) of NATS leaf
+nodes spanning home and cluster, whose tradeoffs we characterize by measurement
+(\S\ref{sec:eval}).
+\item \textbf{Transport and resource subsystems} (\S\ref{sec:subsystems}):
+random-rotation quantization for bandwidth and a Kalman-filtered thermal
+controller for OOM-/heat-safe GPU sizing.
+\item An \textbf{evaluation} (\S\ref{sec:eval}) that verifies the system
+end-to-end on NRP Nautilus and shows the admission controller dominating naive
+and static baselines on the goodput--politeness frontier.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize, node distance=5mm,
+  box/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2pt},
+  >={Stealth[]}]
+\node[box] (client) {home node\\client + driver};
+\node[box, below=of client] (hub) {NATS hub};
+\node[box, right=14mm of hub] (leaf) {NATS leaf\\(in-cluster)};
+\node[box, above=of leaf] (ctrl) {controller\\(admission)};
+\node[box, right=10mm of ctrl] (pods) {GPU worker\\pods};
+\draw[<->] (client) -- (hub) node[midway,right]{burst.submit};
+\draw[<->] (hub) -- (leaf) node[midway,above]{leaf link};
+\draw[->] (leaf) -- (ctrl);
+\draw[->] (ctrl) -- (pods) node[midway,above]{Job};
+\draw[->] (pods) to[bend right=25] node[midway,below]{results.$\langle$id$\rangle$} (leaf);
+\end{tikzpicture}
+\caption{nats-bursting architecture. The home client submits over a federated
+NATS leaf link; the in-cluster controller admits jobs (pacing concurrency to the
+politeness budget) and launches GPU worker pods, whose results route back through
+the leaf.}
+\label{fig:arch}
+\end{figure}
+
+\section{Background and Motivation}
+\label{sec:bg}
+\textbf{Host policy.} The reference host (NRP Nautilus \cite{nautilus}) publishes a
+fair-use policy that our design treats as ground truth: at most $K{=}4$ concurrent
+pods per user; per running pod, utilization relative to \emph{request} must stay
+in published bands (GPU $\ge 40\%$, CPU $20$--$200\%$, RAM $20$--$150\%$); jobs
+must do real work (sleep-only jobs are banned) and release resources on
+completion; idle storage volumes are reclaimed. Admins monitor utilization and
+ban namespaces that hold under-utilized requests---so politeness is not optional.
+
+\textbf{Network reality.} The guest reaches the cluster over a single
+PAT-forwarded port or a mesh VPN, with no inbound access. A control plane must
+therefore live behind that boundary and communicate over a messaging fabric that
+traverses it---motivating the NATS leaf-node design of \S\ref{sec:fabric}.
+
+\textbf{Why existing tools are not enough.} Workflow and function-execution
+frameworks---HTCondor \cite{htcondor}, funcX/Globus Compute \cite{funcx}, Parsl
+\cite{parsl}, Ray \cite{ray}, Dask \cite{dask}---scale workers to demand but carry
+no notion of a host \emph{politeness budget}; left to default scaling they
+over-provision under contention. We instead make self-restraint a first-class,
+controlled objective.
+
+\input{infocom_model}
+
+\section{Federated Messaging Fabric}
+\label{sec:fabric}
+The control plane spans an untrusted network boundary, so nats-bursting uses a
+NATS \cite{nats} \emph{leaf-node} topology: a hub at the home node and a leaf
+inside the cluster, joined by a single outbound link that needs only the one
+forwarded port. Subjects propagate by interest, so the home client's subscription
+to \texttt{results.>} pulls worker results back across the leaf without inbound
+cluster access; submissions flow the other way on \texttt{burst.submit}
+(Fig.~\ref{fig:arch}).
+
+Two design points matter. First, \emph{core NATS vs.\ JetStream}: core subjects are
+fire-and-forget and federate transparently, whereas JetStream streams are not
+themselves federated---durable state is site-local---so we use core subjects for
+the federated control/result path and JetStream only where site-local durability
+is wanted. Second, the \emph{single-port traversal}: the entire plane multiplexes
+onto one port, which we characterize in \S\ref{sec:eval} (durability cost,
+scaling, path latency). The asymmetry of leaf interest propagation is what makes a
+result-return path over the same link possible without opening the cluster.
+
+\section{Transport and Resource Subsystems}
+\label{sec:subsystems}
+Two subsystems keep bursts efficient and policy-safe. \textbf{Transport:}
+turboquant-pro \cite{turboquantpro,turboquant} applies a random rotation that
+makes coordinates approximately i.i.d.\ Gaussian regardless of the input
+distribution, enabling distribution-free per-channel/per-token quantization of the
+tensors that cross the WAN---reducing bytes on the constrained link.
+\textbf{Resource right-sizing:} batch-probe \cite{batchprobe} binary-searches the
+largest OOM-safe GPU batch and, as the micro tier of our two-tier control stack
+(\S\ref{sec:thermal}), runs a Kalman-filtered \cite{kalman} predictive thermal
+controller that throttles before a node's setpoint is breached---node-level
+citizenship complementing the cluster-level admission loop. These mirror the
+attention-efficiency techniques \cite{flashattention,onlinesoftmax} that make the
+underlying jobs feasible.
+
+\section{Implementation}
+\label{sec:impl}
+nats-bursting is a Go control plane (decider, prober, submitter, NATS bridge,
+back-off modules) plus a Python client and the \texttt{\%\%burst} IPython magic
+\cite{natsbursting}. The controller runs \emph{in-cluster} under a minimal
+namespace-scoped ServiceAccount (Job create/get/delete; pod read), connects to the
+in-cluster NATS leaf, and renders each \texttt{JobDescriptor} into a Kubernetes
+Job; node-targeting (a \texttt{nodeSelector} on the descriptor) pins guest pods to
+non-reserved GPU types. We verified the full path live on NRP Nautilus
+\cite{nautilus}: a submit from the home node propagated hub$\to$leaf$\to$controller
+and launched an A10 GPU worker that ran real CUDA matmul and published its result
+back through the leaf to the home driver. The system, the controller/worker
+container images, and the transport/right-sizing packages
+\cite{turboquantpro,batchprobe} are open source.
+
+\input{infocom_eval}
+
+\section{Related Work}
+\label{sec:related}
+\textbf{Bursting and function execution.} HTCondor \cite{htcondor}, funcX/Globus
+Compute \cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray}, and Dask \cite{dask}
+provide elastic task execution and provider-driven scaling, but treat the host as
+owned capacity to fill; none model a fair-use politeness budget or a federated,
+inbound-restricted control plane. \textbf{Messaging.} We build on NATS
+\cite{nats} leaf federation as the substrate rather than a bespoke RPC layer.
+\textbf{Control.} The admission loop is AIMD in the lineage of additive-increase/
+multiplicative-decrease congestion avoidance \cite{chiujain}; we adapt it to a
+\emph{two-sided} objective (stay under a cap \emph{and} above a utilization floor)
+and tie the achievable compliance to a measured detection delay. The micro-tier
+thermal loop is a textbook Kalman filter \cite{kalman} applied to predictive
+throttling. To our knowledge, no prior system frames shared-cluster bursting as a
+politeness-budget control problem with both an analyzed bound and a measured
+goodput--politeness frontier.
+
+\section{Conclusion}
+\label{sec:concl}
+Being a good guest on a shared cluster is a control problem. nats-bursting makes
+self-restraint a first-class, analyzed, and measured objective: a federated NATS
+fabric that respects the network boundary, an AIMD admission controller with a
+hard-cap safety guarantee and a detection-delay-bounded violation rate, and
+node-level thermal control. End-to-end on NRP Nautilus the system works; on a
+controlled testbed the controller is the polite-efficient frontier point,
+$1.7$--$3.2\times$ a static baseline's goodput at equal politeness while a greedy
+baseline matches its goodput only by over-admitting. Honest open problems remain:
+an in-situ contended goodput--politeness Pareto (our shared-cluster measurement
+was variance-dominated, reported as three pre-registered nulls), and leaf-federation
+interest/partition behavior at scale.
+
+\bibliographystyle{IEEEtran}
+\bibliography{paper}
+
+\end{document}
