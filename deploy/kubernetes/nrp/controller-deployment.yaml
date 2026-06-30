@@ -35,7 +35,8 @@ spec:
           type: RuntimeDefault
       containers:
         - name: controller
-          image: ghcr.io/ahb-sjsu/nats-bursting:0.1.1
+          image: ghcr.io/ahb-sjsu/nats-bursting:edge
+          imagePullPolicy: Always
           args:
             - "--config"
             - "/etc/nats-bursting/config.yaml"
