@@ -406,16 +406,21 @@ validity.
 
 ## Citation
 
-If you use `nats-bursting` in academic work:
+Archived on Zenodo — concept DOI [`10.5281/zenodo.20660069`](https://doi.org/10.5281/zenodo.20660069)
+(always resolves to the latest release). If you use `nats-bursting` in academic work:
 
 ```bibtex
 @software{bond_nats_bursting_2026,
   author = {Bond, Andrew H.},
   title  = {nats-bursting: Cloud bursting for AI workloads over a NATS bus},
   year   = {2026},
+  doi    = {10.5281/zenodo.20660069},
   url    = {https://github.com/ahb-sjsu/nats-bursting}
 }
 ```
+
+The accompanying paper, *Polite Bursting* (IEEE INFOCOM 2027 submission), is in
+[`paper/infocom.tex`](paper/infocom.tex); see `CITATION.cff` for its citation entry.
 
 ## License
 

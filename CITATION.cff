@@ -8,8 +8,8 @@ authors:
     affiliation: "San Jose State University"
     orcid: "https://orcid.org/0009-0009-1769-5099"
 type: software
-version: "0.1.1"
-date-released: "2026-06-12"
+version: "0.2.0"
+date-released: "2026-06-30"
 license: MIT
 repository-code: "https://github.com/ahb-sjsu/nats-bursting"
 url: "https://github.com/ahb-sjsu/nats-bursting"
@@ -21,3 +21,13 @@ identifiers:
   - description: "Concept DOI (always resolves to the latest release)"
     type: doi
     value: "10.5281/zenodo.20660069"
+preferred-citation:
+  type: conference-paper
+  title: "Polite Bursting: Feedback-Controlled Admission for AI Workloads over a Federated Messaging Fabric on Shared Clusters"
+  authors:
+    - family-names: Bond
+      given-names: Andrew H.
+      orcid: "https://orcid.org/0009-0009-1769-5099"
+  collection-title: "Proc. IEEE INFOCOM"
+  year: 2027
+  notes: "Submission snapshot; venue and DOI pending acceptance."
