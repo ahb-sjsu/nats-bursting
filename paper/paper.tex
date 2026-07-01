@@ -6,6 +6,7 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{url}
 \usepackage[T1]{fontenc}
 \usepackage{tikz}
@@ -423,8 +424,54 @@ achieves its goodput only by over-admitting ($\rho{=}0.54$/$0.95$). Both
 pre-registered hypotheses hold with disjoint CIs. \emph{Scope:} this isolates the
 admission \emph{policy} on a controlled node; the full pod path
 (controller$\to$node-targeted GPU worker$\to$federated result) is separately
-verified end-to-end on NRP, while in-situ goodput on the shared cluster was
-dominated by exogenous scheduling/image-pull variance (reported, not suppressed).
+verified end-to-end on NRP. The budget above is self-imposed---the \emph{abundance}
+case; next we drive it with a real competing tenant.
+
+\emph{Under real contention.} The sharper test is \emph{scarcity}, where a
+neighbour actually contests capacity. On the two-GV100 Atlas node a competing
+tenant occupies $c(t)$ of the $C{=}2$ GPUs on a fixed profile, so available
+capacity $a(t){=}C{-}c(t)$ is exogenous and \emph{measured} by the prober (a
+per-GPU process census); we also track \emph{harm to the neighbour}---its completed
+work relative to undisturbed. Table~\ref{tab:contended} and Fig.~\ref{fig:contended}
+report it (pre-registered, four seeds, randomized interleaving). Under
+\emph{structured} contention (a square wave, modelling scheduled load) AIMD is the
+polite-efficient \emph{knee}: $1.41\times$ static's goodput at a quarter of naive's
+over-admission, while sparing the neighbour ($76\%$ of its throughput kept vs
+naive's $62\%$)---naive's extra goodput is bought entirely by stealing $38\%$ of the
+competitor's work. Under \emph{memoryless} contention (Poisson) AIMD breaks even
+with static and over-admits more: capacity now varies faster than the prober's
+detection delay, so feedback cannot track. We report this null---adaptive admission
+pays when a neighbour's load has structure, and one should fall back to a fixed
+budget when it does not. The micro tier (batch-probe's thermal controller,
+\S\ref{sec:bp}) ran live throughout; on the GPU it throttled $>\!90\%$ of epochs
+and, on this shared node, found the co-tenant thermal baseline ($\sim$$77^\circ$C)
+a floor self-throttling cannot undercut---politeness extends even to heat.
+
+\begin{table}[t]\centering\caption{Admission under real contention on
+$2{\times}$GV100 ($C{=}2$; 4 seeds, mean\,$\pm$\,95\% CI). ``kept'' $=$ competitor
+throughput retained ($1{=}$undisturbed). Structured (square): AIMD is the
+polite-efficient knee. Memoryless (poisson): feedback breaks even with static---a
+pre-registered null.}\label{tab:contended}
+\begin{tabular}{llccc}\toprule
+contention & policy & goodput (tasks/s) & $\rho$ & kept \\\midrule
+\multirow{3}{*}{square}
+ & naive  & $0.101\pm0.002$ & $0.64$ & $0.62$ \\
+ & aimd   & $0.091\pm0.000$ & $0.15$ & $0.76$ \\
+ & static & $0.064\pm0.000$ & $0.11$ & $0.89$ \\\midrule
+\multirow{3}{*}{poisson}
+ & naive  & $0.096\pm0.002$ & $0.85$ & $0.62$ \\
+ & aimd   & $0.062\pm0.006$ & $0.30$ & $0.55$ \\
+ & static & $0.064\pm0.000$ & $0.22$ & $0.79$ \\\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]\centering
+\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_square.png}\hfill
+\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_poisson.png}
+\caption{Contended goodput--politeness frontier (lower-right is better).
+\emph{Left} (square, structured): AIMD is the polite-efficient knee. \emph{Right}
+(poisson, memoryless): feedback collapses onto static.}\label{fig:contended}
+\end{figure}
 
 \section{Threats to validity}\label{sec:threats}
 We state these so the numbers are read correctly. \textbf{Synthetic data (Tier 1):} real bge
@@ -435,8 +482,10 @@ one overlay (likely relayed) path---a characterized datacenter link would pin ab
 total; the K8s breakdown isolates the cluster-side cost; warm-pool and a real NATS-join are
 measured, while a cold image pull and a GPU-image run remain. \textbf{Scaling:} the plateau is
 explained by Little's law, not presented as pod-count scaling; a compute-bound load is the named
-next run. \textbf{Portability:} batch-probe's
-thermal sensing is Linux-only and its feedforward is one-sided. \textbf{Cluster citizenship:} the
+next run. \textbf{Contention realism:} the contended Pareto is manufactured on a two-GPU node
+($C{=}2$), not a production multi-tenant trace, and the Poisson regime marks where feedback stops
+beating a fixed budget (capacity outpaces the prober's detection delay). \textbf{Portability:}
+batch-probe's thermal sensing is Linux-only and its feedforward is one-sided. \textbf{Cluster citizenship:} the
 harness is policy-safe by construction (ignored-range pods, $\le$4 concurrent, exit-0 Jobs, TTL +
 delete cleanup, an explicit policy gate, and---above the harness---the controller's politeness
 backoff).
