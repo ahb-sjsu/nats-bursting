@@ -45,10 +45,11 @@ tradeoffs---JetStream non-federation, durability, single-port WAN traversal---we
 characterize through measurement; and (iii) bandwidth- and resource-efficient
 transport via random-rotation quantization and OOM-/thermal-safe GPU batch
 right-sizing with a Kalman-filtered predictive controller. We verify the system
-end-to-end on NRP Nautilus, and on a controlled testbed the admission controller
-is the polite-efficient frontier point: it holds the politeness budget exactly
-while delivering $1.7$--$3.2\times$ a static baseline's goodput at equal
-politeness, and matches a greedy baseline without over-admitting. The system and a
+end-to-end on NRP Nautilus and, under \emph{real, manufactured contention}, show
+the controller is the polite-efficient point---up to $3.2\times$ a static
+baseline's goodput while sparing the competing tenant a greedy policy harms---and
+honestly report the memoryless-contention regime where feedback breaks even, as the
+bound predicts. The system and a
 reproducible artifact are \ifblind available to reviewers\else open source\fi.
 \end{abstract}
 
@@ -85,8 +86,10 @@ nodes spanning home and cluster, whose tradeoffs we characterize by measurement
 random-rotation quantization for bandwidth and a Kalman-filtered thermal
 controller for OOM-/heat-safe GPU sizing.
 \item An \textbf{evaluation} (\S\ref{sec:eval}) that verifies the system
-end-to-end on NRP Nautilus and shows the admission controller dominating naive
-and static baselines on the goodput--politeness frontier.
+end-to-end on NRP Nautilus, measures the goodput--politeness frontier under
+\emph{real GPU contention} (where the controller is the polite-efficient knee and
+spares the competing tenant), reports the pre-registered regime where feedback
+breaks even, and exercises the two-tier admission$+$thermal stack live.
 \end{itemize}
 
 \begin{figure}[t]
@@ -213,11 +216,14 @@ self-restraint a first-class, analyzed, and measured objective: a federated NATS
 fabric that respects the network boundary, an AIMD admission controller with a
 hard-cap safety guarantee and a detection-delay-bounded violation rate, and
 node-level thermal control. End-to-end on NRP Nautilus the system works; on a
-controlled testbed the controller is the polite-efficient frontier point,
-$1.7$--$3.2\times$ a static baseline's goodput at equal politeness while a greedy
-baseline matches its goodput only by over-admitting. Honest open problems remain:
-an in-situ contended goodput--politeness Pareto (our shared-cluster measurement
-was variance-dominated, reported as three pre-registered nulls), and leaf-federation
+controlled testbed the controller is the polite-efficient point---up to
+$3.2\times$ a static baseline's goodput under abundance, and under real GPU
+contention the polite-efficient knee that spares the competing tenant a greedy
+policy harms. We also mark feedback's limit honestly: under memoryless contention
+that outpaces the detection delay, adaptive admission breaks even with a fixed
+budget, exactly as Prop.~\ref{prop:bound} predicts. Open problems remain: a
+production multi-tenant trace (ours is manufactured contention at $C{=}2$), a finer
+thermal actuator than admission concurrency, and leaf-federation
 interest/partition behavior at scale.
 
 \bibliographystyle{IEEEtran}

@@ -1,0 +1,94 @@
+{
+  "result": {
+    "experiment": "H4_cpu_thermal",
+    "setpoint": 82.0,
+    "max_threads": 6,
+    "abort_temp": 88.0,
+    "aborted": true,
+    "peak_temp": 88.0,
+    "mean_temp_after_warmup": 85.3,
+    "mean_active_after_warmup": 3.0,
+    "n_samples": 13
+  },
+  "samples": [
+    {
+      "t": 0.0,
+      "temp": 75.0,
+      "target": 6,
+      "active": 1
+    },
+    {
+      "t": 1.0,
+      "temp": 76.0,
+      "target": 6,
+      "active": 2
+    },
+    {
+      "t": 2.0,
+      "temp": 79.0,
+      "target": 6,
+      "active": 3
+    },
+    {
+      "t": 3.1,
+      "temp": 78.0,
+      "target": 6,
+      "active": 4
+    },
+    {
+      "t": 4.1,
+      "temp": 82.0,
+      "target": 6,
+      "active": 5
+    },
+    {
+      "t": 5.1,
+      "temp": 81.0,
+      "target": 1,
+      "active": 1
+    },
+    {
+      "t": 6.1,
+      "temp": 79.0,
+      "target": 1,
+      "active": 1
+    },
+    {
+      "t": 7.1,
+      "temp": 77.0,
+      "target": 1,
+      "active": 1
+    },
+    {
+      "t": 8.1,
+      "temp": 76.0,
+      "target": 6,
+      "active": 2
+    },
+    {
+      "t": 9.2,
+      "temp": 79.0,
+      "target": 6,
+      "active": 3
+    },
+    {
+      "t": 10.2,
+      "temp": 83.0,
+      "target": 6,
+      "active": 4
+    },
+    {
+      "t": 11.2,
+      "temp": 85.0,
+      "target": 6,
+      "active": 5
+    },
+    {
+      "t": 12.2,
+      "temp": 88.0,
+      "target": 0,
+      "active": 0,
+      "abort": true
+    }
+  ]
+}
