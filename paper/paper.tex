@@ -25,24 +25,19 @@ ORCID: \texttt{0009-0003-2599-6158}}}
 \maketitle
 
 \begin{abstract}
-A researcher with a single workstation and access to a shared, multi-tenant GPU cluster (the
-National Research Platform's Nautilus) faces real friction turning that access into elastic
-capacity: \texttt{kubectl}, YAML, container cold starts, and no feedback loop into the code they
-are already running. We present a \emph{polite, container-native bursting fabric} that makes the
-cluster's GPUs appear as elastic capacity \emph{inside the user's running program}. The fabric,
-\textbf{nats-bursting}, makes containerized cluster pods first-class subscribers on the same NATS
-bus as the workstation---in two shapes, ephemeral Kubernetes Jobs and persistent queue-group
-pools---behind a Go control plane whose \emph{politeness controller} probes live cluster state and
-backs off rather than crowding other tenants, operationalizing shared-cluster citizenship. Its
-NATS leaf-node topology surfaces real orchestration design issues (JetStream vs.\ core-NATS
-delivery, asymmetric subject interest) that we report as an experience. Two supporting components
-make the fabric practical: \textbf{turboquant-pro} compresses the payloads on the wire so bursting
-stays viable over constrained links, and \textbf{batch-probe} right-sizes each pod's GPU batch so
-bursts stay useful and policy-aligned. We quantify the fabric on real infrastructure: a
-containerized burst cold-starts in $\sim$6.6\,s while a warm pool serves at $\sim$67\,ms; over a
-real $\sim$2\,Mbps link, compression cuts round-trip up to $8.4\times$; and batch-probe drives a
-burst to 94\% GPU utilization. We report what is measured and what is not, and release all three
-projects and the reproducible benchmark harness as an artifact.
+Turning a shared, multi-tenant GPU cluster into elastic capacity means fighting
+\texttt{kubectl}, YAML, and container cold starts, with no feedback loop into running code. We
+present a \emph{polite, container-native bursting fabric} that makes cluster GPUs appear as elastic
+capacity \emph{inside the user's program}. The fabric, \textbf{nats-bursting}, makes cluster pods
+first-class subscribers on the same NATS bus as the workstation---as ephemeral Kubernetes Jobs or
+persistent queue-group pools---behind a Go control plane whose \emph{politeness controller} probes
+cluster state and backs off rather than crowding tenants. Its leaf-node topology surfaces
+orchestration issues (JetStream vs.\ core-NATS delivery, asymmetric subject interest). Two
+components make bursting practical: \textbf{turboquant-pro} compresses on-wire payloads, and
+\textbf{batch-probe} right-sizes each pod's GPU batch. We measure it on real
+infrastructure---burst cold-start $\sim$6.6\,s, warm pool $\sim$67\,ms, up to $8.4\times$
+compression speedup over a $\sim$2\,Mbps link, 94\% GPU utilization---and release all three
+projects and the harness.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -528,6 +523,96 @@ the pattern---cluster pods as first-class subscribers reached over an outbound l
 controller that defers to its neighbors---generalizes to any Kubernetes cluster a researcher can
 bridge to, and the policy-safe discipline it enforces is the right default for sharing a
 multi-tenant resource.
+
+\appendices
+\section{Artifact Description (AD)}\label{sec:ad}
+
+\subsection{Overview}
+The artifact is the three open-source projects evaluated here---\texttt{nats-bursting}
+(the bursting fabric), \texttt{turboquant-pro} (transport codec), and \texttt{batch-probe}
+(GPU right-sizing and thermal control)---plus a self-contained benchmark harness that
+regenerates every number, table, and figure in \S\ref{sec:eval}. Every reported number is
+produced by this harness.
+
+\subsection{Artifact check-list (metadata)}
+\begin{itemize}\itemsep1pt
+\item \textbf{Algorithms:} polite admission control (Alg.~\ref{alg:polite}); OOM-safe batch
+search (Alg.~\ref{alg:probe}); random-rotation quantization; Kalman-filtered thermal control.
+\item \textbf{Program:} Go~1.23 control plane; Python~3.12 client, codec, right-sizer, harness.
+\item \textbf{Compilation:} \texttt{go build ./...}; Python packages install from PyPI.
+\item \textbf{Data set:} synthetic fp32 vectors (dim 384/768/1024) and real
+\texttt{bge-small-en-v1.5} embeddings on 20newsgroups ($n{=}3000$, dim~384), fetched by the harness.
+\item \textbf{Run-time environment:} Linux; \texttt{nats-server} with JetStream;
+\texttt{kubectl}/client-go with credentials to a Kubernetes cluster for Tier~3.
+\item \textbf{Hardware:} Tiers~1--2 run on any CPU host; Tier~3 and GPU right-sizing need an
+NVIDIA GPU (measured on a GV100 32\,GB) and a shared cluster (measured on NRP Nautilus).
+\item \textbf{Metrics:} compression ratio and reconstruction cosine; round-trip p50/p99 and
+throughput; Job cold-start; warm-pool latency/throughput; GPU utilization; admission goodput
+and over-budget fraction~$\rho$.
+\item \textbf{Output:} JSON result files under \texttt{benchmarks/}; regenerated figures under
+\texttt{paper/figures/}.
+\item \textbf{Disk / setup / run:} $<$1\,GB; setup $<$10\,min; Tiers~1--2 run in minutes; Tier~3
+depends on cluster scheduling.
+\item \textbf{Publicly available:} yes---as PyPI packages and at
+\texttt{github.com/ahb-sjsu} (repositories \texttt{nats-bursting}, \texttt{turboquant-pro},
+\texttt{batch-probe}).
+\item \textbf{License:} MIT (all three projects).
+\item \textbf{Archived DOI:} \texttt{nats-bursting} 10.5281/zenodo.20660069;
+\texttt{turboquant-pro} 10.5281/zenodo.20660087 (concept DOIs; \texttt{batch-probe} DOI on next release).
+\end{itemize}
+
+\subsection{How to access, and dependencies}
+The projects are on PyPI and GitHub (above). \textbf{Hardware:} Tiers~1--2 need only a CPU host;
+Tier~3 and the GPU-utilization result need an NVIDIA GPU and \texttt{kubectl} access to a shared
+cluster; the real-hop transport result needs a bandwidth-constrained WAN path between client and
+server. \textbf{Software:} Linux, Python~3.12, Go~1.23, \texttt{nats-server} (with JetStream for the
+durable path), NumPy, and PyTorch for the GPU right-sizing trial.
+
+\subsection{Installation}
+\begin{verbatim}
+pip install nats-bursting turboquant-pro \
+            batch-probe numpy
+git clone \
+ https://github.com/ahb-sjsu/nats-bursting
+cd nats-bursting && go build ./...
+\end{verbatim}
+
+\subsection{Experiment workflow}
+Each reported result maps to one command; \texttt{make\_figures.py} regenerates the figures from
+the committed JSON.
+\begin{itemize}\itemsep1pt
+\item \textbf{Tier~1 (Fig.~\ref{fig:t1}):} \texttt{python benchmarks/bench\_compression.py}
+$\rightarrow$ \texttt{results\_compression.json} (real-embedding variant:
+\texttt{results\_compression\_real.json}).
+\item \textbf{Tier~2 (Tables~\ref{tab:t2lo},~\ref{tab:t2}, Fig.~\ref{fig:t2}):} start a bus
+(\texttt{docker run -p 4222:4222 nats}), then \texttt{python benchmarks/bench\_transport.py
+[-{}-compress]}; the real-hop driver writes \texttt{results\_transport\_realhop.json}.
+\item \textbf{Tier~3 (Table~\ref{tab:t3}, Fig.~\ref{fig:t3}):} \texttt{python
+benchmarks/bench\_cluster.py -{}-mode cold|warm|scale -{}-i-have-checked-nrp-policy} $\rightarrow$
+\texttt{results\_cluster\_pool.json}; GPU right-sizing writes \texttt{results\_batchprobe.json}.
+\item \textbf{Admission (Table~\ref{tab:admission}, Fig.~\ref{fig:admission}):} the pre-registered
+harness in \texttt{benchmarks/infocom/} (\texttt{run.py}, \texttt{e8\_local.py},
+\texttt{multiseed.py}, \texttt{aggregate.py}); protocol and pre-registration in
+\texttt{E8\_PROTOCOL.md} and \texttt{E8\_PREREG.md}.
+\item \textbf{Figures:} \texttt{python paper/\allowbreak figures/\allowbreak make\_figures.py}.
+\end{itemize}
+
+\subsection{Evaluation and expected results}
+Hardware permitting, the harness reproduces: Tier~1 ratios $7.9/10.4/15.5\times$ at $4/3/2$-bit with
+cosine $0.995/0.978/0.94$, real embeddings matching within $0.001$; Tier~2 up to $8.4\times$
+round-trip speedup at 256\,KB over the $\sim$2\,Mbps hop; Tier~3 median cold-start $\sim$6.6\,s,
+warm-pool $\sim$67\,ms, throughput plateau $\sim$930/s (the Little's-law bound); GPU right-sizing
+$\approx$94\% utilization on a GV100; and AIMD admission at $\rho{=}0$ with $1.7$--$3.2\times$
+static's goodput. Absolute latencies, cold-start, and utilization depend on the cluster, WAN path,
+and GPU model; the qualitative results (compression win grows with payload, warm pool removes the
+cold-start penalty, AIMD holds the budget) are hardware-independent.
+
+\subsection{Notes}
+Tier~3 refuses to run without \texttt{-{}-i-have-checked-nrp-policy} and uses ignored-range pods
+($\le$4 concurrent, cpu=1/mem=2\,GiB, exit-0 Jobs, TTL${+}$delete) to respect shared-cluster policy.
+Thermal sensing in \texttt{batch-probe} is Linux-only. The real-hop bandwidth is one overlay path
+(likely relayed); a cold image pull and a full GPU-image cluster run are not yet measured
+(\S\ref{sec:threats}).
 
 \bibliographystyle{IEEEtran}
 \bibliography{paper}
