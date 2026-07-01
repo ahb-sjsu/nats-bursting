@@ -10,14 +10,23 @@
 
 \newtheorem{proposition}{Proposition}
 
+% ---- Double-blind toggle -------------------------------------------------
+% \blindtrue  => anonymized submission PDF (INFOCOM double-blind).
+% \blindfalse => de-anonymized camera-ready (restores author + real names).
+\newif\ifblind
+\blindtrue
+\newcommand{\sysname}{\ifblind PoliteBurst\else nats-bursting\fi}
+\ifblind\hypersetup{pdfauthor={},pdftitle={},pdfsubject={},pdfkeywords={},pdfcreator={}}\fi
+% -------------------------------------------------------------------------
+
 \begin{document}
 
 \title{Polite Bursting: Feedback-Controlled Admission for AI Workloads
 over a Federated Messaging Fabric on Shared Clusters}
 
-\author{\IEEEauthorblockN{Andrew H. Bond}
-\IEEEauthorblockA{San Jose State University\\
-andrew.bond@sjsu.edu}}
+\author{\IEEEauthorblockN{\ifblind Anonymous Author(s)\else Andrew H. Bond\fi}
+\IEEEauthorblockA{\ifblind Paper submitted for double-blind review\else San Jose State University\\
+andrew.bond@sjsu.edu\fi}}
 
 \maketitle
 
@@ -29,8 +38,8 @@ floors, ignored-resource ranges---and reachable only over constrained,
 partially-connected WAN paths. Naive submission violates policy (risking
 throttling or bans) and wastes the host's capacity; static rate-limiting wastes
 the guest's throughput. We argue that ``being a good guest'' is fundamentally a
-control problem, and present nats-bursting, a container-native bursting fabric
-that maximizes useful goodput while respecting host policy. nats-bursting
+control problem, and present \sysname, a container-native bursting fabric
+that maximizes useful goodput while respecting host policy. \sysname
 contributes (i) a feedback admission/back-off controller modeled as an AIMD loop
 with a probe-driven estimator, analyzed for safety and a bounded
 policy-violation rate; (ii) a federated NATS leaf-node messaging plane spanning
@@ -42,8 +51,8 @@ controller. We verify the system end-to-end on NRP Nautilus, and on a controlled
 testbed the admission controller is the polite-efficient frontier point: it holds
 the politeness budget exactly while delivering $1.7$--$3.2\times$ the goodput of a
 static baseline at equal politeness, and matches a greedy baseline's goodput
-without ever over-admitting. The system and a reproducible artifact are open
-source.
+without ever over-admitting. The system and a reproducible artifact are
+\ifblind provided as an anonymized artifact for review\else open source\fi.
 \end{abstract}
 
 \section{Introduction}
@@ -65,7 +74,7 @@ under-utilized, and trips the very thresholds that get a namespace banned.
 is available, wasting the guest's own throughput. Neither adapts.
 
 We argue that being a good guest is a \emph{control} problem, and we build that
-thesis into nats-bursting, a container-native bursting fabric. Our contributions:
+thesis into \sysname, a container-native bursting fabric. Our contributions:
 \begin{itemize}
 \item A \textbf{politeness controller} (\S\ref{sec:controller}): a feedback
 admission/back-off loop modeled as AIMD over a probe-driven occupancy estimate,
@@ -101,7 +110,7 @@ and static baselines on the goodput--politeness frontier.
 \draw[->] (ctrl) -- (pods) node[midway,above]{Job};
 \draw[->] (pods) to[bend right=25] node[midway,below]{results.$\langle$id$\rangle$} (leaf);
 \end{tikzpicture}}
-\caption{nats-bursting architecture. The home client submits over a federated
+\caption{\sysname{} architecture. The home client submits over a federated
 NATS leaf link; the in-cluster controller admits jobs (pacing concurrency to the
 politeness budget) and launches GPU worker pods, whose results route back through
 the leaf.}
@@ -134,7 +143,7 @@ controlled objective.
 
 \section{Federated Messaging Fabric}
 \label{sec:fabric}
-The control plane spans an untrusted network boundary, so nats-bursting uses a
+The control plane spans an untrusted network boundary, so \sysname{} uses a
 NATS \cite{nats} \emph{leaf-node} topology: a hub at the home node and a leaf
 inside the cluster, joined by a single outbound link that needs only the one
 forwarded port. Subjects propagate by interest, so the home client's subscription
@@ -154,11 +163,11 @@ result-return path over the same link possible without opening the cluster.
 \section{Transport and Resource Subsystems}
 \label{sec:subsystems}
 Two subsystems keep bursts efficient and policy-safe. \textbf{Transport:}
-turboquant-pro \cite{turboquantpro,turboquant} applies a random rotation that
+\ifblind our transport layer\else turboquant-pro\fi{} \cite{turboquantpro,turboquant} applies a random rotation that
 makes coordinates approximately i.i.d.\ Gaussian regardless of the input
 distribution, enabling distribution-free per-channel/per-token quantization of the
 tensors that cross the WAN---reducing bytes on the constrained link.
-\textbf{Resource right-sizing:} batch-probe \cite{batchprobe} binary-searches the
+\textbf{Resource right-sizing:} \ifblind our right-sizing tool\else batch-probe\fi{} \cite{batchprobe} binary-searches the
 largest OOM-safe GPU batch and, as the micro tier of our two-tier control stack
 (\S\ref{sec:thermal}), runs a Kalman-filtered \cite{kalman} predictive thermal
 controller that throttles before a node's setpoint is breached---node-level
@@ -168,7 +177,7 @@ underlying jobs feasible.
 
 \section{Implementation}
 \label{sec:impl}
-nats-bursting is a Go control plane (decider, prober, submitter, NATS bridge,
+\sysname{} is a Go control plane (decider, prober, submitter, NATS bridge,
 back-off modules) plus a Python client and the \texttt{\%\%burst} IPython magic
 \cite{natsbursting}. The controller runs \emph{in-cluster} under a minimal
 namespace-scoped ServiceAccount (Job create/get/delete; pod read), connects to the
@@ -179,7 +188,7 @@ non-reserved GPU types. We verified the full path live on NRP Nautilus
 and launched an A10 GPU worker that ran real CUDA matmul and published its result
 back through the leaf to the home driver. The system, the controller/worker
 container images, and the transport/right-sizing packages
-\cite{turboquantpro,batchprobe} are open source.
+\cite{turboquantpro,batchprobe} are \ifblind available as open-source artifacts (repositories anonymized for review)\else open source\fi.
 
 \input{infocom_eval}
 
@@ -202,7 +211,7 @@ goodput--politeness frontier.
 
 \section{Conclusion}
 \label{sec:concl}
-Being a good guest on a shared cluster is a control problem. nats-bursting makes
+Being a good guest on a shared cluster is a control problem. \sysname{} makes
 self-restraint a first-class, analyzed, and measured objective: a federated NATS
 fabric that respects the network boundary, an AIMD admission controller with a
 hard-cap safety guarantee and a detection-delay-bounded violation rate, and

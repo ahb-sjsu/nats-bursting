@@ -9,7 +9,7 @@
 \section{Evaluation}
 \label{sec:eval}
 
-We evaluate nats-bursting on a production testbed: a home node and an Atlas
+We evaluate \sysname{} on a production testbed: a home node and \ifblind a\else an Atlas\fi{}
 workstation-class node running \texttt{nats-server} with JetStream enabled,
 connected over three paths---co-located (loopback), Tailscale (mesh VPN), and a
 single PAT-forwarded port (\texttt{:4222}). Unless stated otherwise the driver
@@ -129,7 +129,7 @@ $C$, measuring goodput (tasks/s) and the over-budget fraction
 $\rho$ (epochs with concurrency $>C$). To isolate the policy from the exogenous
 scheduling and cold-image-pull variance of the shared cluster---which, reported
 honestly, produced three pre-registered nulls in situ---we run on a controlled,
-variance-free testbed (local-process workers on the Atlas node; no scheduler or
+variance-free testbed (local-process workers on \ifblind the workstation node\else the Atlas node\fi; no scheduler or
 registry jitter), pre-registered with randomized interleaved trial order and four
 repeats per cell, at two scales (GPU pool $C{=}2$; CPU pool $C{=}8$).
 
