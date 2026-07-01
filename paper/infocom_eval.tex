@@ -15,14 +15,18 @@ connected over three paths---co-located (loopback), Tailscale (mesh VPN), and a
 single PAT-forwarded port (\texttt{:4222}). Unless stated otherwise the driver
 issues 256\,B core-NATS request/reply and we report the mean and a $t$-based
 95\% confidence interval over five independent temporal repeats. The study
-answers five questions:
+answers seven questions:
 \textbf{(Q1)} how the federated control path shapes latency and throughput;
 \textbf{(Q2)} what JetStream durability costs;
 \textbf{(Q3)} how the control plane scales with the in-flight window;
 \textbf{(Q4)} the prober detection delay $D$ that governs the bound of
-Prop.~\ref{prop:bound}; and
-\textbf{(Q5)} whether the politeness controller dominates naive and static
-baselines on the goodput--compliance frontier.
+Prop.~\ref{prop:bound};
+\textbf{(Q5)} whether the controller is polite-efficient under a self-imposed
+budget (the \emph{abundance} regime);
+\textbf{(Q6)} whether it holds under \emph{real, time-varying contention} (the
+\emph{scarcity} regime Prop.~\ref{prop:bound} targets)---and where it fails; and
+\textbf{(Q7)} whether the two-tier stack (macro admission $+$ micro thermal)
+operates end-to-end on real hardware.
 
 \subsection{Control-plane latency and throughput (Q1)}
 \label{sec:eval-rtt}
@@ -120,7 +124,7 @@ compliance---not a rounding error---which is precisely the systems$\leftrightarr
 hinge the bound is meant to expose: a guest that admits aggressively (large
 $\alpha$) pays for it in over-admission scaled by this measured cold-start delay.
 
-\subsection{End-to-end goodput versus politeness (Q5)}
+\subsection{Politeness under abundance (Q5)}
 \label{sec:eval-e2e}
 We burst $B$ jobs under three policies---\emph{naive} (submit up to the hard cap),
 \emph{static} (fixed submit rate), and \emph{aimd} (the completion-gated admission
@@ -185,13 +189,123 @@ $\rho=0$, while naive buys goodput only by flagrant over-admission ($\rho=0.95$)
 \label{fig:pareto-cpu}
 \end{figure}
 
-\emph{Honest scope.} This isolates the admission \emph{algorithm} on a controlled
-node; the full pod-scheduling path (controller~$\to$~node-targeted GPU
+\emph{Scope.} This isolates the admission \emph{algorithm} on a controlled node;
+the full pod-scheduling path (controller~$\to$~node-targeted GPU
 worker~$\to$~federated result) is verified end-to-end on NRP Nautilus separately
-(\S\ref{sec:impl}). We also close the model$\leftrightarrow$measurement loop only
-partially: $\bar a$ here is a fixed self-imposed budget rather than a contended
-$a_t$, so the Prop.~\ref{prop:bound} bound is exercised in the abundance regime
-(politeness as self-restraint) rather than the scarcity regime.
+(\S\ref{sec:impl}). Here $\bar a$ is a fixed self-imposed budget---the
+\emph{abundance} regime, politeness as pure self-restraint. \S\ref{sec:eval-contended}
+removes that assumption, driving $a_t$ with a real competing tenant so the
+Prop.~\ref{prop:bound} bound is exercised under genuine \emph{scarcity}.
+
+\subsection{Politeness under real contention (Q6)}
+\label{sec:eval-contended}
+Abundance tests self-restraint; the harder question is politeness under
+\emph{scarcity}. We manufacture controlled contention on a two-GPU node
+($C{=}2$): a \emph{competing tenant} occupies $c(t)\in\{0,1\}$ GPUs on a fixed
+profile, so the guest's available capacity $a(t)=C-c(t)$ is exogenous,
+time-varying, and \emph{measured} by the prober (a per-GPU process census, subject
+to the detection delay $D$ of Q4)---the regime Prop.~\ref{prop:bound} targets. Two
+profiles bracket the space: \emph{square} (a period-$2\tau$ wave, modelling
+slowly-varying or scheduled load) and \emph{poisson} (memoryless on/off arrivals,
+the adversarial case). Alongside goodput and $\rho$ we measure \emph{harm to the
+neighbour}: the competitor's completed work relative to its undisturbed baseline.
+Pre-registered (H1--H3), randomized interleaved order, four seeds per cell.
+
+Table~\ref{tab:e9} and Fig.~\ref{fig:contended} report a sharper picture than
+abundance did. \textbf{Under structured contention (square), aimd is the
+polite-efficient knee}: $1.41\times$ static's goodput ($0.091$ vs $0.064$\,tasks/s,
+disjoint CIs) at $\rho{=}0.15$---a $4\times$ lower over-admission than naive's
+$\rho{=}0.64$---while sparing the neighbour ($76\%$ of its throughput retained vs
+naive's $62\%$). naive's higher goodput ($0.101$) is bought \emph{entirely} at the
+neighbour's expense: it over-admits two-thirds of the time and steals $38\%$ of the
+competitor's throughput. H1 and H2 hold with disjoint CIs.
+
+\textbf{Under unpredictable contention (poisson), feedback breaks even---and we
+report it.} aimd's goodput ($0.062$) is statistically indistinguishable from
+static's ($0.064$, overlapping CIs) and it over-admits \emph{more}
+($\rho{=}0.30$), because capacity now varies on the timescale of the detection
+delay: by the time the prober sees a competitor arrive, the observation is stale.
+This is a pre-registered \emph{null} for H1, and it is precisely the failure
+Prop.~\ref{prop:bound} predicts---$\rho$ grows with $D$ relative to the
+capacity-variation timescale (slow square $\to\rho{=}0.15$; memoryless poisson
+$\to\rho{=}0.30$). \textbf{(H3)} The measured detection path ($D\approx2$--$3$\,s,
+Q4) places the Prop.~\ref{prop:bound} ceiling above the observed aimd $\rho$ in
+both profiles: the bound is conservative for a discrete, completion-gated
+controller, but its central prediction---politeness degrades as contention
+outpaces $D$---is borne out. Practically: feedback admission pays when a
+neighbour's load has structure to track, and one should fall back to a fixed budget
+when it does not. naive is the most impolite in \emph{every} regime
+($\rho{=}0.64$--$0.85$).
+
+\begin{table}[t]
+\centering
+\caption{Politeness under real contention ($C{=}2$; 4 seeds, mean$\,\pm\,$95\% CI).
+``kept'' $=$ competitor throughput retained ($1{=}$undisturbed). Structured
+(square): aimd is the polite-efficient knee. Memoryless (poisson): feedback breaks
+even with static---a pre-registered null.}
+\label{tab:e9}
+\small
+\begin{tabular}{llccc}
+\toprule
+contention & policy & goodput (tasks/s) & $\rho$ & kept \\
+\midrule
+\multirow{3}{*}{square}
+ & naive  & $0.101\pm0.002$ & $0.64\pm0.01$ & $0.62$ \\
+ & aimd   & $0.091\pm0.000$ & $0.15\pm0.01$ & $0.76$ \\
+ & static & $0.064\pm0.000$ & $0.11\pm0.01$ & $0.89$ \\
+\midrule
+\multirow{3}{*}{poisson}
+ & naive  & $0.096\pm0.002$ & $0.85\pm0.06$ & $0.62$ \\
+ & aimd   & $0.062\pm0.006$ & $0.30\pm0.06$ & $0.55$ \\
+ & static & $0.064\pm0.000$ & $0.22\pm0.04$ & $0.79$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_square.png}\hfill
+\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_poisson.png}
+\caption{Contended goodput--politeness frontier (lower-right is better).
+\emph{Left} (square, structured): aimd is the polite-efficient knee. \emph{Right}
+(poisson, memoryless): feedback collapses onto static.}
+\label{fig:contended}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.80\columnwidth]{figures/e9_competitor_harm.png}
+\caption{Harm to the other tenant (throughput lost). naive steals $\sim$$38\%$ in
+both regimes; aimd spares the neighbour under structured contention ($24\%$), but
+under memoryless contention its mistimed admissions harm it as much as---here more
+than---naive ($45\%$): the same $D$-limited failure as its goodput.}
+\label{fig:harm}
+\end{figure}
+
+\subsection{Two-tier control on real hardware (Q7)}
+\label{sec:eval-thermal}
+The macro admission loop is paired with a \emph{micro} tier: the Kalman-filtered
+thermal controller of \S\ref{sec:thermal}, run live during the burst. On the GPU
+pool it is active throughout---throttling guest concurrency on $>\!90\%$ of epochs
+under load (Fig.~\ref{fig:thermal})---and, tellingly, its throttling also
+\emph{lowers} over-admission (aimd square $\rho$ falls $0.15\!\to\!0.08$ with the
+micro tier engaged): both tiers push toward citizenship. Driven instead by CPU
+temperature (its native actuator), the controller tracks a Kalman estimate and
+throttles worker count predictively behind a hard safety cutout. On this
+\emph{shared} node the result is itself a politeness lesson: the co-tenant baseline
+($\sim$$77^\circ$C from the resident workload) sets a thermal floor that
+self-throttling cannot undercut, and the controller correctly cuts out rather than
+cook shared silicon. Even thermal headroom, on a shared machine, is set by one's
+neighbours.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{figures/e9_thermal_demo.png}
+\caption{Micro tier live during a burst: GPU temperature and the thermal
+concurrency cap over time. The Kalman-predictive controller throttles under load;
+the shared-node co-tenant baseline bounds what self-throttling can achieve.}
+\label{fig:thermal}
+\end{figure}
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
@@ -199,12 +313,16 @@ The evaluation establishes: (i) the federated control path is RTT-bound (Q1),
 motivating epoch-paced admission; (ii) JetStream durability is latency-free over
 the WAN (Q2); (iii) control-plane throughput scales sub-linearly with the window
 (Q3); (iv) the prober detection delay $D$ is a measured, first-order term in the
-compliance bound (Q4); and (v) the admission controller is the polite-efficient
-frontier point against both baselines, with disjoint CIs at two scales (Q5).
-Principal threats: the Q5 goodput comparison is on a controlled node, not under
-live multi-tenant contention (the in-situ measurement was variance-dominated; we
-report the three nulls rather than suppress them); federation interest/partition
-behavior (E2/E6) and the single-port traversal tax are characterized on one server
-or left to future work; and $\bar a$ is held fixed rather than driven by a
-contended $a_t$. The system path is nonetheless verified end-to-end, and the
-controller's politeness claim ($\rho=0$ in every repeat of every run) is robust.
+bound (Q4); (v) under abundance the controller is polite-efficient at both scales
+(Q5); (vi) under \emph{structured} contention it is the polite-efficient knee and
+spares the neighbour, while under \emph{memoryless} contention feedback breaks even
+with static---a pre-registered null we report rather than suppress (Q6); and
+(vii) the two-tier stack runs live on real hardware, both tiers pushing toward
+citizenship (Q7). Principal threats: contention is manufactured on a two-GPU node
+with $C{=}2$ and two synthetic profiles, not a production multi-tenant trace; the
+poisson regime marks feedback's limit when capacity outpaces $D$; the GPU thermal
+actuator (admission concurrency) is coarse and the shared node imposes a co-tenant
+thermal floor; and federation interest/partition behaviour (E2/E6) and the
+single-port traversal tax are characterized on one server or left to future work.
+The full system path is nonetheless verified end-to-end, and naive's impoliteness
+($\rho\ge0.64$, $\ge$$38\%$ neighbour harm) is robust across every regime.

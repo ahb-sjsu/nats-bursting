@@ -1,0 +1,106 @@
+{
+  "poisson/aimd": {
+    "n": 4,
+    "goodput": [
+      0.062,
+      0.0064
+    ],
+    "rho": [
+      0.3,
+      0.061
+    ],
+    "competitor_retained": 0.548
+  },
+  "poisson/naive": {
+    "n": 4,
+    "goodput": [
+      0.0959,
+      0.0024
+    ],
+    "rho": [
+      0.853,
+      0.055
+    ],
+    "competitor_retained": 0.621
+  },
+  "poisson/static": {
+    "n": 4,
+    "goodput": [
+      0.0637,
+      0.0
+    ],
+    "rho": [
+      0.223,
+      0.035
+    ],
+    "competitor_retained": 0.786
+  },
+  "square/aimd": {
+    "n": 4,
+    "goodput": [
+      0.0905,
+      0.0003
+    ],
+    "rho": [
+      0.154,
+      0.01
+    ],
+    "competitor_retained": 0.756
+  },
+  "square/naive": {
+    "n": 4,
+    "goodput": [
+      0.1011,
+      0.0019
+    ],
+    "rho": [
+      0.642,
+      0.014
+    ],
+    "competitor_retained": 0.625
+  },
+  "square/static": {
+    "n": 4,
+    "goodput": [
+      0.0642,
+      0.0
+    ],
+    "rho": [
+      0.105,
+      0.014
+    ],
+    "competitor_retained": 0.893
+  },
+  "_thermal": [
+    {
+      "policy": "aimd",
+      "seed": 42,
+      "setpoint": 80.0,
+      "peak_temp": 86.0,
+      "mean_temp": 83.1,
+      "throttle_fraction": 0.932,
+      "goodput": 0.07289,
+      "rho": 0.0781
+    },
+    {
+      "policy": "aimd",
+      "seed": 43,
+      "setpoint": 80.0,
+      "peak_temp": 86.0,
+      "mean_temp": 83.1,
+      "throttle_fraction": 0.933,
+      "goodput": 0.07242,
+      "rho": 0.0777
+    },
+    {
+      "policy": "naive",
+      "seed": 42,
+      "setpoint": 80.0,
+      "peak_temp": 86.0,
+      "mean_temp": 83.1,
+      "throttle_fraction": 0.925,
+      "goodput": 0.07439,
+      "rho": 0.2995
+    }
+  ]
+}
