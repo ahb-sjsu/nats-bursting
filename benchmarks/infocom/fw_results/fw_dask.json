@@ -1,0 +1,1 @@
+{"framework": "dask", "setup_s": 10.82, "dispatch_p50_ms": 13.85, "dispatch_p99_ms": 90.03, "embed_throughput_docs_s": 1052.4}
