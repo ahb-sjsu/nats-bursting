@@ -1,0 +1,1 @@
+{"workers": 4, "gpus": 2, "total_docs": 20480, "timed_window_s": 0.7, "wall_s": 12.54, "throughput_docs_s": 29316.8}
