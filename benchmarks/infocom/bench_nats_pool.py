@@ -39,6 +39,11 @@ async def worker(url, subj, ready):
     m = SentenceTransformer(MODEL, device="cuda")
     warm = torch.ones(8, 8, device="cuda")
     nc = await nats.connect(url)
+    loop = asyncio.get_event_loop()
+
+    def _encode(n):
+        m.encode(["the quick brown fox jumps over the lazy dog"] * n,
+                 batch_size=min(n, 128), convert_to_numpy=True)
 
     async def handler(msg):
         p = msg.data.decode()
@@ -47,8 +52,9 @@ async def worker(url, subj, ready):
             r = b"1"
         else:
             n = int(p.split(":")[1])
-            m.encode(["the quick brown fox jumps over the lazy dog"] * n,
-                     batch_size=min(n, 128), convert_to_numpy=True)
+            # run the blocking encode OFF the event loop so the worker keeps
+            # receiving/replying and the pool stays saturated (fair throughput)
+            await loop.run_in_executor(None, _encode, n)
             r = str(n).encode()
         await nc.publish(msg.reply, r)
 
