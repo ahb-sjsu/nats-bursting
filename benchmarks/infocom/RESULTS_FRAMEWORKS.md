@@ -25,14 +25,26 @@ differentiator is not raw speed but capability: a host **politeness budget**, an
 the event loop** — none of which the general task engines carry. Positioning, not a
 leaderboard.
 
-**On throughput — honest correction.** An earlier draft reported a per-fabric
-fine-grained embed throughput (e.g. nats-bursting 920 docs/s). That number was a
-**harness artifact**, not a fabric property: the NATS arm's single-client
-request/reply driver caps at ~14 req/s and does **not** scale with worker count
-(W=1/2/4 → 870/867/957 docs/s), and running the encode off the event loop did not
-change it — so the bottleneck is the benchmark driver, not the bus. We therefore do
-**not** report a per-fabric fine-grained throughput. On real work every fabric is
-GPU-bound; the actual throughput story is the compute-bound scaling curve below.
+**Throughput — root-caused and fixed with a Go driver.** An earlier Python `asyncio`
+driver reported nats-bursting at 920 docs/s and, tellingly, it did **not** scale with
+workers (W=1/2/4 → 870/867/957) and moving the encode off the event loop didn't help
+— the bottleneck was the single-client Python driver, not the bus. Re-driving the
+same Python GPU workers from Go (`nats.go`, the client nats-bursting's control plane
+already uses; `natsbench/`) confirms it:
+
+| workers | tiny (pure fabric) | embed (real AI work) |
+|---|---|---|
+| 1 | 8036 req/s | 2421 docs/s |
+| 2 | 9106 req/s | 4461 docs/s |
+| 4 | 8264 req/s | **9407 docs/s** |
+| 8 | 10423 req/s | 14906 docs/s |
+
+The fabric sustains **~8–10k req/s** on near-empty tasks (so the bus was never the
+limit), and embedding throughput **scales with workers** to the GPU-bound ceiling
+(9.4k docs/s at 4 workers — competitive with Ray 9.8k / ProcessPool 9.0k, far above
+Dask 1.05k; disp p50 0.9 ms). The Python-driver number was a ~10× harness artifact
+and is retracted. Orchestration: `run_gonats.sh` (nats-server + Python GPU workers +
+Go driver).
 
 **Compute-bound scaling** (`bench_embed_scaling.py`; MiniLM, warm workers across
 both GV100s):

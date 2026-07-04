@@ -482,37 +482,39 @@ contention & policy & goodput (tasks/s) & $\rho$ & kept \\\midrule
 \subsection{Positioning against task frameworks}\label{sec:eval-frameworks}
 To place the fabric among general task engines, we ran the \emph{same} warm-pool workload---MiniLM
 embedding on one GV100---through Ray, Dask, a raw \texttt{ProcessPoolExecutor}, and our NATS warm
-pool, all same-node and warm, measuring per-task \emph{dispatch latency}: a tiny round-trip that
-isolates fabric overhead (Table~\ref{tab:frameworks}). On \emph{throughput} every fabric is
-ultimately GPU-bound---batched embedding on the warm pool scales to the two-GPU ceiling
-(Fig.~\ref{fig:embed-scaling})---so we compare fabrics on dispatch overhead and capability, not peak
-docs/s. (We deliberately do \emph{not} report a per-fabric fine-grained throughput: it is dominated
-by each system's dispatch idiom and, for our request/reply arm, by the single-client driver rather
-than the bus itself.)
+pool, all same-node and warm, each driven by its \emph{native} client (Python for the first three;
+the Go \texttt{nats.go} client for the pool, matching nats-bursting's Go control plane). We report
+per-task \emph{dispatch latency} (a tiny round-trip isolating fabric overhead) and saturated
+\emph{throughput} at four warm workers (Table~\ref{tab:frameworks}). Driven concurrently, the pool
+reaches the GPU-bound ceiling---$9.4$k\,docs/s at four workers, scaling to $14.9$k at
+eight---competitive with the in-process engines (Ray $9.8$k, ProcessPool $9.0$k) and far above Dask
+($1.1$k); its pure-fabric ceiling (a near-empty task) is $8.3$k\,req/s. (A first-draft single-client
+Python \texttt{asyncio} driver under-saturated the pool at $0.9$k\,docs/s and did not scale with
+workers---a harness limit, not the bus, whose pure-fabric rate is ${>}500\times$ higher.)
 
-nats-bursting's dispatch latency (1.1\,ms p50) is competitive: on par with
-\texttt{ProcessPoolExecutor} (1.0\,ms), under Ray (2.3\,ms), and an order of magnitude below Dask
-(13.9\,ms); its tail is looser (p99 ${\sim}52$\,ms, async/GC jitter). But raw dispatch is not the
-contribution: Ray, Dask, Parsl and Globus Compute/funcX are mature task engines we do not try to
-beat. What none of them carries is a \emph{host politeness budget}, an \emph{inbound-restricted WAN
+nats-bursting's dispatch latency ($0.9$\,ms p50, Go client) is competitive: on par with
+\texttt{ProcessPoolExecutor} ($1.0$\,ms), under Ray ($2.3$\,ms), and an order of magnitude below Dask
+($13.9$\,ms). But raw dispatch is not the contribution: Ray, Dask, Parsl and Globus Compute/funcX are
+mature task engines we do not try to beat. What none of them carries is a \emph{host politeness budget}, an \emph{inbound-restricted WAN
 leaf-federation}, or a burst that is a \emph{publish inside the event loop}. The fabric trades
 generality for lower-friction, bus-native, policy-aware bursting---a different point in the design
 space, not a faster scheduler.
 
-\begin{table}[t]\centering\caption{Same-node warm-pool dispatch overhead on one GV100 (MiniLM
-embedding, warm). ``disp.'' = tiny-task round-trip. Ray/Dask/ProcessPool/nats-bursting measured;
-Parsl (HTEx) and funcX/Globus Compute characterized by design (funcX needs a hosted authenticated
-endpoint). polite = host fair-use budget; WAN = inbound-restricted leaf federation; bus = burst is
-an event-loop publish. Throughput is GPU-bound for all (Fig.~\ref{fig:embed-scaling}).}\label{tab:frameworks}
+\begin{table}[t]\centering\caption{Same-node warm-pool comparison on one GV100 (MiniLM embedding, 4
+warm workers). ``disp.'' = tiny-task round-trip (fabric overhead); ``thr.'' = embedding throughput,
+each system driven by its native client (Python for Ray/Dask/ProcessPool; Go \texttt{nats.go} for
+nats-bursting). Parsl (HTEx) and funcX/Globus Compute characterized by design (funcX needs a hosted
+authenticated endpoint). polite = host fair-use budget; WAN = inbound-restricted leaf federation;
+bus = burst is an event-loop publish.}\label{tab:frameworks}
 \small
 \begin{tabular}{lrrccc}\toprule
-fabric & disp.\ p50 & disp.\ p99 & polite & WAN & bus \\\midrule
-\texttt{ProcessPool}   & 1.0\,ms  & 1.3\,ms  & no & no & no \\
-Ray                    & 2.3\,ms  & 2.8\,ms  & no & no & no \\
-Dask                   & 13.9\,ms & 90\,ms   & no & no & no \\
+fabric & disp.\ p50 & thr.\ (d/s) & polite & WAN & bus \\\midrule
+\texttt{ProcessPool}   & 1.0\,ms  & 9000 & no & no & no \\
+Ray                    & 2.3\,ms  & 9800 & no & no & no \\
+Dask                   & 13.9\,ms & 1050 & no & no & no \\
 Parsl (HTEx)           & \multicolumn{2}{c}{by design} & no & no & no \\
 funcX / Globus         & \multicolumn{2}{c}{by design} & no & part & no \\
-\textbf{nats-bursting} & \textbf{1.1\,ms} & 52\,ms & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
+\textbf{nats-bursting} & \textbf{0.9\,ms} & \textbf{9400} & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
 \bottomrule
 \end{tabular}
 \end{table}

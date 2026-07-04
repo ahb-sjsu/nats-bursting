@@ -1,0 +1,1 @@
+{"concurrency": 64, "dispatch_p50_ms": 1.101, "dispatch_p99_ms": 65.579, "framework": "nats-bursting-go", "loaded_req_p50_ms": 5.876, "loaded_req_p99_ms": 12.696, "setup_s": 17.978373432, "task": "tiny", "throughput_docs_s": 10423.057122609114, "throughput_req_s": 10423.057122609114, "workers": 8}

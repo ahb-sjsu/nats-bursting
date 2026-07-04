@@ -199,11 +199,12 @@ Compute \cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray}, and Dask \cite{dask}
 provide elastic task execution and provider-driven scaling, but treat the host as
 owned capacity to fill; none model a fair-use politeness budget or a federated,
 inbound-restricted control plane. On a same-node warm-pool microbenchmark (MiniLM
-embedding), \sysname{}'s per-task dispatch latency ($1.1$\,ms p50) is competitive
-with these engines---on par with a raw \texttt{ProcessPoolExecutor} ($1.0$\,ms),
-under Ray ($2.3$\,ms), and an order of magnitude below Dask ($13.9$\,ms)---so the
-fabric adds policy-awareness and WAN leaf-federation without a dispatch-latency
-penalty; on real embedding work throughput is GPU-bound for all. \textbf{Messaging.} We build on NATS
+embedding, each system driven by its native client), \sysname{}'s dispatch latency
+($0.9$\,ms p50) and embedding throughput ($9.4$k\,docs/s, GPU-bound) are competitive
+with these engines---dispatch on par with a raw \texttt{ProcessPoolExecutor}
+($1.0$\,ms), under Ray ($2.3$\,ms), and an order of magnitude below Dask
+($13.9$\,ms)---so the fabric adds policy-awareness and WAN leaf-federation without a
+performance penalty. \textbf{Messaging.} We build on NATS
 \cite{nats} leaf federation as the substrate rather than a bespoke RPC layer.
 \textbf{Control.} The admission loop is AIMD in the lineage of additive-increase/
 multiplicative-decrease congestion avoidance \cite{chiujain}; we adapt it to a
