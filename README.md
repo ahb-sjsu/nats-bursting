@@ -392,6 +392,8 @@ cold|warm|scale`, gated behind `--i-have-checked-nrp-policy`).
 | GPU sizing | batch-probe on a GV100 | a burst ran at **94% GPU utilization** |
 | Admission — abundance | naive / static / AIMD vs. a self-imposed budget | AIMD holds the budget (ρ = 0) at **1.7–3.2× a static baseline's goodput**, matching a greedy baseline without over-admitting (pre-registered, randomized, 4 reps) |
 | Admission — real contention (E9) | vs. a live competing tenant on 2×GV100 | **structured load:** AIMD is the polite-efficient knee — **1.4× static's goodput, 4× lower over-admission than greedy**, and spares the neighbour (**76% vs 62%** throughput kept); **memoryless load:** feedback breaks even with static — a pre-registered null (capacity outpaces the detection delay) |
+| Compute-bound scaling | warm-pool MiniLM embedding across 2×GV100 | throughput **scales 8k → 44k docs/s** (workers 1→8) to GPU saturation — the compute-bound counterpart to the I/O-bound plateau above |
+| Task-framework comparison | same warm-pool workload vs. Ray / Dask / ProcessPool | nats-bursting (Go client): dispatch **0.9 ms p50**, **9.4k docs/s** — competitive with Ray (9.8k) / ProcessPool (9.0k), far above Dask (1.05k); the differentiator is a **politeness budget + inbound-restricted WAN leaf-federation + bus-native burst** none of them carry (Parsl/funcX by design) |
 
 The composition with [**turboquant-pro**](https://pypi.org/project/turboquant-pro)
 (on-wire compression) and [**batch-probe**](https://pypi.org/project/batch-probe)
@@ -400,8 +402,9 @@ The composition with [**turboquant-pro**](https://pypi.org/project/turboquant-pr
 write-up---the AIMD politeness controller, the federated NATS fabric, and the
 goodput–politeness Pareto above---is assembled in
 [`paper/infocom.tex`](paper/infocom.tex) (targeting IEEE INFOCOM); the full E1–E9
-measurement harness, results, and the honest record of what is and isn't
-established live in [`benchmarks/infocom/`](benchmarks/infocom/). See
+measurement harness, the task-framework comparison, results, and the honest record
+of what is and isn't established live in
+[`benchmarks/infocom/`](benchmarks/infocom/). See
 [`benchmarks/README.md`](benchmarks/README.md) for the SC26 tables and threats to
 validity.
 

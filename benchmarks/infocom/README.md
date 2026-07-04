@@ -30,6 +30,18 @@ in [`E8_PREREG.md`](E8_PREREG.md) and [`E9_PREREG.md`](E9_PREREG.md).
   delay D). naive is impolite in both (ρ = 0.64–0.85, steals ~38%). 4 seeds,
   randomized-interleaved, **27 trials, 0 contaminated**. Figures:
   `../../paper/figures/pareto_contended_{square,poisson}.pdf`, `e9_competitor_harm.pdf`.
+- **Task-framework comparison (positioning):** same warm-pool workload (MiniLM embedding
+  on one GV100) vs. Ray, Dask, and a raw `ProcessPoolExecutor`. Driven by its native Go
+  client (`nats.go`), nats-bursting's warm pool does **0.9 ms** dispatch p50 and **9.4k
+  docs/s** (scales 2.4k→14.9k over workers 1→8) — competitive with Ray (9.8k) /
+  ProcessPool (9.0k), far above Dask (1.05k); pure-fabric ceiling ~8–10k req/s. The
+  differentiator is capability (politeness budget, WAN leaf-federation, bus-native
+  burst), not speed. Parsl (HTEx) and funcX (needs a hosted Globus endpoint) by design.
+  Compute-bound scaling across both GPUs reaches **~44k docs/s** (`bench_embed_scaling.py`).
+  See [`RESULTS_FRAMEWORKS.md`](RESULTS_FRAMEWORKS.md); harness `bench_frameworks.py`,
+  `bench_nats_pool.py`, `natsbench/` (Go), `bench_embed_scaling.py`.
+  *Note:* an earlier Python-`asyncio` driver reported 0.9k docs/s for nats-bursting — a
+  harness artifact (single-client, didn't scale with workers); the Go driver fixed it.
 
 Honest record: the system path is verified end-to-end on NRP; in-situ NRP goodput was
 dominated by exogenous scheduling and cold-image-pull variance (three pre-registered
