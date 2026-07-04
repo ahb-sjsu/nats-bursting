@@ -1,0 +1,1 @@
+{"framework": "nats-bursting", "setup_s": 10.43, "dispatch_p50_ms": 1.34, "dispatch_p99_ms": 51.71, "embed_throughput_docs_s": 917.5}

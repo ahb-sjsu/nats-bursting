@@ -88,6 +88,12 @@ orchestration design---particularly the politeness controller that makes ``effec
 policy-safe'' mechanical rather than aspirational---and the honest characterization of when each
 supporting layer helps.
 
+\textbf{Why SC.} This is a systems paper about operationalizing opportunistic, shared GPU capacity
+for AI workloads. The contribution is not a new scheduler or a new quantizer, but a
+\emph{policy-aware bursting fabric} that turns multi-tenant Kubernetes GPUs into
+event-loop-local capacity, with reproducible measurements of cold start, warm-pool latency,
+compressed transport, admission control under contention, and GPU utilization.
+
 \section{Background}
 \textbf{NRP Nautilus}~\cite{nautilus} is a shared, opportunistic Kubernetes cluster. Its usage
 policy shapes the design: small/idle pods are tolerated (CPU\,$\le$\,1, mem\,$\le$\,2\,GiB are an
@@ -472,6 +478,44 @@ contention & policy & goodput (tasks/s) & $\rho$ & kept \\\midrule
 \emph{Left} (square, structured): AIMD is the polite-efficient knee. \emph{Right}
 (poisson, memoryless): feedback collapses onto static.}\label{fig:contended}
 \end{figure}
+
+\subsection{Positioning against task frameworks}\label{sec:eval-frameworks}
+To place the fabric among general task engines, we ran the \emph{same} warm-pool workload---MiniLM
+embedding of batches on one GV100---through Ray, Dask, a raw \texttt{ProcessPoolExecutor}, and our
+NATS warm pool, all same-node and warm (model preloaded), measuring per-task \emph{dispatch
+latency} (a tiny round-trip that isolates fabric overhead) and fine-grained embedding throughput
+(Table~\ref{tab:frameworks}). This is same-node fabric overhead, \emph{not} the cross-site path or
+multi-tenant policy---which is exactly the point.
+
+Two readings. First, nats-bursting's dispatch latency (1.3\,ms p50) is competitive: between
+\texttt{ProcessPoolExecutor} (1.0\,ms) and Ray (2.3\,ms), and far under Dask (13.9\,ms). Second, on
+throughput the in-process engines (Ray, ProcessPool) reach the GPU-bound ceiling
+(${\sim}9$k\,docs/s) while the message-oriented fabrics (Dask, nats-bursting) pay a per-task
+messaging cost on fine-grained tasks---which is why the pool dispatches \emph{batches} in practice.
+But raw dispatch speed is not the contribution: Ray, Dask, Parsl and Globus Compute/funcX are
+mature task engines we do not try to beat. What none of them carries is a \emph{host politeness
+budget}, an \emph{inbound-restricted WAN leaf-federation}, or a burst that is a \emph{publish inside
+the event loop}. The fabric trades generality for lower-friction, bus-native, policy-aware
+bursting---a different point in the design space, not a faster scheduler.
+
+\begin{table}[t]\centering\caption{Same-node warm-pool comparison on one GV100 (MiniLM embedding, 4
+warm workers). ``disp.'' = tiny-task round-trip (fabric overhead); ``thr.'' = batch-64 throughput.
+Ray/Dask/ProcessPool/nats-bursting are measured; Parsl (HTEx) and funcX/Globus Compute are
+federated-function systems characterized by design (funcX needs a hosted authenticated endpoint).
+polite = host fair-use budget; WAN = inbound-restricted leaf federation; bus = burst is an
+event-loop publish.}\label{tab:frameworks}
+\small
+\begin{tabular}{lrrccc}\toprule
+fabric & disp.\ p50 & thr.\ (d/s) & polite & WAN & bus \\\midrule
+\texttt{ProcessPool}   & 1.0\,ms  & 9000 & no & no & no \\
+Ray                    & 2.3\,ms  & 9800 & no & no & no \\
+Dask                   & 13.9\,ms & 1050 & no & no & no \\
+Parsl (HTEx)           & \multicolumn{2}{c}{by design} & no & no & no \\
+funcX / Globus         & \multicolumn{2}{c}{by design} & no & part & no \\
+\textbf{nats-bursting} & \textbf{1.3\,ms} & 920 & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Threats to validity}\label{sec:threats}
 We state these so the numbers are read correctly. \textbf{Synthetic data (Tier 1):} real bge
