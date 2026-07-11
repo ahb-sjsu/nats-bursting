@@ -57,13 +57,15 @@ while the best static value is $V_{\mathrm{stat}}=\psi(\bar\mu)$. Convexity of $
 and Jensen give $\Delta(D)=\mathbb E[\psi(\mu_{\mathcal G})]-\psi(\bar\mu)\ge0$:
 freshness never hurts the optimal controller. For the upper bound,
 Lemma~\ref{lem:lip} yields
-\[
-\Delta(D)=\mathbb E\big[\psi(\mu_{\mathcal G})-\psi(\bar\mu)\big]
-\le\Omega\,\mathbb E\big\|\mathbb P(a_t\in\cdot\mid\mathcal F_{\le t-D})-\mathbb P(a_t\in\cdot)\big\|_{\mathrm{TV}}
-\le\Omega\,\beta(D),
-\]
-the last step because $\sigma(a_t)\subseteq\mathcal F_{\ge t}$ and \eqref{eq:beta}
-takes the supremum over that field.
+\begin{align*}
+\Delta(D)&=\mathbb E\big[\psi(\mu_{\mathcal G})-\psi(\bar\mu)\big]
+\;\le\;\Omega\,\mathbb E\big\|\mu_{\mathcal G}-\bar\mu\big\|_{\mathrm{TV}}\\
+&=\Omega\,\mathbb E\!\Big[\textstyle\sup_{B}\big|\mathbb P(a_t{\in}B\mid\mathcal G)-\mathbb P(a_t{\in}B)\big|\Big]\\
+&\le\;\Omega\,\beta(D),
+\end{align*}
+where $\mu_{\mathcal G}=\mathbb P(a_t\in\cdot\mid\mathcal G)$, and the last step holds
+because $\sigma(a_t)\subseteq\mathcal F_{\ge t}$ so \eqref{eq:beta} takes the supremum
+over a larger field.
 \end{proof}
 
 \begin{corollary}[Binary tightness]\label{cor:tight}
@@ -111,7 +113,7 @@ regime that shrinks $\gamma$ also offers long stationary stretches to average ov
 If $r(D)$ is separated from the threshold by $|r(D)-\theta|\ge\Delta\theta$, the
 branch choice is correct whenever $|\hat r_n-r(D)|<\Delta\theta$, so
 \begin{equation}\label{eq:wrong}
-\Pr(\text{wrong branch after }n\text{ epochs})\le 2\exp\!\big(-c_0\gamma n(\Delta\theta)^{2}/4D^{2}\big).
+\Pr[\text{wrong branch at }n]\le 2\exp\!\big(-c_0\gamma n(\Delta\theta)^{2}/(4D^{2})\big).
 \end{equation}
 
 \begin{theorem}[Uniform regret]\label{thm:regret}
@@ -129,10 +131,11 @@ and, for any fixed process with $r(D)\neq\theta$, $\mathrm{Regret}_N=O(1/N)$.
 A wrong branch at epoch $n$ costs at most the value gap $L|r(D)-\theta|=L\,\Delta\theta$
 (zero at the threshold by the indifference choice of $\theta$). Averaging over the
 horizon and applying \eqref{eq:wrong},
-\[
-\mathrm{Regret}_N(\Delta\theta)\le\frac{L\,\Delta\theta}{N}\sum_{n=1}^{N}2e^{-c_0\gamma n(\Delta\theta)^{2}/4D^{2}}
-\le L\,\min\!\Big(\Delta\theta,\ \tfrac{8D^{2}}{c_0\gamma N\,\Delta\theta}\Big).
-\]
+\begin{align*}
+\mathrm{Regret}_N(\Delta\theta)
+&\le\frac{L\,\Delta\theta}{N}\sum_{n=1}^{N}2e^{-c_0\gamma n(\Delta\theta)^{2}/4D^{2}}\\
+&\le L\,\min\!\Big(\Delta\theta,\ \tfrac{8D^{2}}{c_0\gamma N\,\Delta\theta}\Big).
+\end{align*}
 For fixed $\Delta\theta>0$ the geometric sum is $O(1)$, giving the $O(1/N)$ rate. The
 worst case over $\tau_c$ is the near-threshold instance; maximizing
 $\min(\Delta\theta,\,8D^{2}/(c_0\gamma N\Delta\theta))$ at
