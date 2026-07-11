@@ -1,0 +1,158 @@
+{
+  "n": 20,
+  "n_attempted": 20,
+  "image": "python:3.12-slim",
+  "median_submit_to_complete_s": 7.27,
+  "mean_submit_to_complete_s": 7.12,
+  "min": 4.17,
+  "max": 9.81,
+  "p25": 6.54,
+  "p75": 7.96,
+  "median_schedule_to_run_s": 2.0,
+  "distinct_nodes": [
+    "rci-nrp-gpu-04.sdsu.edu",
+    "sdsu.gp-argo.greatplains.net"
+  ],
+  "rows": [
+    {
+      "run": 1,
+      "submit_to_complete_s": 8.61,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 2,
+      "submit_to_complete_s": 7.21,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 3,
+      "submit_to_complete_s": 6.54,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 4,
+      "submit_to_complete_s": 7.16,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 5,
+      "submit_to_complete_s": 7.71,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 6,
+      "submit_to_complete_s": 7.1,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 7,
+      "submit_to_complete_s": 7.9,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 8,
+      "submit_to_complete_s": 7.96,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 9,
+      "submit_to_complete_s": 7.6,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 10,
+      "submit_to_complete_s": 8.77,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 11,
+      "submit_to_complete_s": 8.4,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 12,
+      "submit_to_complete_s": 9.81,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 13,
+      "submit_to_complete_s": 7.32,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 14,
+      "submit_to_complete_s": 7.33,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 15,
+      "submit_to_complete_s": 6.38,
+      "schedule_to_run_s": 2,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 16,
+      "submit_to_complete_s": 7.04,
+      "schedule_to_run_s": 3,
+      "node": "sdsu.gp-argo.greatplains.net",
+      "ok": true
+    },
+    {
+      "run": 17,
+      "submit_to_complete_s": 4.17,
+      "schedule_to_run_s": 1,
+      "node": "rci-nrp-gpu-04.sdsu.edu",
+      "ok": true
+    },
+    {
+      "run": 18,
+      "submit_to_complete_s": 4.66,
+      "schedule_to_run_s": 1,
+      "node": "rci-nrp-gpu-04.sdsu.edu",
+      "ok": true
+    },
+    {
+      "run": 19,
+      "submit_to_complete_s": 5.1,
+      "schedule_to_run_s": 0,
+      "node": "rci-nrp-gpu-04.sdsu.edu",
+      "ok": true
+    },
+    {
+      "run": 20,
+      "submit_to_complete_s": 5.61,
+      "schedule_to_run_s": 1,
+      "node": "rci-nrp-gpu-04.sdsu.edu",
+      "ok": true
+    }
+  ]
+}

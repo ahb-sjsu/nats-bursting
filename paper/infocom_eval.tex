@@ -1,6 +1,6 @@
-% nats-bursting -- INFOCOM Evaluation (Section 8). Drop-in; \input after the model.
-% Preamble: \usepackage{booktabs} (optional). References sec:model, sec:controller,
-% sec:thermal, sec:fabric, prop:bound from infocom_model.tex.
+% nats-bursting -- INFOCOM Evaluation. Drop-in; \input after the model.
+% Preamble: \usepackage{booktabs} (optional). References sec:model, sec:limit,
+% sec:controller, sec:fabric, thm:limit, cor:exp, thm:adapt, prop:bound.
 %
 % HONESTY MARKERS: paragraphs tagged %PENDING% describe experiments not yet run;
 % do not present them as results. Numbers below are measured (5-rep mean +/- 95% CI
@@ -9,106 +9,26 @@
 \section{Evaluation}
 \label{sec:eval}
 
-We evaluate \sysname{} on a production testbed: a home node and \ifblind a\else an Atlas\fi{}
-workstation-class node running \texttt{nats-server} with JetStream enabled,
-connected over three paths---co-located (loopback), Tailscale (mesh VPN), and a
-single PAT-forwarded port (\texttt{:4222}). Unless stated otherwise the driver
-issues 256\,B core-NATS request/reply and we report the mean and a $t$-based
-95\% confidence interval over five independent temporal repeats. The study
-answers seven questions:
-\textbf{(Q1)} how the federated control path shapes latency and throughput;
-\textbf{(Q2)} what JetStream durability costs;
-\textbf{(Q3)} how the control plane scales with the in-flight window;
-\textbf{(Q4)} the prober detection delay $D$ that governs the bound of
+We evaluate the controller on a testbed whose \emph{sensing age is measured, not
+assumed}: a home node and \ifblind a\else an Atlas\fi{} workstation-class node with
+GV100 GPUs, the controller probing real GPU occupancy and admitting real CUDA
+workers, with a competing tenant driving exogenous capacity. The federated fabric
+that carries this control plane---and its latency, durability, and scaling
+characterization---is the companion systems paper's~\cite{companion}; here we take
+the fabric as given and measure what the \emph{controller} does over it. Unless noted
+we report the mean and a $t$-based 95\% confidence interval over independent repeats.
+The study answers four questions:
+\textbf{(Q1)} the prober detection delay $D$ that governs the bound of
 Prop.~\ref{prop:bound};
-\textbf{(Q5)} whether the controller is polite-efficient under a self-imposed
+\textbf{(Q2)} whether the controller is polite-efficient under a self-imposed
 budget (the \emph{abundance} regime);
-\textbf{(Q6)} whether it holds under \emph{real, time-varying contention} (the
+\textbf{(Q3)} whether it holds under \emph{real, time-varying contention} (the
 \emph{scarcity} regime Prop.~\ref{prop:bound} targets)---and where it fails; and
-\textbf{(Q7)} whether the two-tier stack (macro admission $+$ micro thermal)
-operates end-to-end on real hardware.
+\textbf{(Q4)} whether the feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$
+(Thm.~\ref{thm:limit}) holds at the controller level and unifies the two contention
+regimes as points on one curve.
 
-\subsection{Control-plane latency and throughput (Q1)}
-\label{sec:eval-rtt}
-Co-located, request/reply RTT is $0.84$\,ms (p50) at $6855$\,msg/s. Over
-Tailscale---one WAN hop to the same responder---RTT rises to $76\pm13$\,ms (p50),
-$171\pm96$ (p95), $302\pm170$ (p99), and closed-loop throughput at a 16-message
-window falls to $188\pm28$\,msg/s. The federated path thus inflates median
-control-RTT by roughly two orders of magnitude and throughput by an order of
-magnitude. Crucially the cost is \emph{round-trip latency}, not server work:
-a synchronous, per-message control loop would be RTT-bound. This is the direct
-empirical motivation for the \emph{epoch-paced} admission controller of
-\S\ref{sec:controller} rather than per-message acknowledgement, and for the
-wide-tail variance ($95\%$ CI on p99 spans $\pm170$\,ms) that any WAN-side
-controller must tolerate.
-%PENDING% The single-port \texttt{:4222} traversal tax (E2) is not yet measured;
-%PENDING% it requires a PAT-forwarding window unavailable during these runs.
-
-\begin{table}[t]
-\centering
-\caption{Control-plane RTT and throughput by path (core-NATS, 256\,B, 5 reps).
-The federated path is RTT-bound.}
-\label{tab:e1}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lcc}
-\toprule
-path & RTT p50/95/99 (ms) & thr.\ (msg/s) \\
-\midrule
-local      & $0.84/1.09/1.14$ & $6855$ \\
-Tailscale  & $76/171/302$     & $188\pm28$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Durability cost (Q2)}
-\label{sec:eval-durability}
-We compare JetStream publish-to-ack latency for file-backed and in-memory streams
-over Tailscale. The medians are $81.4\pm10.6$\,ms (file) vs.\ $84.0\pm6.5$\,ms
-(memory), overlapping at every percentile. Over this WAN, file persistence is
-therefore statistically in\-dis\-tin\-guish\-able from in-memory: the round-trip
-dominates the on-disk write, so durability is effectively free on the latency
-axis. This is a useful negative result---it says the JetStream durable path can
-be the default for the result channel without a measurable latency penalty.
-%PENDING% A server-restart durability test (where memory should not survive and
-%PENDING% file should) is deferred to a controlled maintenance window; the present
-%PENDING% recovery check exercises only client reconnection.
-
-\subsection{Control-plane scaling (Q3)}
-\label{sec:eval-scaling}
-Sweeping the in-flight window $w\in\{1,4,8,16,32\}$, throughput grows
-sub-linearly: $11, 39, 83, 158, 283$\,msg/s respectively (95\% CIs widening from
-$\pm2$ to $\pm128$). The curve is consistent with an RTT- and contention-bound
-closed loop and with the AIMD window dynamics of \S\ref{sec:controller}: useful
-in-flight work scales with the window until queueing and shared-link contention
-flatten the gain---exactly the regime in which additive-increase probing and
-multiplicative back-off are the appropriate control law.
-
-\begin{table}[t]
-\centering
-\caption{Control-plane throughput vs.\ in-flight window $w$ (Tailscale, 5 reps).}
-\label{tab:e5}
-\small
-\begin{tabular}{lccccc}
-\toprule
-window $w$        & 1 & 4 & 8 & 16 & 32 \\
-\midrule
-throughput (msg/s) & 11 & 39 & 83 & 158 & 283 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Subject interest (Q1, federation)}
-\label{sec:eval-interest}
-On a single server, publishing to a subscribed subject yields $300/300$ delivery
-with zero cross-subject leakage and propagation p50 $169$\,ms, confirming subject
-isolation and correct interest routing.
-%PENDING% The asymmetric leaf-federation interest behavior central to
-%PENDING% \S\ref{sec:fabric} (and the result-webhook return path it motivates)
-%PENDING% requires a two-leaf topology and is not yet measured; the single-server
-%PENDING% result above is a routing sanity check, not the federation claim.
-
-\subsection{Detection delay and the violation bound (Q4)}
+\subsection{Detection delay and the violation bound (Q1)}
 \label{sec:eval-detection}
 $D$ has two measured components. The prober's per-call cost (read-only
 \texttt{nvidia-smi}) is $27$--$33$\,ms (p50). The \emph{end-to-end} detection delay
@@ -124,7 +44,7 @@ compliance---not a rounding error---which is precisely the systems$\leftrightarr
 hinge the bound is meant to expose: a guest that admits aggressively (large
 $\alpha$) pays for it in over-admission scaled by this measured cold-start delay.
 
-\subsection{Politeness under abundance (Q5)}
+\subsection{Politeness under abundance (Q2)}
 \label{sec:eval-e2e}
 We burst $B$ jobs under three policies---\emph{naive} (submit up to the hard cap),
 \emph{static} (fixed submit rate), and \emph{aimd} (the completion-gated admission
@@ -197,14 +117,14 @@ worker~$\to$~federated result) is verified end-to-end on NRP Nautilus separately
 removes that assumption, driving $a_t$ with a real competing tenant so the
 Prop.~\ref{prop:bound} bound is exercised under genuine \emph{scarcity}.
 
-\subsection{Politeness under real contention (Q6)}
+\subsection{Politeness under real contention (Q3)}
 \label{sec:eval-contended}
 Abundance tests self-restraint; the harder question is politeness under
 \emph{scarcity}. We manufacture controlled contention on a two-GPU node
 ($C{=}2$): a \emph{competing tenant} occupies $c(t)\in\{0,1\}$ GPUs on a fixed
 profile, so the guest's available capacity $a(t)=C-c(t)$ is exogenous,
 time-varying, and \emph{measured} by the prober (a per-GPU process census, subject
-to the detection delay $D$ of Q4)---the regime Prop.~\ref{prop:bound} targets. Two
+to the detection delay $D$ of Q1)---the regime Prop.~\ref{prop:bound} targets. Two
 profiles bracket the space: \emph{square} (a period-$2\tau$ wave, modelling
 slowly-varying or scheduled load) and \emph{poisson} (memoryless on/off arrivals,
 the adversarial case). Alongside goodput and $\rho$ we measure \emph{harm to the
@@ -225,17 +145,20 @@ report it.} aimd's goodput ($0.062$) is statistically indistinguishable from
 static's ($0.064$, overlapping CIs) and it over-admits \emph{more}
 ($\rho{=}0.30$), because capacity now varies on the timescale of the detection
 delay: by the time the prober sees a competitor arrive, the observation is stale.
-This is a pre-registered \emph{null} for H1, and it is precisely the failure
-Prop.~\ref{prop:bound} predicts---$\rho$ grows with $D$ relative to the
-capacity-variation timescale (slow square $\to\rho{=}0.15$; memoryless poisson
-$\to\rho{=}0.30$). \textbf{(H3)} The measured detection path ($D\approx2$--$3$\,s,
-Q4) places the Prop.~\ref{prop:bound} ceiling above the observed aimd $\rho$ in
-both profiles: the bound is conservative for a discrete, completion-gated
-controller, but its central prediction---politeness degrades as contention
-outpaces $D$---is borne out. Practically: feedback admission pays when a
-neighbour's load has structure to track, and one should fall back to a fixed budget
-when it does not. naive is the most impolite in \emph{every} regime
-($\rho{=}0.64$--$0.85$).
+This is a pre-registered \emph{null} for H1, and it is precisely what
+Thm.~\ref{thm:limit} predicts: the two profiles are two coherence times on the
+$\Delta(D)=\tfrac12 r(D)$ curve (Cor.~\ref{cor:exp}), with the slow square
+($\tau_c\!\gg\!D$) giving feedback room to help and the memoryless poisson
+($\tau_c\!\lesssim\!D$) driving $r(D)\!\to\!0$, where no causal controller can beat
+static---so feedback's break-even is a theorem, not a tuning failure. \textbf{(H3)}
+The measured detection path ($D\approx2$--$3$\,s, Q1) also places the
+Prop.~\ref{prop:bound} sawtooth ceiling above the observed aimd $\rho$ in both
+profiles: conservative for a discrete, completion-gated controller, but its
+prediction---politeness degrades as contention outpaces $D$---is borne out.
+Practically, this is exactly the case for the regime-adaptive controller
+(\S\ref{sec:controller}, Thm.~\ref{thm:adapt}): track $r(D)$ and fall back to a
+fixed budget when the neighbour has no structure to exploit. naive is the most
+impolite in \emph{every} regime ($\rho{=}0.64$--$0.85$).
 
 \begin{table}[t]
 \centering
@@ -282,47 +205,66 @@ than---naive ($45\%$): the same $D$-limited failure as its goodput.}
 \label{fig:harm}
 \end{figure}
 
-\subsection{Two-tier control on real hardware (Q7)}
-\label{sec:eval-thermal}
-The macro admission loop is paired with a \emph{micro} tier: the Kalman-filtered
-thermal controller of \S\ref{sec:thermal}, run live during the burst. On the GPU
-pool it is active throughout---throttling guest concurrency on $>\!90\%$ of epochs
-under load (Fig.~\ref{fig:thermal})---and, tellingly, its throttling also
-\emph{lowers} over-admission (aimd square $\rho$ falls $0.15\!\to\!0.08$ with the
-micro tier engaged): both tiers push toward citizenship. Driven instead by CPU
-temperature (its native actuator), the controller tracks a Kalman estimate and
-throttles worker count predictively behind a hard safety cutout. On this
-\emph{shared} node the result is itself a politeness lesson: the co-tenant baseline
-($\sim$$77^\circ$C from the resident workload) sets a thermal floor that
-self-throttling cannot undercut, and the controller correctly cuts out rather than
-cook shared silicon. Even thermal headroom, on a shared machine, is set by one's
-neighbours.
+\subsection{Validating the feedback-usefulness law (Q4)}
+\label{sec:eval-law}
+The contention results above are two points; Thm.~\ref{thm:limit} predicts the whole
+curve. To test it we simulate the actual window controllers on the two-state
+capacity process the theory analyzes---a Markov competitor with per-epoch flip
+probability $p$, so the coherence time $\tau_c=-1/\ln(1-2p)$ sweeps continuously
+(matching \texttt{contention.py --profile markov})---at the measured sensing age
+$D{=}3$ epochs, $1.2{\times}10^{5}$ epochs per point. Fig.~\ref{fig:tausweep}
+reports the goodput advantage of each controller over the best static budget at
+matched over-admission, against the predicted $\Delta(D)=\tfrac12 r(D)$.
+
+Three facts confirm the theory and motivate the adaptive controller.
+\textbf{(i)} The delayed-threshold (Bayes-optimal) policy sits \emph{on} the
+predicted line across three decades of $\tau_c$---maximum deviation
+$|\Delta_{\text{opt}}-\tfrac12 r(D)|=0.013$---so the closed form is not an asymptote
+but the exact frontier. \textbf{(ii)} Practical AIMD captures roughly half the
+available advantage when $\tau_c\!\gg\!D$ and, crucially, goes \emph{negative}
+(worse than static) once $\tau_c\!\lesssim\!D$: it keeps probing a signal that has
+become noise, paying over-admission for nothing---the same failure the live poisson
+regime shows. \textbf{(iii)} The regime-adaptive controller, estimating $r(D)$
+online, tracks the upper envelope: it never drops below static and recovers most of
+AIMD's advantage where feedback is worth having. Finally, sweeping $D$ collapses
+every curve onto $\tfrac12 e^{-D/\tau_c}$ when plotted against $D/\tau_c$
+(Fig.~\ref{fig:tausweep}, right), confirming the predicted scaling. The live
+square/poisson pair (Q3) are the two ends of this axis: $\tau_c\!\gg\!D$ (feedback
+wins) and $\tau_c\!\lesssim\!D$ (feedback breaks even), exactly as
+Cor.~\ref{cor:exp} states.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/e9_thermal_demo.png}
-\caption{Micro tier live during a burst: GPU temperature and the thermal
-concurrency cap over time. The Kalman-predictive controller throttles under load;
-the shared-node co-tenant baseline bounds what self-throttling can achieve.}
-\label{fig:thermal}
+\includegraphics[width=\columnwidth]{figures/tau_sweep.png}
+\caption{Controller-level validation of the feedback-usefulness law.
+\emph{Left:} goodput advantage over static vs.\ capacity coherence time $\tau_c$ at
+$D{=}3$. The Bayes-optimal controller lies on the predicted $\tfrac12 r(D)$ (dashed)
+to within $0.013$; practical AIMD falls below static once $\tau_c\!\lesssim\!D$; the
+regime-adaptive controller tracks the envelope. \emph{Right:} sweeping $D$ collapses
+the optimal advantage onto $\tfrac12 e^{-D/\tau_c}$ vs.\ $D/\tau_c$.}
+\label{fig:tausweep}
 \end{figure}
+%PENDING% A live NRP run of the regime-adaptive controller (a $\tau_c$ sweep via
+%PENDING% contention.py --profile markov against run.py, landing in-situ points on
+%PENDING% Fig.~\ref{fig:tausweep}) is the natural next anchor; the results here are
+%PENDING% the controller-level simulation, and the live Q3 pair are its endpoints.
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
-The evaluation establishes: (i) the federated control path is RTT-bound (Q1),
-motivating epoch-paced admission; (ii) JetStream durability is latency-free over
-the WAN (Q2); (iii) control-plane throughput scales sub-linearly with the window
-(Q3); (iv) the prober detection delay $D$ is a measured, first-order term in the
-bound (Q4); (v) under abundance the controller is polite-efficient at both scales
-(Q5); (vi) under \emph{structured} contention it is the polite-efficient knee and
-spares the neighbour, while under \emph{memoryless} contention feedback breaks even
-with static---a pre-registered null we report rather than suppress (Q6); and
-(vii) the two-tier stack runs live on real hardware, both tiers pushing toward
-citizenship (Q7). Principal threats: contention is manufactured on a two-GPU node
-with $C{=}2$ and two synthetic profiles, not a production multi-tenant trace; the
-poisson regime marks feedback's limit when capacity outpaces $D$; the GPU thermal
-actuator (admission concurrency) is coarse and the shared node imposes a co-tenant
-thermal floor; and federation interest/partition behaviour (E2/E6) and the
-single-port traversal tax are characterized on one server or left to future work.
-The full system path is nonetheless verified end-to-end, and naive's impoliteness
-($\rho\ge0.64$, $\ge$$38\%$ neighbour harm) is robust across every regime.
+The evaluation establishes: (i) the prober detection delay $D$ is a measured,
+first-order term in the bound---$\approx2.5$\,s, CUDA-cold-start-dominated (Q1);
+(ii) under abundance the controller is polite-efficient at both scales, $1.7$--$3.2\times$
+static's goodput at $\rho{=}0$ (Q2); (iii) under \emph{structured} contention it is
+the polite-efficient knee and spares the neighbour, while under \emph{memoryless}
+contention feedback breaks even with static---a pre-registered null we report rather
+than suppress (Q3); and (iv) the feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$
+holds at the controller level, the optimal policy sitting on it to within $0.013$
+while the regime-adaptive controller never falls below static (Q4), unifying the two
+live contention regimes as endpoints of one curve. Principal threats: contention is
+manufactured on a two-GPU node with $C{=}2$ and two synthetic profiles, not a
+production multi-tenant trace; and the law validation (Q4) and the regime-adaptive
+controller are established in controller-level simulation on the theory's two-state
+process, with the live cluster run of the adaptive policy left as the next anchor.
+The full system path is nonetheless verified end-to-end (\S\ref{sec:impl}), and
+naive's impoliteness ($\rho\ge0.64$, $\ge$$38\%$ neighbour harm) is robust across
+every regime.

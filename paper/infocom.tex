@@ -8,7 +8,10 @@
 \usetikzlibrary{arrows.meta,positioning}
 \usepackage[hidelinks]{hyperref}
 
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
 
 % ---- Double-blind toggle -------------------------------------------------
 % \blindtrue  => anonymized submission PDF (INFOCOM double-blind).
@@ -21,8 +24,8 @@
 
 \begin{document}
 
-\title{Polite Bursting: Feedback-Controlled Admission for AI Workloads
-over a Federated Messaging Fabric on Shared Clusters}
+\title{Polite Bursting: Feedback Admission Control under
+Age-Limited Sensing on Shared Clusters}
 
 \author{\IEEEauthorblockN{\ifblind Anonymous Author(s)\else Andrew H. Bond\fi}
 \IEEEauthorblockA{\ifblind Paper submitted for double-blind review\else San Jose State University\\
@@ -33,24 +36,30 @@ andrew.bond@sjsu.edu\fi}}
 \begin{abstract}
 Research and AI teams burst GPU/ML batch workloads onto shared, multi-tenant
 clusters where they are \emph{guests}: bound by fair-use policy (pod caps,
-utilization floors, ignored-resource ranges) and reachable only over constrained
-WAN paths. Naive submission violates policy and wastes host capacity; static
-rate-limiting wastes the guest's throughput. We argue that being a good guest is a
-control problem, and present \sysname, a container-native bursting fabric that
-maximizes goodput while respecting host policy. \sysname contributes (i) a
-feedback admission/back-off controller modeled as an AIMD loop with a probe-driven
-estimator, analyzed for safety and a bounded policy-violation rate; (ii) a
-federated NATS leaf-node messaging plane spanning home and cluster whose
-tradeoffs---JetStream non-federation, durability, single-port WAN traversal---we
-characterize through measurement; and (iii) bandwidth- and resource-efficient
-transport via random-rotation quantization and OOM-/thermal-safe GPU batch
-right-sizing with a Kalman-filtered predictive controller. We verify the system
-end-to-end on NRP Nautilus and, under \emph{real, manufactured contention}, show
-the controller is the polite-efficient point---up to $3.2\times$ a static
-baseline's goodput while sparing the competing tenant a greedy policy harms---and
-honestly report the memoryless-contention regime where feedback breaks even, as the
-bound predicts. The system and a
-reproducible artifact are \ifblind available to reviewers\else open source\fi.
+utilization floors) and forced to sense a neighbour-driven, unobservable capacity
+through a \emph{stale} probe. Naive submission violates policy; static
+rate-limiting wastes throughput; and adaptive control sometimes helps and sometimes
+does not. We explain \emph{when} by casting polite bursting as chance-constrained
+admission under age-of-information: the controller acts on a capacity estimate of
+age $D$. Our central result is an exact \emph{feedback-usefulness limit}---the
+goodput advantage of any causal admission controller over the best static budget
+equals \emph{half the autocorrelation of available capacity at the sensing lag},
+$\Delta(D)=\tfrac12 r(D)$. It yields a sharp impossibility (no controller beats
+static once $D$ exceeds the neighbour's coherence time $\tau_c$), a matching
+achievability, and a \emph{regime-adaptive} controller that estimates $\tau_c$
+online and switches between closed- and open-loop admission to track the limit
+uniformly. We validate the law in simulation---the optimal policy sits on
+$\tfrac12 r(D)$ to within $0.013$, practical AIMD degrades below static exactly when
+$\tau_c\!\lesssim\!D$, and the regime-adaptive controller never falls below
+static---and on a workstation testbed under \emph{real, manufactured GPU contention}
+(with the full submission path verified end-to-end on NRP Nautilus): under structured
+contention feedback admission is the polite-efficient knee, $1.41\times$ static's
+goodput at $4\times$ lower over-admission while sparing the competing tenant a greedy
+policy harms, and up to $3.2\times$ under a self-imposed budget. The pre-registered
+memoryless regime where it breaks even is exactly the $r(D)\!\to\!0$
+prediction---the regime the adaptive controller is built to detect and sidestep. The
+system and a reproducible artifact are
+\ifblind available to reviewers\else open source\fi.
 \end{abstract}
 
 \section{Introduction}
@@ -71,25 +80,34 @@ under-utilized, and trips the very thresholds that get a namespace banned.
 \emph{Static} rate-limiting is safe but leaves the budget idle whenever capacity
 is available, wasting the guest's own throughput. Neither adapts.
 
-We argue that being a good guest is a \emph{control} problem, and we build that
-thesis into \sysname, a container-native bursting fabric. Our contributions:
+We argue that being a good guest is a \emph{control} problem whose answer is set by
+\emph{how stale the guest's view of the cluster is}, and we build that thesis into
+\sysname, a container-native bursting fabric. Our contributions:
 \begin{itemize}
-\item A \textbf{politeness controller} (\S\ref{sec:controller}): a feedback
-admission/back-off loop modeled as AIMD over a probe-driven occupancy estimate,
-with a deterministic hard-cap safety guarantee and a steady-state policy-violation
-bound whose dominant term is the \emph{measured} prober detection delay
-(Prop.~\ref{prop:safety},~\ref{prop:bound}).
-\item A \textbf{federated messaging fabric} (\S\ref{sec:fabric}) of NATS leaf
-nodes spanning home and cluster, whose tradeoffs we characterize by measurement
-(\S\ref{sec:eval}).
-\item \textbf{Transport and resource subsystems} (\S\ref{sec:subsystems}):
-random-rotation quantization for bandwidth and a Kalman-filtered thermal
-controller for OOM-/heat-safe GPU sizing.
-\item An \textbf{evaluation} (\S\ref{sec:eval}) that verifies the system
-end-to-end on NRP Nautilus, measures the goodput--politeness frontier under
-\emph{real GPU contention} (where the controller is the polite-efficient knee and
-spares the competing tenant), reports the pre-registered regime where feedback
-breaks even, and exercises the two-tier admission$+$thermal stack live.
+\item An \textbf{age-of-information formulation} of polite bursting
+(\S\ref{sec:model}) and a \textbf{feedback-usefulness limit}
+(\S\ref{sec:limit}): with a capacity estimate of age $D$, the goodput advantage of
+\emph{any} causal admission controller over the best static budget is exactly
+$\Delta(D)=\tfrac12 r(D)$, half the autocorrelation of available capacity at the
+sensing lag (Thm.~\ref{thm:limit})---an impossibility once $D$ exceeds the
+neighbour's coherence time $\tau_c$ (Cor.~\ref{cor:imp}), lifted to any pod cap by a
+layer-cake reduction (Prop.~\ref{prop:layercake}).
+\item A \textbf{regime-adaptive controller} (\S\ref{sec:controller}) that estimates
+$\tau_c$ online from the probe stream and switches between closed- and open-loop
+admission, provably tracking the limit uniformly in $\tau_c$
+(Thm.~\ref{thm:adapt}) with a deterministic hard-cap safety guarantee
+(Prop.~\ref{prop:safety}).
+\item A \textbf{realization} (\S\ref{sec:fabric}) in which the controller runs
+in-cluster and senses/actuates across a single-port WAN leaf link that fixes the
+sensing age $D$; the fabric's own design and characterization are the subject of a
+companion systems paper~\cite{companion} and are out of scope here.
+\item An \textbf{evaluation} (\S\ref{sec:eval}) that validates the law in
+simulation (optimal policy on $\tfrac12 r(D)$ within $0.013$; adaptive control
+never below static) and, on a workstation testbed under \emph{real GPU contention}
+(full submission path verified end-to-end on NRP Nautilus), shows feedback admission
+is the polite-efficient knee that spares the competing tenant---while the
+pre-registered memoryless regime where it breaks even is exactly the
+$r(D)\!\to\!0$ prediction the adaptive controller detects and sidesteps.
 \end{itemize}
 
 \begin{figure}[t]
@@ -139,41 +157,24 @@ no notion of a host \emph{politeness budget}; left to default scaling they
 over-provision under contention. We instead make self-restraint a first-class,
 controlled objective.
 
-\input{infocom_model}
+\input{infocom_aoi_model}
 
-\section{Federated Messaging Fabric}
+\section{Realization: Sensing over a Federated Fabric}
 \label{sec:fabric}
-The control plane spans an untrusted network boundary, so \sysname{} uses a
-NATS \cite{nats} \emph{leaf-node} topology: a hub at the home node and a leaf
-inside the cluster, joined by a single outbound link that needs only the one
-forwarded port. Subjects propagate by interest, so the home client's subscription
-to \texttt{results.>} pulls worker results back across the leaf without inbound
-cluster access; submissions flow the other way on \texttt{burst.submit}
-(Fig.~\ref{fig:arch}).
-
-Two design points matter. First, \emph{core NATS vs.\ JetStream}: core subjects are
-fire-and-forget and federate transparently, whereas JetStream streams are not
-themselves federated---durable state is site-local---so we use core subjects for
-the federated control/result path and JetStream only where site-local durability
-is wanted. Second, the \emph{single-port traversal}: the entire plane multiplexes
-onto one port, which we characterize in \S\ref{sec:eval} (durability cost,
-scaling, path latency). The asymmetry of leaf interest propagation is what makes a
-result-return path over the same link possible without opening the cluster.
-
-\section{Transport and Resource Subsystems}
-\label{sec:subsystems}
-Two subsystems keep bursts efficient and policy-safe. \textbf{Transport:}
-\ifblind our transport layer\else turboquant-pro\fi{} \cite{turboquantpro,turboquant} applies a random rotation that
-makes coordinates approximately i.i.d.\ Gaussian regardless of the input
-distribution, enabling distribution-free per-channel/per-token quantization of the
-tensors that cross the WAN---reducing bytes on the constrained link.
-\textbf{Resource right-sizing:} \ifblind our right-sizing tool\else batch-probe\fi{} \cite{batchprobe} binary-searches the
-largest OOM-safe GPU batch and, as the micro tier of our two-tier control stack
-(\S\ref{sec:thermal}), runs a Kalman-filtered \cite{kalman} predictive thermal
-controller that throttles before a node's setpoint is breached---node-level
-citizenship complementing the cluster-level admission loop. These mirror the
-attention-efficiency techniques \cite{flashattention,onlinesoftmax} that make the
-underlying jobs feasible.
+The controller runs \emph{in-cluster}, behind the network boundary, and reaches the
+home node over a NATS~\cite{nats} \emph{leaf} link that needs only one outbound port
+(Fig.~\ref{fig:arch}): it probes cluster occupancy and actuates admission across that
+link, submissions flowing on \texttt{burst.submit} and results returning on
+\texttt{results.>} by interest propagation, with no inbound cluster access. What
+matters for the controller is that this view is \emph{aged}---the leaf round-trip and
+the CUDA cold-start of a freshly admitted pod together set the sensing age $D$ of
+\S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. To keep that loop fresh the
+tensors crossing the link are compressed by random-rotation quantization
+\cite{turboquantpro,turboquant} (fewer bytes, smaller $D$). The fabric's own
+design---leaf-federation tradeoffs, JetStream durability, single-port traversal---and
+the transport and node-level thermal subsystems are a systems contribution developed
+and characterized in a companion paper~\cite{companion}; here the fabric is simply the
+medium that makes capacity sensing possible, and stale.
 
 \section{Implementation}
 \label{sec:impl}
@@ -197,40 +198,55 @@ container images, and the transport/right-sizing packages
 \textbf{Bursting and function execution.} HTCondor \cite{htcondor}, funcX/Globus
 Compute \cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray}, and Dask \cite{dask}
 provide elastic task execution and provider-driven scaling, but treat the host as
-owned capacity to fill; none model a fair-use politeness budget or a federated,
-inbound-restricted control plane. On a same-node warm-pool microbenchmark (MiniLM
-embedding, each system driven by its native client), \sysname{}'s dispatch latency
-($0.9$\,ms p50) and embedding throughput ($9.4$k\,docs/s, GPU-bound) are competitive
-with these engines---dispatch on par with a raw \texttt{ProcessPoolExecutor}
-($1.0$\,ms), under Ray ($2.3$\,ms), and an order of magnitude below Dask
-($13.9$\,ms)---so the fabric adds policy-awareness and WAN leaf-federation without a
-performance penalty. \textbf{Messaging.} We build on NATS
-\cite{nats} leaf federation as the substrate rather than a bespoke RPC layer.
-\textbf{Control.} The admission loop is AIMD in the lineage of additive-increase/
-multiplicative-decrease congestion avoidance \cite{chiujain}; we adapt it to a
-\emph{two-sided} objective (stay under a cap \emph{and} above a utilization floor)
-and tie the achievable compliance to a measured detection delay. The micro-tier
-thermal loop is a textbook Kalman filter \cite{kalman} applied to predictive
-throttling. To our knowledge, no prior system frames shared-cluster bursting as a
-politeness-budget control problem with both an analyzed bound and a measured
-goodput--politeness frontier.
+owned capacity to fill; none model a fair-use politeness budget or admission under
+age-limited sensing. They are complementary substrates---a head-to-head
+dispatch/throughput comparison against them, and the fabric that carries our control
+plane, is reported in the companion systems paper~\cite{companion}. \textbf{Messaging.}
+The control plane rides NATS \cite{nats} leaf federation rather than a bespoke RPC
+layer.
+\textbf{Congestion and scavenger control.} Our controller is AIMD in the lineage of
+additive-increase/multiplicative-decrease congestion avoidance \cite{chiujain}, and
+its \emph{polite} objective---yield to incumbents, use only slack---aligns with
+low-priority/scavenger transports such as LEDBAT \cite{ledbat} and TCP-Nice
+\cite{tcpnice}. Those protocols are engineered to back off under one-sided loss or
+delay signals; we differ in two ways. First, the objective is \emph{two-sided}
+(stay under a pod cap \emph{and} above a utilization floor), which admits an
+over-admission metric rather than pure loss. Second, and more fundamentally, we do
+not merely propose a back-off rule: we prove a \emph{limit} on what any such rule
+can achieve. \textbf{Age of information.} That limit is an information-freshness
+statement---the value of feedback is set by the age $D$ of the capacity estimate
+relative to the neighbour's coherence time---placing polite bursting in the
+age-of-information line of work \cite{aoi} but on the \emph{control} rather than the
+sampling side: we bound the achievable goodput--politeness frontier as a function of
+$D$ and give a controller that adapts to the measured regime. To our knowledge, no
+prior work frames shared-cluster bursting as admission control under age-limited
+sensing, proves a feedback-usefulness limit for it, or ties an over-admission bound
+to a measured detection delay.
 
 \section{Conclusion}
 \label{sec:concl}
-Being a good guest on a shared cluster is a control problem. \sysname{} makes
-self-restraint a first-class, analyzed, and measured objective: a federated NATS
-fabric that respects the network boundary, an AIMD admission controller with a
-hard-cap safety guarantee and a detection-delay-bounded violation rate, and
-node-level thermal control. End-to-end on NRP Nautilus the system works; on a
-controlled testbed the controller is the polite-efficient point---up to
-$3.2\times$ a static baseline's goodput under abundance, and under real GPU
-contention the polite-efficient knee that spares the competing tenant a greedy
-policy harms. We also mark feedback's limit honestly: under memoryless contention
-that outpaces the detection delay, adaptive admission breaks even with a fixed
-budget, exactly as Prop.~\ref{prop:bound} predicts. Open problems remain: a
-production multi-tenant trace (ours is manufactured contention at $C{=}2$), a finer
-thermal actuator than admission concurrency, and leaf-federation
-interest/partition behavior at scale.
+Being a good guest on a shared cluster is a control problem, and how well it can be
+solved is fixed by how stale the guest's view of the cluster is. \sysname{} makes
+that precise: an age-of-information formulation, a feedback-usefulness limit
+$\Delta(D)=\tfrac12 r(D)$ that says closed-loop admission is worth exactly the
+autocorrelation of capacity at the sensing lag, and a regime-adaptive controller
+that measures its own predictability and tracks the limit. The limit is validated
+at the controller level (the optimal policy sits on $\tfrac12 r(D)$ to within
+$0.013$; AIMD falls below static precisely when $\tau_c\!\lesssim\!D$) and on a
+workstation testbed under real GPU contention (the full submission path verified
+end-to-end on NRP Nautilus): under structured contention feedback admission is the
+polite-efficient knee---$1.41\times$ static's goodput at a quarter of the
+over-admission while sparing the competing tenant a greedy policy harms---and up to
+$3.2\times$ under a self-imposed budget. The one regime where feedback breaks even,
+under memoryless contention that outpaces detection, is not a disappointment but the
+theory's own prediction ($r(D)\!\to\!0$, Cor.~\ref{cor:imp})---and the regime the
+adaptive controller detects and sidesteps. Open problems remain: a production multi-tenant trace (ours is
+manufactured contention at $C{=}2$), extending the exact limit beyond the binary
+layer to general capacity processes via the $\beta$-mixing lower bound, and
+predictive controllers that estimate $r(D)$ rather than only its regime.
+
+\appendix
+\input{infocom_appendix}
 
 \bibliographystyle{IEEEtran}
 \bibliography{infocom}

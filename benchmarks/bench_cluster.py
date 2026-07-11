@@ -22,16 +22,17 @@ wire; batch-probe maximizes per-pod GPU work; nats-bursting moves them over NATS
     clean up. Measure, do not camp.
 
 Measured cold-start (NRP `ssu-atlas-ai`, 2026; ephemeral CPU Job at cpu=1/mem=2Gi -- the
-policy "ignored" range; warm node, cached `python:3.12-slim`; one pod at a time;
-auto-cleaned). Submit -> Completed, submitting-host wall clock, 5 runs:
+policy "ignored" range; cached `python:3.12-slim`; one pod at a time; auto-cleaned).
+Submit -> Completed, submitting-host wall clock, n=20 runs (see coldstart_n20.json):
 
-    5.13, 6.14, 6.57, 7.44, 7.60 s     (median ~6.6 s)
+    median 7.27 s, IQR 6.54-7.96, range 4.17-9.81   (schedule->run median 2 s)
 
-of which the pod schedule -> container-start (K8s-reported, 1 s resolution) is ~1-3 s; the
-remainder is API + `kubectl wait` detection. Caveats: cached image (a cold pull on a fresh
-node adds pull time; a GPU image adds much more); CPU job (no device init); single cluster;
-no NATS-join yet. `measure_cold_start_kubectl()` below is the policy-safe path that produced
-these; the full burst-ready metric (incl. NATS join) needs a worker image with the client.
+16 runs landed on one ~7 s node, 4 on a warmer/closer node (~4-5 s). Of the total, the pod
+schedule -> container-start (K8s-reported, 1 s resolution) is ~1-3 s; the remainder is API +
+`kubectl wait` detection. Caveats: cached image (a cold pull on a fresh node adds pull time;
+a GPU image adds much more); CPU job (no device init); single cluster; no NATS-join yet.
+`measure_cold_start_kubectl()` below is the policy-safe path that produced these; the full
+burst-ready metric (incl. NATS join) needs a worker image with the client.
 """
 
 import argparse
@@ -316,7 +317,7 @@ def main():
     ap.add_argument(
         "--mode", choices=["cold", "warm", "scale", "overhead"], default="cold"
     )
-    ap.add_argument("--reps", type=int, default=5)
+    ap.add_argument("--reps", type=int, default=20)
     ap.add_argument("--gpu", type=int, default=1)
     ap.add_argument("--namespace", default="ssu-atlas-ai")
     ap.add_argument("--i-have-checked-nrp-policy", action="store_true")

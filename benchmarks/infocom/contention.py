@@ -46,6 +46,19 @@ def profile_target(name: str, t: int, a: argparse.Namespace) -> int:
     if name == "poisson":
         # expected occupancy ~ lam*hold, clamped to [0, C-1] (leave a slot for the guest)
         return min(a.C - 1, max(0, int(round(random.gauss(a.lam * a.hold, 0.7)))))
+    if name == "markov":
+        # Two-state {c_lo, c_hi} DTMC with per-epoch flip prob p_flip. This is the
+        # capacity process the INFOCOM theory analyzes: the lag-D autocorrelation is
+        # r(D) = (1-2*p_flip)^D and the coherence time is tau_c = -1/ln(1-2*p_flip),
+        # so sweeping --p-flip sweeps tau_c and traces the feedback-advantage law
+        # Delta(D) = 1/2 * r(D). State persists across epochs in a._mk_state.
+        s = getattr(a, "_mk_state", None)
+        if s is None:
+            s = random.random() < 0.5
+        elif random.random() < a.p_flip:
+            s = not s
+        a._mk_state = s
+        return a.c_hi if s else a.c_lo
     raise SystemExit(f"unknown profile {name}")
 
 
@@ -205,12 +218,19 @@ def main() -> None:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument(
-        "--profile", choices=["square", "ramp", "poisson"], default="square"
+        "--profile", choices=["square", "ramp", "poisson", "markov"], default="square"
     )
     ap.add_argument("--C", type=int, default=4, help="contended slice size (slots)")
     ap.add_argument("--c-lo", type=int, default=1, dest="c_lo")
     ap.add_argument("--c-hi", type=int, default=3, dest="c_hi")
     ap.add_argument("--tau", type=int, default=10, help="square half-period (epochs)")
+    ap.add_argument(
+        "--p-flip",
+        type=float,
+        default=0.1,
+        dest="p_flip",
+        help="markov per-epoch flip prob; tau_c = -1/ln(1-2*p_flip)",
+    )
     ap.add_argument("--lam", type=float, default=0.5, help="poisson arrival rate")
     ap.add_argument(
         "--hold", type=float, default=4.0, help="poisson mean hold (epochs)"

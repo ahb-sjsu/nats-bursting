@@ -1,0 +1,28 @@
+{
+  "tasks": 400,
+  "concurrency": 64,
+  "payload_bytes": 1024,
+  "rows": [
+    {
+      "workers": 1,
+      "tasks": 400,
+      "throughput_per_s": 697.3,
+      "p50_ms": 79.53,
+      "p99_ms": 128.03
+    },
+    {
+      "workers": 2,
+      "tasks": 400,
+      "throughput_per_s": 709.7,
+      "p50_ms": 76.62,
+      "p99_ms": 116.4
+    },
+    {
+      "workers": 4,
+      "tasks": 400,
+      "throughput_per_s": 736.5,
+      "p50_ms": 76.31,
+      "p99_ms": 103.51
+    }
+  ]
+}

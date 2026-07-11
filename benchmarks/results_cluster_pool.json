@@ -1,18 +1,18 @@
 {
-  "description": "Tier-3 warm-pool latency + throughput + scaling. Persistent NRP worker pods (queue-group subscribers) over the leaf bridge (real NRP<->Atlas WAN); driver on the Atlas hub.",
+  "description": "Tier-3 warm-pool latency + throughput + scaling. Persistent NRP worker pods (queue-group subscribers) over the leaf bridge (real NRP<->Atlas WAN); driver on the Atlas hub. Re-measured 2026-07 over the same continuously-running deployment (leaf up 21d, controller 10d).",
   "setup": {
     "workers": "ignored-range CPU Job pods (cpu=1, mem=2Gi), queue-group subscribers on subject bench.work, bounded lifetime, auto-cleaned",
     "driver": "on Atlas, nats://127.0.0.1:4222 hub",
     "payload_bytes": 1024,
     "tasks_per_run": 400,
     "driver_concurrency": 64,
-    "link": "NRP<->Atlas leaf bridge, ~67 ms RTT",
+    "link": "NRP<->Atlas leaf bridge, ~76 ms RTT",
     "policy": "<=4 pods, ignored range, exit-0, ttl + delete cleanup"
   },
   "results": [
-    {"workers": 1, "throughput_per_s": 781.8, "p50_ms": 71.18, "p99_ms": 112.96},
-    {"workers": 2, "throughput_per_s": 923.5, "p50_ms": 68.07, "p99_ms": 79.68},
-    {"workers": 4, "throughput_per_s": 935.7, "p50_ms": 67.03, "p99_ms": 77.67}
+    {"workers": 1, "throughput_per_s": 697.3, "p50_ms": 79.53, "p99_ms": 128.03},
+    {"workers": 2, "throughput_per_s": 709.7, "p50_ms": 76.62, "p99_ms": 116.4},
+    {"workers": 4, "throughput_per_s": 736.5, "p50_ms": 76.31, "p99_ms": 103.51}
   ],
-  "finding": "Warm-pool per-task latency ~67 ms (WAN-RTT bound) vs ~6.6 s ephemeral-Job cold-start -- the pool removes the ~100x cold-start penalty. Throughput plateaus ~930/s at >=2 workers because for trivial I/O-bound tasks the ceiling is driver_concurrency / RTT (Little's law: 64 / 0.067 ~ 955/s), not worker count. Worker-count scaling matters for compute-bound tasks; here 1-2 workers already saturate the link. This also gives the burst-path-overhead contrast: warm pool ~67 ms vs cold Job ~6.6 s."
+  "finding": "Warm-pool per-task latency ~76 ms (WAN-RTT bound) vs ~7.3 s ephemeral-Job cold-start -- the pool removes the ~100x cold-start penalty. Throughput is flat across 1-4 workers (~700-740/s) because for trivial I/O-bound tasks the ceiling is driver_concurrency / RTT (Little's law: 64 / 0.076 ~ 840/s), not worker count; one pod already saturates the link. Worker-count scaling matters for compute-bound tasks. Re-measured over the live production deployment (dogfooded), superseding the earlier ~67 ms / ~930/s run on a faster path."
 }
