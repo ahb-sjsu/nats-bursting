@@ -41,10 +41,13 @@ through a \emph{stale} probe. Naive submission violates policy; static
 rate-limiting wastes throughput; and adaptive control sometimes helps and sometimes
 does not. We explain \emph{when} by casting polite bursting as chance-constrained
 admission under age-of-information: the controller acts on a capacity estimate of
-age $D$. Our central result is an exact \emph{feedback-usefulness limit}---the
-goodput advantage of any causal admission controller over the best static budget
-equals \emph{half the autocorrelation of available capacity at the sensing lag},
-$\Delta(D)=\tfrac12 r(D)$. It yields a sharp impossibility (no controller beats
+age $D$. Our central result is an exact \emph{feedback-usefulness limit}: for a
+symmetric two-state capacity, the goodput advantage of any causal admission
+controller over the best static budget equals \emph{half the autocorrelation of
+available capacity at the sensing lag}, $\Delta(D)=\tfrac12 r(D)$---a value that
+stays \emph{achievable} for any symmetric stationary capacity (via a memoryless
+threshold), with the general converse governed by the capacity's $\beta$-mixing
+rate. It yields a sharp impossibility (no controller beats
 static once $D$ exceeds the neighbour's coherence time $\tau_c$), a matching
 achievability, and a \emph{regime-adaptive} controller that estimates $\tau_c$
 online and switches between closed- and open-loop admission to track the limit
@@ -54,8 +57,9 @@ $\tau_c\!\lesssim\!D$, and the regime-adaptive controller never falls below
 static---and on a workstation testbed under \emph{real, manufactured GPU contention}
 (with the full submission path verified end-to-end on NRP Nautilus): under structured
 contention feedback admission is the polite-efficient knee, $1.41\times$ static's
-goodput at $4\times$ lower over-admission while sparing the competing tenant a greedy
-policy harms, and up to $3.2\times$ under a self-imposed budget. The pre-registered
+goodput at $4\times$ lower over-admission \emph{than naive} while sparing the
+competing tenant a greedy policy harms, and up to $3.2\times$ under a self-imposed
+budget. The pre-registered
 memoryless regime where it breaks even is exactly the $r(D)\!\to\!0$
 prediction---the regime the adaptive controller is built to detect and sidestep. The
 system and a reproducible artifact are
@@ -87,9 +91,11 @@ We argue that being a good guest is a \emph{control} problem whose answer is set
 \item An \textbf{age-of-information formulation} of polite bursting
 (\S\ref{sec:model}) and a \textbf{feedback-usefulness limit}
 (\S\ref{sec:limit}): with a capacity estimate of age $D$, the goodput advantage of
-\emph{any} causal admission controller over the best static budget is exactly
+\emph{any} causal admission controller over the best static budget is
 $\Delta(D)=\tfrac12 r(D)$, half the autocorrelation of available capacity at the
-sensing lag (Thm.~\ref{thm:limit})---an impossibility once $D$ exceeds the
+sensing lag---exactly so for a symmetric two-state capacity (Thm.~\ref{thm:limit}),
+and achievably in general, with the converse governed by $\beta$-mixing
+(App.~\ref{app:beta})---an impossibility once $D$ exceeds the
 neighbour's coherence time $\tau_c$ (Cor.~\ref{cor:imp}), lifted to any pod cap by a
 layer-cake reduction (Prop.~\ref{prop:layercake}).
 \item A \textbf{regime-adaptive controller} (\S\ref{sec:controller}) that estimates
@@ -179,7 +185,7 @@ medium that makes capacity sensing possible, and stale.
 \section{Implementation}
 \label{sec:impl}
 \sysname{} is a Go control plane (decider, prober, submitter, NATS bridge,
-back-off modules) plus a Python client and the \texttt{\%\%burst} IPython magic
+back-off modules) plus a Python client and an IPython cell magic
 \cite{natsbursting}. The controller runs \emph{in-cluster} under a minimal
 namespace-scoped ServiceAccount (Job create/get/delete; pod read), connects to the
 in-cluster NATS leaf, and renders each \texttt{JobDescriptor} into a Kubernetes
@@ -235,7 +241,7 @@ at the controller level (the optimal policy sits on $\tfrac12 r(D)$ to within
 $0.013$; AIMD falls below static precisely when $\tau_c\!\lesssim\!D$) and on a
 workstation testbed under real GPU contention (the full submission path verified
 end-to-end on NRP Nautilus): under structured contention feedback admission is the
-polite-efficient knee---$1.41\times$ static's goodput at a quarter of the
+polite-efficient knee---$1.41\times$ static's goodput at a quarter of naive's
 over-admission while sparing the competing tenant a greedy policy harms---and up to
 $3.2\times$ under a self-imposed budget. The one regime where feedback breaks even,
 under memoryless contention that outpaces detection, is not a disappointment but the

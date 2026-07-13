@@ -37,7 +37,11 @@ $40\%$ floor (10 reps on a GV100, thermally guarded)---is \textbf{$2.46$\,s}
 (mean; p50 $2.48$, range $2.29$--$2.61$), dominated by CUDA cold-start rather than
 the poll. The relevant $D$ depends on the question: detecting a \emph{newly
 admitted} pod's (un)productivity incurs the $\sim\!2.5$\,s cold-start term, while
-probing \emph{already-running} pods costs only the $\sim\!27$\,ms poll.
+probing \emph{already-running} pods costs only the $\sim\!27$\,ms poll. In the
+epoch-based model of \S\ref{sec:limit} one epoch is a single completion-gated
+admission decision, so the cold-start-dominated age maps to $D\!\approx\!3$ epochs
+---the value swept in the law validation (Q4)---while the $27$\,ms poll is sub-epoch
+for already-running pods.
 Substituting into Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)\bar a)$,
 the $2.46$\,s term makes $D$ a \emph{first-order} contributor to the achievable
 compliance---not a rounding error---which is precisely the systems$\leftrightarrow$theory
@@ -136,7 +140,12 @@ abundance did. \textbf{Under structured contention (square), aimd is the
 polite-efficient knee}: $1.41\times$ static's goodput ($0.091$ vs $0.064$\,tasks/s,
 disjoint CIs) at $\rho{=}0.15$---a $4\times$ lower over-admission than naive's
 $\rho{=}0.64$---while sparing the neighbour ($76\%$ of its throughput retained vs
-naive's $62\%$). naive's higher goodput ($0.101$) is bought \emph{entirely} at the
+naive's $62\%$). The target $\epsilon$ is grounded in the host policy: NRP acts on
+\emph{persistently} under-utilized requests rather than momentary dips below the
+$\ge\!40\%$ GPU floor, so $\epsilon$ is the tolerable share of epochs a pod may sit
+under-utilized; read that way the $\rho{=}0.15$ aimd holds is a deliberately
+conservative operating point, inside a $\sim\!0.1$--$0.2$ band consistent with that
+floor at our epoch length. naive's higher goodput ($0.101$) is bought \emph{entirely} at the
 neighbour's expense: it over-admits two-thirds of the time and steals $38\%$ of the
 competitor's throughput. H1 and H2 hold with disjoint CIs.
 

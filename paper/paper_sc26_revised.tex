@@ -46,8 +46,9 @@ components make bursting practical: \textbf{turboquant-pro} compresses on-wire p
 infrastructure---burst cold-start median $7.3$\,s ($n{=}20$), warm pool $\sim$76\,ms, up to $8.4\times$
 compression speedup over a $\sim$2\,Mbps link, 94\% GPU utilization\rev{---and report honestly
 where each supporting layer helps and where it does not. The rule-based politeness gate defers to
-co-tenants under load rather than crowding them; the control-theoretic analysis of feedback
-admission is a companion contribution}. \rev{All three projects and the reproducibility harness are
+co-tenants under structured or slack load rather than crowding them; the control-theoretic analysis
+of feedback admission---including where that politeness is regime-limited---is a companion
+contribution}. \rev{All three projects and the reproducibility harness are
 released open-source.}
 % CUT trailing "---and release all three projects and the harness." -- expanded so
 % the abstract's last sentence is the analyzed admission result + the honest
@@ -389,8 +390,10 @@ batch & raw & compressed & speedup \\\midrule
 \subsection{Cluster: cold-start, warm-pool, scaling (Tier 3)}
 Ephemeral CPU Jobs (ignored range, one at a time, auto-cleaned) cold-start in median $7.3$\,s
 (IQR $6.5$--$8.0$, range $4.2$--$9.8$, $n{=}20$), of which the K8s schedule$\to$container-start is
-$\sim$1--3\,s (median $2$\,s); the four fastest runs landed on a warmer/closer node ($\sim$4--5\,s),
-the rest on one $\sim$7\,s node. A
+$\sim$1--3\,s (median $2$\,s). The pooled median mixes two node classes, so we report
+each: the sixteen runs on the primary node (\texttt{gp-argo}) have median $7.5$\,s,
+and the four that landed on a warmer/closer node (\texttt{rci-nrp-gpu-04}) median
+$4.9$\,s---the split, not a single headline number, is the honest summary. A
 persistent pool of $N$ queue-group workers driven from the hub (Table~\ref{tab:t3},
 Fig.~\ref{fig:t3}) serves at $\sim$76\,ms per task---removing the $\sim$100$\times$ cold-start
 penalty. Throughput is flat across $1$--$4$ workers ($\sim$700--740/s), and honestly so: for
@@ -427,7 +430,13 @@ feedback admission---the goodput/politeness frontier under real, time-varying
 contention, an age-of-information limit on how much feedback can possibly help, and
 a regime-adaptive controller---is a distinct contribution developed and evaluated in
 a companion paper~\cite{companion}, and we deliberately do not reproduce it here so
-the two results stay disjoint. The thermal micro-tier of \S\ref{sec:bp} ran live
+the two results stay disjoint. \rev{One qualifier from that analysis carries over:
+politeness is \emph{regime-dependent}. Feedback admission spares the neighbour under
+structured or slack load, but under \emph{memoryless} contention that outpaces the
+detection delay it can crowd the co-tenant as much as a naive policy---so ``polite''
+is a property of the structured/slack regime this deployment operates in, not an
+unconditional guarantee. The rule-based gate here inherits the same limit.} The
+thermal micro-tier of \S\ref{sec:bp} ran live
 during these bursts, throttling $>\!90\%$ of GPU epochs and, on the shared node,
 finding the co-tenant thermal baseline ($\sim$$77^\circ$C) a floor self-throttling
 cannot undercut---politeness extends even to heat.
@@ -442,9 +451,11 @@ per-task \emph{dispatch latency} (a tiny round-trip isolating fabric overhead) a
 reaches the GPU-bound ceiling---$9.4$k\,docs/s at four workers, scaling to $14.9$k at eight
 \emph{on this single GV100}---competitive with the in-process engines (Ray $9.8$k, ProcessPool
 $9.0$k) and far above Dask ($1.1$k); its pure-fabric ceiling (a near-empty task) is $8.3$k\,req/s.
-(The two-GV100 scaling run of Fig.~\ref{fig:embed-scaling} is a separate, larger configuration and
-reaches ${\sim}44$k at eight workers; the two numbers are different setups, not the same
-experiment.) (A first-draft single-client
+Fig.~\ref{fig:embed-scaling} is a \emph{different, larger} configuration---the
+compute-bound scaling run on \emph{two} GV100s---and reaches ${\sim}44$k\,docs/s at
+eight workers. The $14.9$k here (one GPU, eight workers) and that ${\sim}44$k (two
+GPUs, eight workers) are separate experiments and should not be read as one scaling
+curve. (A first-draft single-client
 Python \texttt{asyncio} driver under-saturated the pool at $0.9$k\,docs/s and did not scale with
 workers---a harness limit, not the bus, whose pure-fabric rate is ${>}500\times$ higher.)
 
@@ -461,9 +472,14 @@ space, not a faster scheduler.
 \begin{table}[t]\centering\caption{Same-node warm-pool comparison on one GV100 (MiniLM embedding, 4
 warm workers). ``disp.'' = tiny-task round-trip (fabric overhead); ``thr.'' = embedding throughput,
 each system driven by its native client (Python for Ray/Dask/ProcessPool; Go \texttt{nats.go} for
-nats-bursting). Parsl (HTEx) and funcX/Globus Compute characterized by design (funcX needs a hosted
-authenticated endpoint). polite = host fair-use budget; WAN = inbound-restricted leaf federation;
-bus = burst is an event-loop publish.}\label{tab:frameworks}
+nats-bursting). ``by design'' = not run on this testbed but placed from documented
+architecture: Parsl's HTEx interposes a process/worker executor comparable to
+\texttt{ProcessPool}, and funcX/Globus Compute requires a hosted, authenticated
+endpoint (so it cannot run same-node); their polite/WAN/bus entries follow from that
+architecture, not a measurement. polite = host fair-use budget; WAN = inbound-restricted leaf federation;
+bus = burst is an event-loop publish. $^{\dagger}$Go client; a Python-client pool
+sits nearer the interpreter-bound engines, so we do not lean on the dispatch win
+(\S\ref{sec:eval-frameworks}).}\label{tab:frameworks}
 \small
 \begin{tabular}{lrrccc}\toprule
 fabric & disp.\ p50 & thr.\ (d/s) & polite & WAN & bus \\\midrule
@@ -472,7 +488,7 @@ Ray                    & 2.3\,ms  & 9800 & no & no & no \\
 Dask                   & 13.9\,ms & 1050 & no & no & no \\
 Parsl (HTEx)           & \multicolumn{2}{c}{by design} & no & no & no \\
 funcX / Globus         & \multicolumn{2}{c}{by design} & no & part & no \\
-\textbf{nats-bursting} & \textbf{0.9\,ms} & \textbf{9400} & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
+\textbf{nats-bursting} & \textbf{0.9\,ms}$^{\dagger}$ & \textbf{9400} & \textbf{yes} & \textbf{yes} & \textbf{yes} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -493,7 +509,10 @@ one overlay (likely relayed) path---a characterized datacenter link would pin ab
 \textbf{Cold-start realism (Tier 3):} the $n{=}20$ median mixes two nodes---image-pull state and
 \texttt{kubectl wait} detection inflate the total, and the schedule$\to$run breakdown ($\sim$2\,s
 median) isolates the cluster-side cost; warm-pool and a real NATS-join are
-measured, while a cold image pull and a GPU-image run remain. \textbf{Scaling:} the plateau is
+measured, while a cold image pull and a GPU-image \emph{throughput} run remain (the
+end-to-end GPU submission path---submit\,$\to$\,node-targeted GPU worker\,$\to$\,federated
+result---is itself verified in the companion~\cite{companion}, just not benchmarked at
+scale here). \textbf{Scaling:} the plateau is
 explained by Little's law, not presented as pod-count scaling; a compute-bound load is the named
 next run. \textbf{Politeness gate.} \rev{The rule-based gate of \S\ref{sec:bursting} is evaluated here only
 through its effect on utilization and warm-pool behaviour; its control-theoretic characterization
