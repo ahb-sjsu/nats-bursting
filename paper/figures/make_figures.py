@@ -46,8 +46,8 @@ thr = [r["throughput_per_s"] for r in pool]
 p50 = [r["p50_ms"] for r in pool]
 fig, ax1 = plt.subplots(figsize=(5, 3.2))
 ax1.plot(w, thr, "s-", color="C1", label="throughput")
-ax1.axhline(955, color="C1", ls=":", lw=0.8)
-ax1.annotate("Little's-law ceiling (64/RTT)", (w[0], 955),
+ax1.axhline(840, color="C1", ls=":", lw=0.8)
+ax1.annotate("Little's-law ceiling (64/RTT)", (w[0], 840),
              color="C1", fontsize=7, va="bottom")
 ax1.set_xlabel("worker pods")
 ax1.set_ylabel("throughput (msg/s)", color="C1")

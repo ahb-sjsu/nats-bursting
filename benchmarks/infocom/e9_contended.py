@@ -83,8 +83,10 @@ def nvidia_util_temp(gpu_ids):
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--policy", required=True, choices=["naive", "static", "aimd"])
-    ap.add_argument("--profile", default="square", choices=["square", "poisson"])
+    ap.add_argument("--policy", required=True,
+                    choices=["naive", "static", "aimd", "adaptive"])
+    ap.add_argument("--profile", default="square",
+                    choices=["square", "poisson", "markov"])
     ap.add_argument("--C", type=int, default=2)                 # capacity (slots)
     ap.add_argument("--burst", type=int, default=24)            # B guest tasks
     ap.add_argument("--work", type=int, default=1200)           # matmul iters/task
@@ -92,6 +94,12 @@ def main() -> None:
     ap.add_argument("--gpus", default="1,0")                    # slot order (free GPU1 first)
     ap.add_argument("--device", default="gpu", choices=["gpu", "cpu"])
     ap.add_argument("--tau", type=int, default=6)               # profile half-period (epochs)
+    ap.add_argument("--p-flip", type=float, default=0.1, dest="p_flip",
+                    help="markov per-epoch flip prob; tau_c = -1/ln(1-2*p_flip)")
+    ap.add_argument("--D", type=int, default=3,
+                    help="adaptive: sensing age (epochs) in r_hat=(1-2*p_hat)^D")
+    ap.add_argument("--gamma", type=float, default=0.15,
+                    help="adaptive: r_hat threshold to run closed-loop vs static fallback")
     ap.add_argument("--c-hi", type=int, default=1, dest="c_hi")
     ap.add_argument("--c-lo", type=int, default=0, dest="c_lo")
     ap.add_argument("--comp-life", type=float, default=8.0, dest="comp_life")
@@ -228,18 +236,31 @@ def main() -> None:
     # ---- competitor generator (controlled c(t)) --------------------------------
     comp_files: list[str] = []
     comp_idx = [0]
+    mk_state = [None]   # markov two-state DTMC state (persists across epochs)
 
     def c_target(epoch):
         if a.profile == "square":
             return a.c_hi if (epoch // a.tau) % 2 == 0 else a.c_lo
+        if a.profile == "markov":
+            # symmetric two-state {c_lo,c_hi} DTMC with per-epoch flip prob p_flip:
+            # the INFOCOM capacity process. r(D)=(1-2*p_flip)^D, tau_c=-1/ln(1-2*p_flip),
+            # so sweeping --p-flip sweeps tau_c and traces Delta(D)=1/2 r(D).
+            s = mk_state[0]
+            if s is None:
+                s = random.random() < 0.5
+            elif random.random() < a.p_flip:
+                s = not s
+            mk_state[0] = s
+            return a.c_hi if s else a.c_lo
         # poisson-ish on/off: expected ~c_hi/2, clamped [0, C-1]
         return min(C - 1, max(0, int(round(random.gauss((a.c_hi) * 0.5, 0.7)))))
 
     def reconcile_comp(epoch):
         want = c_target(epoch)
-        have = comp_occ()
         # competitor occupies slots from the *front* (slot0 = free GPU1)
         occupied = {sg for _p, sg, *_ in live(comp)}
+        have = len(occupied)
+        # scale UP: launch on free slots
         while have < want:
             for g in gpu_ids:
                 if g not in occupied:
@@ -250,7 +271,23 @@ def main() -> None:
                     break
             else:
                 break
-        # over-target competitors simply self-expire (fixed life); no kill needed
+        # scale DOWN: kill over-target competitors so realized c(t) tracks the DTMC.
+        # (Previously add-only + fixed-life self-expiry, which decoupled realized r(D)
+        #  from p_flip: a competitor launched on an up-flip squatted for comp_life s
+        #  regardless of later down-flips, pinning the sensed autocorrelation high
+        #  across the whole sweep. Symmetric reconcile makes down-flips actuate.)
+        while have > want:
+            victim = next((x for x in reversed(comp) if x[0].poll() is None), None)
+            if victim is None:
+                break
+            vp, vg, *_ = victim
+            vp.terminate()
+            try:
+                vp.wait(timeout=3)
+            except Exception:
+                vp.kill()
+            occupied.discard(vg)
+            have -= 1
 
     # ---- monitor thread --------------------------------------------------------
     def mon():
@@ -272,11 +309,23 @@ def main() -> None:
     mt = threading.Thread(target=mon, daemon=True); mt.start()
 
     # ---- admission loop --------------------------------------------------------
-    window = C if a.policy != "aimd" else 1   # aimd starts conservative
+    # aimd and adaptive both start conservative and grow via additive-increase.
+    window = 1 if a.policy in ("aimd", "adaptive") else C
     launched = 0
     epoch = 0
     loop0 = time.time()
     congested_epochs = 0
+
+    # ---- regime-adaptive controller online state (§V, Thm 2) -------------------
+    # Estimate the flip rate of the (age-D) available-capacity observation stream,
+    # form r_hat=(1-2*p_hat)^D, and switch: closed-loop AIMD when r_hat>gamma
+    # (trackable), else fall back to the safe static budget floor(a_bar) so we
+    # never do worse than static. Mirrors run_adaptive() in tau_sweep.py.
+    ad_prev = [None]                 # previous age-D observation a_hat
+    ad_flips = [0]; ad_seen = [0]    # flip count / #transitions seen
+    ad_abar_sum = [0.0]; ad_abar_n = [0]   # running mean of measured a_hat
+    ad_trace: list[dict] = []        # per-epoch (r_hat, p_hat, branch, eff)
+    ad_closed = [0]                  # epochs spent in the closed-loop branch
 
     def gpu_compute_pids():
         """{gpu_index: set(compute PIDs)} via nvidia-smi pmon -- the realistic
@@ -318,23 +367,45 @@ def main() -> None:
         now = time.time()
         reconcile_comp(epoch)
 
-        if a.policy == "aimd":
+        paced = a.policy == "static"    # rate-paced (trickle) vs window-gated (greedy)
+        if a.policy in ("aimd", "adaptive"):
             a_hat = probe_available()
+            # advance the AIMD window every epoch (for adaptive this keeps a warm
+            # shadow so a switch into the closed-loop branch resumes mid-sawtooth).
             if guest_inflight() > a_hat:              # congestion signal
                 window = max(1, math.ceil(a.beta * window))   # multiplicative decrease
                 congested_epochs += 1
             else:
                 window = min(window + a.alpha, C)             # additive increase
+
+        if a.policy == "aimd":
             eff = min(window, thermal_cap(), max(1, a_hat))
-        elif a.policy == "static":
-            eff = min(C, thermal_cap())
-        else:  # naive
+        elif a.policy == "adaptive":
+            # online flip-rate estimate on the age-D observation stream a_hat
+            if ad_prev[0] is not None:
+                ad_flips[0] += int(a_hat != ad_prev[0]); ad_seen[0] += 1
+            ad_prev[0] = a_hat
+            ad_abar_sum[0] += a_hat; ad_abar_n[0] += 1
+            p_hat = ad_flips[0] / max(1, ad_seen[0])
+            r_hat = (1.0 - 2.0 * min(p_hat, 0.5)) ** a.D
+            if r_hat > a.gamma:                       # trackable -> closed-loop AIMD
+                eff = min(window, thermal_cap(), max(1, a_hat))
+                branch = "closed"; ad_closed[0] += 1
+            else:                                     # untrackable -> static floor(a_bar)
+                static_w = max(1, int(math.floor(ad_abar_sum[0] / max(1, ad_abar_n[0]))))
+                eff = min(static_w, thermal_cap())
+                branch = "static"; paced = True       # trickle like static: never worse
+            ad_trace.append({"epoch": epoch, "r_hat": round(r_hat, 4),
+                             "p_hat": round(p_hat, 4), "branch": branch, "eff": eff})
+        else:  # static, naive
             eff = min(C, thermal_cap())
 
-        if a.policy == "static":
-            # rate-paced: at most one launch per 1/rate s, ignore occupancy
+        if paced:
+            # rate-paced: at most one launch per 1/rate s. static keeps its original
+            # gate (< C); adaptive's static-fallback is gated by its floor(a_bar) window.
+            gate = C if a.policy == "static" else eff
             due = launched < (now - loop0) * a.rate + 1
-            if launched < a.burst and due and guest_inflight() < C:
+            if launched < a.burst and due and guest_inflight() < gate:
                 launch_guest(); launched += 1
         else:
             while launched < a.burst and guest_inflight() < eff:
@@ -350,9 +421,19 @@ def main() -> None:
     for p, _sg in guest:
         try: p.wait(timeout=30)
         except Exception: pass
+    # Terminate any still-running competitors BEFORE waiting: with a long comp_life
+    # (so reconcile — not self-expiry — controls occupancy) they will not exit on
+    # their own, and a bare wait() would time out and leave orphan GPU processes.
     for p, _sg, _e in comp:
-        try: p.wait(timeout=30)
-        except Exception: pass
+        if p.poll() is None:
+            try: p.terminate()
+            except Exception: pass
+    for p, _sg, _e in comp:
+        try:
+            p.wait(timeout=30)
+        except Exception:
+            try: p.kill()
+            except Exception: pass
     if thermal:
         thermal.stop()
 
@@ -373,11 +454,30 @@ def main() -> None:
         except Exception:
             pass
 
+    # Realized autocorrelation of the sensed availability at lag D (epochs). This is
+    # the r(D) the controller actually experiences on the GPU — reported alongside the
+    # nominal (1-2*p_flip)^D so the Delta(D)=1/2 r(D) check uses the *realized* signal,
+    # robust to competitor actuation latency smoothing fast flips.
+    def r_emp_at(series, D):
+        n = len(series)
+        if n <= D:
+            return None
+        m = sum(series) / n
+        var = sum((x - m) ** 2 for x in series) / n
+        if var <= 0:
+            return 0.0
+        cov = sum((series[t] - m) * (series[t - D] - m) for t in range(D, n)) / (n - D)
+        return cov / var
+
+    avail_series = [r["a"] for r in rows]
+    r_emp = r_emp_at(avail_series, a.D)
+
     res = {
         "policy": a.policy, "profile": a.profile, "seed": a.seed, "C": C,
         "burst": a.burst, "completed": completed, "wall_s": round(wall, 2),
         "goodput_tasks_per_s": round(goodput, 5),
         "over_admission_rho": round(rho, 4),
+        "r_emp_D": (round(r_emp, 4) if r_emp is not None else None),
         "mean_available_abar": round(sum(r["a"] for r in rows) / len(rows), 3),
         "mean_guest_inflight": round(sum(r["n"] for r in rows) / len(rows), 3),
         "thermal_on": bool(thermal),
@@ -391,9 +491,34 @@ def main() -> None:
         "n_samples": len(rows),
         "alpha": a.alpha, "beta": a.beta,
     }
+
+    # ---- regime-adaptive diagnostics (which regime it detected, and how) --------
+    if a.policy == "adaptive" and ad_trace:
+        p_hat = ad_flips[0] / max(1, ad_seen[0])
+        r_hat = (1.0 - 2.0 * min(p_hat, 0.5)) ** a.D
+        tau_c_hat = (float("inf") if p_hat <= 0
+                     else -1.0 / math.log(1 - 2 * min(p_hat, 0.4999)))
+        res["adaptive"] = {
+            "D": a.D, "gamma": a.gamma,
+            "p_hat": round(p_hat, 4), "r_hat": round(r_hat, 4),
+            "tau_c_hat": (None if math.isinf(tau_c_hat) else round(tau_c_hat, 2)),
+            "frac_closed_loop": round(ad_closed[0] / len(ad_trace), 3),
+            "n_decisions": len(ad_trace),
+            "r_emp_D": (round(r_emp, 4) if r_emp is not None else None),
+        }
+        if a.profile == "markov":
+            r_true = (1 - 2 * min(a.p_flip, 0.5)) ** a.D
+            res["adaptive"]["p_flip_true"] = a.p_flip
+            res["adaptive"]["r_true"] = round(r_true, 4)
+            res["adaptive"]["tau_c_true"] = (
+                None if a.p_flip <= 0
+                else round(-1.0 / math.log(1 - 2 * min(a.p_flip, 0.4999)), 2))
+
+    out_obj = {"experiment": "E9", "cfg": vars(a), "result": res, "samples": samples}
+    if a.policy == "adaptive":
+        out_obj["adaptive_trace"] = ad_trace
     with open(a.out, "w") as f:
-        json.dump({"experiment": "E9", "cfg": vars(a), "result": res,
-                   "samples": samples}, f, indent=2)
+        json.dump(out_obj, f, indent=2)
     print(f"[e9] {a.policy}/{a.profile} seed={a.seed} done={completed}/{a.burst} "
           f"wall={wall:.1f}s goodput={goodput:.4f} rho={rho:.3f} "
           f"peakT={res['peak_temp']} throttle={res['thermal_throttle_fraction']} "

@@ -1,0 +1,152 @@
+% nats-bursting -- INFOCOM appendices. \input after Conclusion, following \appendix.
+% Closes two gaps: (A) generalizes the impossibility (Cor.~\ref{cor:imp}) to arbitrary
+% capacity processes via beta-mixing; (B) proves the uniform regret of Thm.~\ref{thm:adapt}
+% with an explicit spectral-gap concentration inequality.
+
+\section{General-Capacity Impossibility via $\beta$-Mixing}
+\label{app:beta}
+Corollary~\ref{cor:imp} showed feedback's value vanishes with the sensing age $D$
+for the two-state model. We now show the same for \emph{any} stationary capacity
+process, with the decay rate governed by the process's $\beta$-mixing (absolute
+regularity) coefficient---so the exact binary law of Thm.~\ref{thm:limit} is one
+tight instance of a general information-theoretic limit.
+
+\paragraph{Setup.}
+Let $\{a_t\}$ be stationary on $\{0,\dots,C\}$ with $\mathcal F_{\le s}=\sigma(a_u:u\le s)$
+and $\mathcal F_{\ge s}=\sigma(a_u:u\ge s)$. Its \emph{$\beta$-mixing coefficient} at
+lag $D$ is
+\begin{equation}\label{eq:beta}
+\beta(D)=\mathbb E\!\left[\ \sup_{B\in\mathcal F_{\ge t}}\big|\mathbb P(B\mid\mathcal F_{\le t-D})-\mathbb P(B)\big|\ \right],
+\end{equation}
+with $\beta(D)\!\to\!0$ iff the process is absolutely regular; geometrically mixing
+processes satisfy $\beta(D)\le c_0\varrho^{D}$ for some $\varrho\in(0,1)$. Fix any
+bounded per-epoch objective $R(w,a)$---e.g.\ the politeness Lagrangian
+$R_\lambda(w,a)=\min(w,a)-\lambda(w-a)^{+}$---with oscillation
+$\Omega\triangleq\max_{w,a}R-\min_{w,a}R$. A causal age-$D$ controller sets $w_t$
+measurable w.r.t.\ $\mathcal G\triangleq\mathcal F_{\le t-D}$; a static controller
+uses a $\mathcal G$-independent $w$. Write $V^\star(D)$, $V_{\mathrm{stat}}$ for their
+optimal per-epoch values and $\Delta(D)=V^\star(D)-V_{\mathrm{stat}}$.
+
+\begin{lemma}[Lipschitz value function]\label{lem:lip}
+$\psi(\mu)\triangleq\max_w\sum_a R(w,a)\,\mu(a)$ is convex on the simplex and
+$\Omega$-Lipschitz in total variation:
+$|\psi(\mu)-\psi(\mu')|\le\Omega\,\|\mu-\mu'\|_{\mathrm{TV}}$.
+\end{lemma}
+\begin{proof}
+$\psi$ is a pointwise maximum of linear functionals, hence convex. Let $w_\mu$
+attain $\psi(\mu)$. Then $\psi(\mu)-\psi(\mu')\le\sum_a R(w_\mu,a)\,(\mu-\mu')(a)\le
+\mathrm{osc}_a R(w_\mu,\cdot)\,\|\mu-\mu'\|_{\mathrm{TV}}\le\Omega\|\mu-\mu'\|_{\mathrm{TV}}$,
+using $\sum_a f(a)\nu(a)\le\mathrm{osc}(f)\|\nu\|_{\mathrm{TV}}$ for zero-sum $\nu$;
+the reverse bound is symmetric.
+\end{proof}
+
+\begin{theorem}[$\beta$-mixing impossibility]\label{thm:beta}
+For any stationary capacity process and any bounded objective,
+\begin{equation}
+0\ \le\ \Delta(D)\ \le\ \Omega\,\beta(D).
+\end{equation}
+Hence no causal age-$D$ controller outperforms static as $D\to\infty$ whenever the
+capacity is absolutely regular; if $\beta(D)\le c_0\varrho^{D}$ the advantage decays
+geometrically, $\Delta(D)\le\Omega c_0\varrho^{D}$.
+\end{theorem}
+\begin{proof}
+Let $\mu_{\mathcal G}=\mathbb P(a_t\in\cdot\mid\mathcal G)$; the tower property gives
+$\mathbb E[\mu_{\mathcal G}]=\mathbb P(a_t\in\cdot)\triangleq\bar\mu$. Optimizing the
+$\mathcal G$-measurable window pointwise, $V^\star(D)=\mathbb E[\psi(\mu_{\mathcal G})]$,
+while the best static value is $V_{\mathrm{stat}}=\psi(\bar\mu)$. Convexity of $\psi$
+and Jensen give $\Delta(D)=\mathbb E[\psi(\mu_{\mathcal G})]-\psi(\bar\mu)\ge0$:
+freshness never hurts the optimal controller. For the upper bound,
+Lemma~\ref{lem:lip} yields
+\begin{align*}
+\Delta(D)&=\mathbb E\big[\psi(\mu_{\mathcal G})-\psi(\bar\mu)\big]
+\;\le\;\Omega\,\mathbb E\big\|\mu_{\mathcal G}-\bar\mu\big\|_{\mathrm{TV}}\\
+&=\Omega\,\mathbb E\!\Big[\textstyle\sup_{B}\big|\mathbb P(a_t{\in}B\mid\mathcal G)-\mathbb P(a_t{\in}B)\big|\Big]\\
+&\le\;\Omega\,\beta(D),
+\end{align*}
+where $\mu_{\mathcal G}=\mathbb P(a_t\in\cdot\mid\mathcal G)$, and the last step holds
+because $\sigma(a_t)\subseteq\mathcal F_{\ge t}$ so \eqref{eq:beta} takes the supremum
+over a larger field.
+\end{proof}
+
+\begin{corollary}[Binary tightness]\label{cor:tight}
+For the symmetric two-state model, $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$, so
+Thm.~\ref{thm:beta} reproduces the exact advantage of Thm.~\ref{thm:limit} up to the
+objective scale $\Omega$. The autocorrelation form $\tfrac12 r(D)$ is thus the tight
+refinement of the general $\beta$-mixing rate: the $\beta$-coefficient \emph{is} half
+the capacity autocorrelation in the binary case, and bounds the advantage in general.
+\end{corollary}
+\begin{proof}
+By the Markov property $\mathcal F_{\le t-D}$ reduces to $a_{t-D}$, and
+$\|\mathbb P(a_t\!\in\!\cdot\mid a_{t-D})-\mathbb P(a_t\!\in\!\cdot)\|_{\mathrm{TV}}
+=|\tfrac12-q(D)|$ from either conditioning state; averaging gives
+$\beta(D)=\tfrac12-q(D)=\tfrac12 r(D)$.
+\end{proof}
+
+\section{Regret of the Regime-Adaptive Controller}
+\label{app:regret}
+This proves the uniform near-optimality asserted in Thm.~\ref{thm:adapt}, with an
+explicit concentration inequality in place of the sketch there.
+
+\paragraph{Estimator.}
+From the observed (age-$D$) capacity stream the controller estimates the flip
+probability $\hat p_n=\tfrac1n\sum_{i=1}^{n}\mathbf 1[\hat a_i\neq\hat a_{i-1}]$ and
+forms $\hat r_n=(1-2\hat p_n)^{D}$. It runs the closed-loop (predictor) branch when
+$\hat r_n>\theta$ and the static branch otherwise, for a threshold $\theta$ fixed
+from the politeness target (\S\ref{sec:controller}).
+
+\paragraph{Concentration.}
+The flip indicators are a bounded functional of the two-state chain $\{a_i\}$, which
+is reversible with absolute spectral gap $\gamma=1-|1-2p|=2\min(p,1-p)$. By the
+spectral-gap Hoeffding inequality for reversible Markov chains
+\cite{paulin2015,lezaud1998}, there is a universal $c_0>0$ with
+\begin{equation}\label{eq:conc}
+\Pr\big(|\hat p_n-p|\ge t\big)\le 2\exp\!\big(-c_0\,\gamma\,n\,t^{2}\big),\qquad t>0.
+\end{equation}
+Since $p\mapsto(1-2p)^{D}$ is $2D$-Lipschitz on $[0,\tfrac12]$,
+$|\hat r_n-r(D)|\le 2D\,|\hat p_n-p|$, so
+$\Pr(|\hat r_n-r(D)|\ge s)\le 2\exp\!\big(-c_0\gamma n s^{2}/4D^{2}\big)$.
+The estimator is therefore consistent, and the sample size to resolve a margin
+$s$ scales as $D^{2}/(\gamma s^{2})$---benign, since the low-flip (large-$\tau_c$)
+regime that shrinks $\gamma$ also offers long stationary stretches to average over.
+
+\paragraph{Correct-regime probability.}
+If $r(D)$ is separated from the threshold by $|r(D)-\theta|\ge\Delta\theta$, the
+branch choice is correct whenever $|\hat r_n-r(D)|<\Delta\theta$, so
+\begin{equation}\label{eq:wrong}
+\Pr[\text{wrong branch at }n]\le 2\exp\!\big(-c_0\gamma n(\Delta\theta)^{2}/(4D^{2})\big).
+\end{equation}
+
+\begin{theorem}[Uniform regret]\label{thm:regret}
+Set $\theta$ at the branch \emph{indifference} level, so the two branches' values are
+Lipschitz in $r(D)$ and coincide at $\theta$: $|\mathrm{val}_{\mathrm{pred}}(r)-
+\mathrm{val}_{\mathrm{stat}}(r)|\le L|r-\theta|$. Then the regime-adaptive
+controller's time-averaged value over horizon $N$ obeys
+\begin{equation}
+\sup_{\tau_c}\ \mathrm{Regret}_N \;=\; O\!\Big(\tfrac{D}{\sqrt{\gamma N}}\Big)
+\quad\big(\,O(D\sqrt{\log N/(\gamma N)})\text{ w.h.p.}\big),
+\end{equation}
+and, for any fixed process with $r(D)\neq\theta$, $\mathrm{Regret}_N=O(1/N)$.
+\end{theorem}
+\begin{proof}
+A wrong branch at epoch $n$ costs at most the value gap $L|r(D)-\theta|=L\,\Delta\theta$
+(zero at the threshold by the indifference choice of $\theta$). Averaging over the
+horizon and applying \eqref{eq:wrong},
+\begin{align*}
+\mathrm{Regret}_N(\Delta\theta)
+&\le\frac{L\,\Delta\theta}{N}\sum_{n=1}^{N}2e^{-c_0\gamma n(\Delta\theta)^{2}/4D^{2}}\\
+&\le L\,\min\!\Big(\Delta\theta,\ \tfrac{8D^{2}}{c_0\gamma N\,\Delta\theta}\Big).
+\end{align*}
+For fixed $\Delta\theta>0$ the geometric sum is $O(1)$, giving the $O(1/N)$ rate. The
+worst case over $\tau_c$ is the near-threshold instance; maximizing
+$\min(\Delta\theta,\,8D^{2}/(c_0\gamma N\Delta\theta))$ at
+$\Delta\theta^\star=\sqrt{8D^{2}/(c_0\gamma N)}$ yields the stated
+$O(D/\sqrt{\gamma N})$, with the extra $\sqrt{\log N}$ arising from the union bound in
+the high-probability version.
+\end{proof}
+
+\paragraph{Deployment note.}
+Replacing the predictor branch with the AIMD loop of \S\ref{sec:controller} keeps the
+estimator \eqref{eq:conc}, the switch \eqref{eq:wrong}, and the hard-cap safety
+guarantee (Prop.~\ref{prop:safety}) intact, but attains a constant fraction of
+$\Delta(D)$ rather than its entirety---consistent with Fig.~\ref{fig:tausweep}, where
+AIMD trades the last increment of advantage for a memoryless, state-light controller.

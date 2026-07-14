@@ -1,0 +1,287 @@
+% nats-bursting -- INFOCOM model, STRENGTHENED (drop-in replacement for the
+% model/controller sections of infocom_model.tex). The thermal micro-tier moves
+% to the CANOPIE-HPC companion; this file is single-tier (admission) and adds the
+% Age-of-Information feedback-usefulness limit that turns the Poisson null into
+% the paper's central result.
+%
+% Preamble (ensure present in the main file):
+%   \usepackage{amsmath,amssymb,amsthm}
+%   \newtheorem{theorem}{Theorem}
+%   \newtheorem{lemma}{Lemma}
+%   \newtheorem{corollary}{Corollary}
+%   \newtheorem{proposition}{Proposition}
+%   \theoremstyle{definition}\newtheorem{assumption}{Assumption}
+
+\section{System Model: Polite Bursting under Age-Limited Sensing}
+\label{sec:model}
+
+A \emph{guest} bursts batch GPU pods onto a shared cluster and is bound by a
+fair-use policy: at most $K$ concurrent pods, and each admitted pod must sustain
+a utilization floor (else it is a poor citizen, risking throttling or a ban).
+Time is slotted into control epochs $t\in\mathbb{N}$. Let $a_t\in\{0,\dots,C\}$ be
+the capacity the cluster can \emph{productively} give the guest at epoch $t$; it
+is set by the other tenants---exogenous, stochastic, and \textbf{not directly
+observable}. The guest chooses a window $w_t\in\{0,\dots,K\}$. Useful goodput is
+$G_t=\min(w_t,a_t)$; the surplus $(w_t-a_t)^{+}$ is \emph{over-admitted}: those
+pods sit below the utilization floor and mark the guest impolite. With
+$\rho\triangleq\limsup_T\frac1T\sum_{t<T}\mathbf 1[w_t>a_t]$ the long-run
+over-admission fraction, the guest solves
+\begin{equation}\label{eq:polite}
+\max_{\{w_t\}}\ \mathbb{E}[\min(w_t,a_t)]
+\quad\text{s.t.}\quad
+\underbrace{w_t\le K\ \forall t}_{\text{hard cap}},\qquad
+\underbrace{\rho\le\epsilon}_{\text{policy}} .
+\end{equation}
+The constraint is \emph{two-sided}---stay below the cap yet above the floor---which
+already separates it from one-sided (loss-only) congestion control.
+
+\paragraph{Age-limited sensing.}
+The guest does not observe $a_t$; it \emph{probes} cluster state, and the probe
+is stale. We model this as an \emph{age of information} $D$: at epoch $t$ the
+controller's freshest reading of capacity has age $D$, i.e.\ admissible policies
+are causal functions of $\{a_{s-D}\}_{s\le t}$. $D$ is a physical, \emph{measured}
+quantity (Sec.~\ref{sec:eval}: $D\!\approx\!2.5$\,s, dominated by CUDA cold-start,
+not the $\sim\!27$\,ms poll). Age-limited sensing is the crux: a controller can
+only act on a $D$-old picture of a world the neighbours are still changing.
+
+\paragraph{The contended unit.}
+Politeness is decided at the margin. Fix attention on the single contended
+resource unit whose availability fluctuates with the neighbour, and let
+$x_t\in\{0,1\}$ indicate that it is \emph{free} ($x_t=1$) or \emph{taken}
+($x_t=0$); admitting it when taken is the over-admission the policy punishes. We
+take $x_t$ stationary with $\Pr[x_t=1]=\tfrac12$ (a fully contended unit; the
+asymmetric case only rescales the constants below). The guest's marginal decision
+$m_t\in\{0,1\}$ is a (possibly randomized) causal function of the age-$D$
+observation $\hat x_t\triangleq x_{t-D}$. Marginal goodput and over-admission are
+\begin{equation}\label{eq:margin}
+g \triangleq \Pr[m_t=1,\,x_t=1],\qquad
+\rho \triangleq \Pr[m_t=1,\,x_t=0].
+\end{equation}
+Everything below concerns the achievable $(\rho,g)$ region under age $D$. (The
+stationary $\rho=\Pr[m_t{=}1,x_t{=}0]$ of \eqref{eq:margin} is the ergodic limit of
+the epoch fraction in \eqref{eq:polite}; we reuse $\rho$ for both, and write
+$\bar\rho$ for the surplus \emph{amount} in Prop.~\ref{prop:layercake}.)
+
+\begin{proposition}[Hard-cap safety]\label{prop:safety}
+Any window update that clamps additive increase at $K$ and never increases $w_t$
+on a congestion signal keeps $w_t\le K$ for all $t$ deterministically; the pod-cap
+is never violated.
+\end{proposition}
+\begin{proof}
+Induction on $t$: increase is clamped to $K$, decrease cannot exceed the current
+value.
+\end{proof}
+
+\section{The Feedback-Usefulness Limit}
+\label{sec:limit}
+
+We now characterize \emph{exactly} how much closed-loop admission can gain over
+open-loop (static) admission when the only signal is a $D$-old observation. The
+answer is a single, interpretable quantity: the autocorrelation of capacity at the
+sensing lag.
+
+\begin{lemma}[Predictive disagreement]\label{lem:q}
+Let $q(D)\triangleq\Pr[x_t\neq x_{t-D}]$ be the lag-$D$ disagreement probability
+and $r(D)\triangleq\mathbb{E}[(2x_t\!-\!1)(2x_{t-D}\!-\!1)]$ the lag-$D$
+autocorrelation of the centered availability. Then $r(D)=1-2q(D)\in[-1,1]$, and by
+stationarity and symmetry the joint law of $(\hat x_t,x_t)$ is
+$\Pr[\hat x_t{=}i,x_t{=}j]=\tfrac14\big(1+(2i{-}1)(2j{-}1)\,r(D)\big)$.
+For a symmetric two-state Markov capacity with per-epoch flip probability
+$p\in(0,\tfrac12)$, $r(D)=(1-2p)^{D}=e^{-D/\tau_c}$ with correlation time
+$\tau_c\triangleq-1/\ln(1-2p)\approx 1/(2p)$.
+\end{lemma}
+\begin{proof}
+$r=\mathbb{E}[(2x_t-1)(2x_{t-D}-1)]=\Pr[\text{agree}]-\Pr[\text{disagree}]=1-2q$.
+The joint follows from the two symmetric marginals and the single correlation.
+For the Markov chain the $D$-step transition is
+$P^D=\tfrac12\!\left(\begin{smallmatrix}1+\lambda^D&1-\lambda^D\\1-\lambda^D&1+\lambda^D\end{smallmatrix}\right)$
+with $\lambda=1-2p$, so $\Pr[\text{disagree}]=\tfrac12(1-\lambda^D)$ and
+$r=\lambda^D$.
+\end{proof}
+
+\begin{theorem}[Achievable region and the feedback advantage]\label{thm:limit}
+For the symmetric two-state Markov capacity of Lemma~\ref{lem:q}, under age-$D$
+sensing the achievable $(\rho,g)$ region of
+\eqref{eq:margin} is the convex hull of
+$\{(0,0),\,(\tfrac{q}{2},\tfrac{1-q}{2}),\,(\tfrac12,\tfrac12)\}$, with $q=q(D)$.
+The best \emph{static} (observation-oblivious) policy is confined to the diagonal
+$g=\rho$. Consequently the goodput gain of feedback over static, maximized over
+matched over-admission levels, is
+\begin{equation}\label{eq:adv}
+\boxed{\;\Delta(D)\;=\;\tfrac12\,r(D)\;=\;\tfrac12\big(1-2q(D)\big)\;}
+\end{equation}
+attained at the kink $\rho=q/2$ by the Bayes threshold policy $m_t=\hat x_t$ (at a
+lower level $\rho<q/2$ the gain is the smaller $\rho(1-2q)/q$); i.e.\ \emph{the peak
+value of closed-loop admission is exactly half the autocorrelation of available
+capacity at the sensing lag}.
+\end{theorem}
+\begin{proof}
+For the symmetric two-state Markov chain the freshest sample
+$\hat x_t=x_{t-D}$ is a sufficient statistic for $x_t$ given the entire delayed
+history $\{x_{s-D}\}_{s\le t}$ (the Markov property makes older samples conditionally
+uninformative), so an optimal causal age-$D$ policy depends on the history only
+through $\hat x_t$; we may therefore restrict without loss to policies parameterized
+by a pair $(\theta_1,\theta_0)$, $\theta_i=\Pr[m_t{=}1\mid\hat x_t{=}i]$.
+Using Lemma~\ref{lem:q},
+$g=\tfrac12\big(\theta_1(1{-}q)+\theta_0 q\big)$ and
+$\rho=\tfrac12\big(\theta_1 q+\theta_0(1{-}q)\big)$.
+This linear map sends the square $[0,1]^2$ to the quadrilateral with vertices at
+$(\theta_1,\theta_0)\in\{(0,0),(1,0),(1,1),(0,1)\}$, i.e.\
+$(0,0),(\tfrac q2,\tfrac{1-q}2),(\tfrac12,\tfrac12),(\tfrac{1-q}2,\tfrac q2)$; its
+upper boundary is the stated hull. Maximizing $g-\lambda\rho$ turns on $\theta_1$
+before $\theta_0$ because $q<\tfrac12$ makes the free-observation state strictly
+more goodput-efficient, so the max-goodput point for $\rho\le q/2$ is the kink
+$(\tfrac q2,\tfrac{1-q}2)$, achieved by $m_t=\hat x_t$. A static policy ignores
+$\hat x_t$ ($\theta_1=\theta_0=\theta$), giving $g=\rho=\theta/2$: the diagonal.
+The vertical gap at $\rho=q/2$ is $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfrac12 r(D)$.
+\end{proof}
+
+\begin{corollary}[Impossibility as sensing ages]\label{cor:imp}
+$\Delta(D)\!\to\!0$ as $r(D)\!\to\!0$. For the symmetric two-state (Markov) model
+$\Delta(D)=\tfrac12 e^{-D/\tau_c}$, so no causal controller with sensing age $D$ can
+outperform the static budget once $D\gg\tau_c$: here closed-loop admission helps only
+to the extent that the guest can sense the neighbour faster than the neighbour
+changes. In this model low autocorrelation and unpredictability coincide, but in
+general they need not---a decorrelated process ($r(D){=}0$) can still be exactly
+predictable from its history (e.g.\ a random-phase deterministic square wave)---so for
+an \emph{arbitrary} capacity process the vanishing of the advantage is governed by the
+$\beta$-mixing coefficient, not by $r(D)$. At $D=0$, $\Delta=\tfrac12$ (capacity is
+perfectly trackable); the advantage halves every $\tau_c\ln 2$ epochs of added age.
+App.~\ref{app:beta} makes the general statement precise, extending the impossibility to
+arbitrary (non-binary, non-Markov) capacity processes with the decay rate set by
+$\beta(D)$.
+\end{corollary}
+
+\begin{corollary}[The square/Poisson experiments are two points on \eqref{eq:adv}]
+\label{cor:exp}
+The contention study of Sec.~\ref{sec:eval} instantiates exactly this two-state
+$C{=}2$ model. \emph{Structured (square)} load has $\tau_c\gg D$, so
+$r(D)\!\approx\!1$ and feedback is near-maximally useful (low $\rho$, large goodput
+gain); \emph{memoryless (Poisson)} load drives $\tau_c\lesssim D$, so
+$r(D)\!\approx\!0$ and feedback collapses onto static---the pre-registered null.
+The single curve \eqref{eq:adv} predicts both regimes and the crossover between
+them.
+\end{corollary}
+
+The binary reduction is not a special case but the atom of the general problem.
+
+\begin{proposition}[Layer-cake reduction for $C>2$]\label{prop:layercake}
+Let $a_t\in\{0,\dots,C\}$ and score over-admission by the surplus \emph{amount}
+$\bar\rho\triangleq\mathbb{E}[(w_t-a_t)^{+}]$. With $x^u_t\triangleq\mathbf1[a_t\ge u]$
+and $\pi_u\triangleq\Pr[x^u_t=1]$, both objectives decompose additively over units,
+$\min(w_t,a_t)=\sum_{u\ge1}\mathbf1[w_t\ge u]\,x^u_t$ and
+$(w_t-a_t)^{+}=\sum_{u\ge1}\mathbf1[w_t\ge u](1-x^u_t)$. The age-$D$ optimum is the
+delayed-capacity window $w_t=a_{t-D}$, and its total goodput advantage over the
+best comonotone static budget at matched surplus is
+\begin{equation}\label{eq:adv-multi}
+\Delta(D)=\sum_{u=1}^{K}\pi_u\,r_u(D),\qquad r_u(D)=\mathrm{corr}\big(x^u_t,x^u_{t-D}\big),
+\end{equation}
+which for a single symmetric contended unit ($\pi_u=\tfrac12$) recovers
+$\Delta=\tfrac12 r(D)$.
+\end{proposition}
+\begin{proof}
+The two identities are the layer-cake (Fubini) expansions of $\min$ and $(\cdot)^+$.
+Setting $w_t=a_{t-D}$ makes $\mathbf1[w_t\ge u]=x^u_{t-D}=\hat x^u_t$, i.e.\ the
+Thm.~\ref{thm:limit} threshold policy applied independently to each layer; the
+layers' nesting $x^1_t\ge x^2_t\ge\cdots$ is inherited by the observations, so the
+per-unit thresholds compose into a valid scalar window. For an asymmetric layer
+with $\Pr[x^u{=}1]=\pi_u$, the same LP as Thm.~\ref{thm:limit} gives per-unit
+advantage $\mathrm{Cov}(x^u_t,x^u_{t-D})/(1-\pi_u)=\pi_u r_u(D)$ over the static
+policy matching its marginal; additivity of goodput and surplus sums these to
+\eqref{eq:adv-multi}.
+\end{proof}
+
+At $C{=}2$ the contended layer alone fluctuates ($\pi_1{=}1,r_1{=}0$;
+$\pi_2{=}\tfrac12$), so \eqref{eq:adv-multi} collapses to $\tfrac12 r_2(D)$: the
+binary law is exactly the $C{=}2$ instance, and the experiments measure it directly.
+
+\section{Achievability: A Regime-Adaptive Controller}
+\label{sec:controller}
+
+Theorem~\ref{thm:limit} exposes a gap that a \emph{fixed} controller cannot close:
+additive-increase/multiplicative-decrease (AIMD) tracks a slowly varying neighbour
+and approaches the kink $(\tfrac q2,\tfrac{1-q}2)$ when $\tau_c\gg D$, but
+\emph{over-admits} when $\tau_c\lesssim D$ (it keeps probing a signal that is pure
+noise); a static budget is safe everywhere but forfeits $\Delta(D)$ when
+$\tau_c\gg D$. The optimal policy must know which regime it is in. Since $r(D)$ is
+itself \emph{measurable from the probe stream}, the guest can estimate it online
+and switch.
+
+\begin{center}\small
+\fbox{\parbox{0.94\columnwidth}{
+\textbf{Regime-adaptive admission.} Maintain the empirical lag-$D$ correlation
+$\hat r_n$ from the last $n$ probes. Each epoch:
+(i) if $\hat r_n>\theta$ (trackable): run AIMD with the safe $(\alpha,\beta)$ of
+Prop.~\ref{prop:bound}, converging toward the Bayes kink;
+(ii) else (untrackable): fall back to the static budget $w_t\equiv\lfloor \bar a\rfloor$.
+The threshold $\theta$ is set from the target $\epsilon$ via \eqref{eq:adv} (we reserve
+$\gamma$ for the chain's spectral gap in Thm.~\ref{thm:adapt}).}}
+\end{center}
+
+\begin{proposition}[Sawtooth realization of the kink]\label{prop:bound}
+Under stationary capacity $a$ and (A1)--(A3) of the tracking regime, AIMD forms a
+periodic sawtooth about $a$ with long-run over-admission
+$\rho=D\alpha/\big((1-\beta)(a+D\alpha)\big)\approx D\alpha/((1-\beta)a)$; choosing
+$\alpha\le\epsilon(1-\beta)a/D$ gives $\rho\le\epsilon$, and $\rho\to0$ as $D\to0$.
+\end{proposition}
+\begin{proof}[Proof sketch]
+After a backoff the window restarts at $\beta(a+D\alpha)$ and rises by $\alpha$ per
+clean epoch, overshooting $a$ for $D$ epochs before detection triggers the next
+backoff at peak $a+D\alpha$; the fraction of violating epochs per cycle gives
+$\rho$. (This is the dynamic approach to the static-capacity kink of
+Thm.~\ref{thm:limit}; $D$ enters both here and in \eqref{eq:adv}, the
+systems$\leftrightarrow$theory hinge the paper turns on.)
+\end{proof}
+
+\begin{theorem}[Uniform near-optimality]\label{thm:adapt}
+Let capacity be a symmetric two-state process with correlation time $\tau_c$
+unknown to the guest. The empirical correlation is consistent,
+$\hat r_n\!\to\!r(D)$ a.s.\ (ergodicity), with
+$\Pr[|\hat r_n-r(D)|>t]\le 2e^{-cnt^2}$ for a mixing constant $c>0$
+(Hoeffding for functions of a geometrically mixing chain). Hence the
+regime-adaptive controller attains goodput within
+$\Delta(D)-O\!\big(\sqrt{\log n/n}\big)$ of the age-$D$ optimum
+\emph{uniformly in} $\tau_c$, whereas (i) fixed AIMD incurs excess over-admission
+$\Omega(1)$ as $\tau_c/D\!\to\!0$, and (ii) the fixed static budget forfeits
+goodput $\Omega(1)$ as $\tau_c/D\!\to\!\infty$. The regret rate is
+$O(D\sqrt{\log N/(\gamma N)})$ over horizon $N$, with $\gamma$ the chain's spectral
+gap (App.~\ref{app:regret}).
+\end{theorem}
+\begin{proof}[Proof sketch]
+Consistency and the concentration bound give a correct regime decision after
+$n=O(\log(1/\delta)/(\,r{-}\theta\,)^2)$ probes w.p.\ $1-\delta$; conditioned on the
+correct branch, Thm.~\ref{thm:limit} (static branch) and Prop.~\ref{prop:bound}
+(AIMD branch) bound the per-epoch gap, and averaging over the $O(1)$ misclassified
+prefix yields the stated regret. The separations (i)--(ii) are the two endpoints of
+Cor.~\ref{cor:imp}: at small $\tau_c$ AIMD sits at $\rho\!\approx\!\tfrac14$ while
+the optimum is $\rho\!\to\!0$; at large $\tau_c$ static forfeits
+$\Delta\!\to\!\tfrac12$.
+\end{proof}
+
+\paragraph{Scope, honestly.}
+Three assumptions earn the closed form. (i) \emph{Binary/symmetric per layer:} for
+any symmetric stationary $x_t$ the value $\tfrac12 r(D)$ of \eqref{eq:adv} is
+\emph{achievable}---by the memoryless threshold $m_t=\hat x_t$, which uses only the
+freshest sample---and it is the \emph{exact} feedback advantage when $x_t$ is Markov,
+since then $\hat x_t$ is a sufficient statistic for $x_t$ (Thm.~\ref{thm:limit}). For a
+general non-Markov symmetric process a history-using controller can do strictly better
+than $\tfrac12 r(D)$---e.g.\ a random-phase deterministic square wave of period $4D$
+has $r(D){=}0$ yet its phase, hence $x_t$ exactly, is recoverable from the delayed
+history, so a causal controller attains $\Delta=\tfrac12$, not $0$---so the exact
+equality is Markov-specific and the general \emph{converse} is the $\beta$-mixing
+bound of App.~\ref{app:beta}, not $r(D)$. Prop.~\ref{prop:layercake} lifts the
+construction to any integer $C$ once over-admission is scored by \emph{amount} rather
+than by the $0/1$ indicator (the two coincide at $C{=}2$, so our testbed is
+unaffected). (ii) \emph{Stationarity:}
+$r(D)$ is a lag-$D$ autocorrelation of a stationary process; under slow drift it is
+replaced by a local estimate, which is exactly what the regime-adaptive controller
+tracks (\S\ref{sec:controller}). (iii) \emph{Fixed age $D$:} if the freshest
+sample has a random age $A$ whose value the controller can read, the advantage is
+the age-averaged $\Delta=\tfrac12\,\mathbb{E}[r(A)]$---the same law under the age
+law---and the impossibility $\Delta\to0$ persists whenever $A\gg\tau_c$ almost
+surely. A matching
+lower bound in the process's $\beta$-mixing coefficient, for general non-binary
+capacity, is deferred to the appendix. The point stands: \textbf{politeness under
+age-limited sensing is worth exactly what the neighbour's load is predictable
+across the sensing delay, and a controller should measure that predictability and
+adapt.}

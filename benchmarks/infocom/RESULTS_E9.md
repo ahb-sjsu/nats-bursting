@@ -35,11 +35,61 @@ Params: `--burst 16 --work 1000 --matmul 4096 --tau 25 --comp-life 25 --gpus 1,0
   safety cutout; the shared node's co-tenant baseline (~77 °C) sets a thermal floor
   self-throttling cannot undercut — a politeness lesson in itself.
 
+## Markov τ_c sweep + regime-adaptive controller (live)
+
+The square/poisson pair are two points; the markov profile sweeps the coherence time
+`τ_c=−1/ln(1−2p)` continuously to trace the whole `Δ(D)=½·r(D)` law and exercise the
+**regime-adaptive** controller (estimate `r̂=(1−2p̂)^D` online; run closed-loop AIMD
+when `r̂>γ=0.15`, else fall back to a static floor). Live sweep on the same 2×GV100
+node: policies {static, aimd, adaptive} × `p∈{0.01,0.03,0.08,0.15,0.4}` × 2 seeds,
+`D=3`, markov epoch `--interval 2 --comp-life 600`. Analyzer: `e9_adaptive_curve.py`.
+
+> **Rig fix that made this measurable.** The first live sweep failed: `reconcile_comp`
+> was add-only with a fixed 25 s competitor life, so realized GPU availability flipped
+> at the `comp_life` cadence, decoupled from `p` — `r̂` sat pinned ~0.68 across the
+> whole sweep and the switch never fired. Making `reconcile_comp` **symmetric** (kill
+> over-target competitors on down-flips) realizes the DTMC faithfully. See
+> `ADAPTIVE_CURVE_FINDINGS.md`.
+
+| p | r(D)=(1−2p)³ | r̂ (online) | frac_closed | g_static | g_aimd | g_adaptive | ρ_static | ρ_aimd | ρ_adaptive |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.01 | 0.94 | 0.92 | 0.98 | 0.064 | 0.071 | 0.072 | 0.20 | 0.06 | 0.07 |
+| 0.08 | 0.59 | 0.62 | 0.95 | 0.064 | 0.102 | 0.102 | 0.07 | 0.26 | 0.25 |
+| 0.15 | 0.34 | 0.35 | 0.83 | 0.064 | 0.092 | 0.091 | 0.05 | 0.36 | 0.31 |
+| 0.40 | 0.01 | 0.24 | 0.48 | 0.064 | 0.104 | 0.083 | 0.04 | 0.44 | 0.22 |
+
+**A1 (estimator on the curve):** ✅ `r̂` tracks `(1−2p)³` — mean `|r̂−r_true|=0.073`;
+the realized availability autocorrelation `r_emp` sits on the curve throughout (the one
+deviation is `r̂` at p=0.4, where the nvidia-smi census smooths the fastest flips).
+**A2 (switch modulates):** ✅ `frac_closed_loop` falls 0.98→0.48 as `r(D)` drops (it
+was pinned at 0.99 before the rig fix).
+
+**A3 (the law manifests as a politeness dividend, not a raw-goodput crossover):**
+On real hardware **raw goodput rewards greed** — AIMD beats static at *every* p, but at
+high p that edge is bought purely with over-admission (ρ=0.44 vs static 0.04), not
+tracking. So the sim's goodput crossover (AIMD < static once `τ_c≲D`) does *not* appear
+live; instead the switch's value shows on the goodput–ρ Pareto as the over-admission it
+sheds vs always-AIMD, which grows monotonically as `r(D)→0`:
+
+| p | r(D) | ρ_aimd − ρ_adaptive |
+|---|---|---|
+| 0.08 | 0.59 | +0.01 |
+| 0.15 | 0.34 | +0.05 |
+| 0.40 | 0.01 | **+0.22** |
+
+Adaptive matches AIMD's aggression where feedback is trackable and recovers static's
+politeness (halving AIMD's over-admission) exactly where feedback becomes noise —
+best-of-both on the goodput/politeness trade-off. The clean goodput-*advantage* tracing
+of `½·r(D)` stays the controller-level simulation (`tau_sweep.py`), because live static
+is a flat trickle with no tunable ρ frontier. Figure: `paper/figures/e9_adaptive_curve`.
+
 ## Takeaway
 Feedback admission is the polite-efficient point when a neighbour's load has
-structure to track, and one should fall back to a fixed budget when it does not.
-naive's higher goodput is bought entirely at the neighbour's expense. Honest
-negative (poisson) reported, not suppressed.
+structure to track, and one should fall back to a fixed budget when it does not. The
+regime-adaptive controller estimates that structure online and does exactly this,
+shedding over-admission as predictability vanishes. naive's higher goodput is bought
+entirely at the neighbour's expense. Honest negatives (poisson goodput null; the live
+politeness-not-goodput manifestation) reported, not suppressed.
 
 Atlas restored to captured baseline after the run (GPU0 60 °C/0%/19621 MiB, GPU1
 free; ego stack intact; zero strays).
