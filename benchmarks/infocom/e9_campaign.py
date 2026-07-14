@@ -33,6 +33,14 @@ COMMON = ["--burst", BURST, "--work", WORK, "--matmul", "4096",
           "--comp-life", "25", "--tau", "25", "--interval", "1",
           "--rate", "0.06", "--gpus", GPUS]
 
+# markov-profile overrides: the DTMC must be *realized* on the GPU for the
+# Delta(D)=1/2 r(D) sweep to be meaningful. A longer epoch lets the competitor
+# launch/kill actuate within an epoch (CUDA init is seconds), and a long comp_life
+# hands occupancy control fully to the (now-symmetric) reconcile_comp rather than to
+# fixed-life self-expiry. See ADAPTIVE_CURVE_FINDINGS.md.
+MK_INTERVAL = os.environ.get("E9_MK_INTERVAL", "2")
+MK_COMPLIFE = os.environ.get("E9_MK_COMPLIFE", "600")
+
 # markov tau_c sweep: --p-flip sweeps tau_c=-1/ln(1-2p), landing in-situ points on
 # the Delta(D)=1/2 r(D) law (Fig tau_sweep). adaptive is the marquee controller;
 # aimd/static are the envelope it must track (never below static, near aimd when
@@ -85,6 +93,9 @@ def main() -> None:
             L(f"[{i}/{len(trials)}] skip {tag}"); continue
         cmd = [PY, SCRIPT, "--policy", pol, "--profile", prof, "--seed", str(seed),
                "--workdir", WD, "--out", out] + COMMON
+        if prof == "markov":
+            # argparse takes the last value, so these override COMMON's interval/comp-life
+            cmd += ["--interval", MK_INTERVAL, "--comp-life", MK_COMPLIFE]
         if pflip is not None:
             cmd += ["--p-flip", str(pflip)]
         if therm:

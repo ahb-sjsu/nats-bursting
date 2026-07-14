@@ -257,9 +257,10 @@ def main() -> None:
 
     def reconcile_comp(epoch):
         want = c_target(epoch)
-        have = comp_occ()
         # competitor occupies slots from the *front* (slot0 = free GPU1)
         occupied = {sg for _p, sg, *_ in live(comp)}
+        have = len(occupied)
+        # scale UP: launch on free slots
         while have < want:
             for g in gpu_ids:
                 if g not in occupied:
@@ -270,7 +271,23 @@ def main() -> None:
                     break
             else:
                 break
-        # over-target competitors simply self-expire (fixed life); no kill needed
+        # scale DOWN: kill over-target competitors so realized c(t) tracks the DTMC.
+        # (Previously add-only + fixed-life self-expiry, which decoupled realized r(D)
+        #  from p_flip: a competitor launched on an up-flip squatted for comp_life s
+        #  regardless of later down-flips, pinning the sensed autocorrelation high
+        #  across the whole sweep. Symmetric reconcile makes down-flips actuate.)
+        while have > want:
+            victim = next((x for x in reversed(comp) if x[0].poll() is None), None)
+            if victim is None:
+                break
+            vp, vg, *_ = victim
+            vp.terminate()
+            try:
+                vp.wait(timeout=3)
+            except Exception:
+                vp.kill()
+            occupied.discard(vg)
+            have -= 1
 
     # ---- monitor thread --------------------------------------------------------
     def mon():
@@ -404,9 +421,19 @@ def main() -> None:
     for p, _sg in guest:
         try: p.wait(timeout=30)
         except Exception: pass
+    # Terminate any still-running competitors BEFORE waiting: with a long comp_life
+    # (so reconcile — not self-expiry — controls occupancy) they will not exit on
+    # their own, and a bare wait() would time out and leave orphan GPU processes.
     for p, _sg, _e in comp:
-        try: p.wait(timeout=30)
-        except Exception: pass
+        if p.poll() is None:
+            try: p.terminate()
+            except Exception: pass
+    for p, _sg, _e in comp:
+        try:
+            p.wait(timeout=30)
+        except Exception:
+            try: p.kill()
+            except Exception: pass
     if thermal:
         thermal.stop()
 
@@ -427,11 +454,30 @@ def main() -> None:
         except Exception:
             pass
 
+    # Realized autocorrelation of the sensed availability at lag D (epochs). This is
+    # the r(D) the controller actually experiences on the GPU — reported alongside the
+    # nominal (1-2*p_flip)^D so the Delta(D)=1/2 r(D) check uses the *realized* signal,
+    # robust to competitor actuation latency smoothing fast flips.
+    def r_emp_at(series, D):
+        n = len(series)
+        if n <= D:
+            return None
+        m = sum(series) / n
+        var = sum((x - m) ** 2 for x in series) / n
+        if var <= 0:
+            return 0.0
+        cov = sum((series[t] - m) * (series[t - D] - m) for t in range(D, n)) / (n - D)
+        return cov / var
+
+    avail_series = [r["a"] for r in rows]
+    r_emp = r_emp_at(avail_series, a.D)
+
     res = {
         "policy": a.policy, "profile": a.profile, "seed": a.seed, "C": C,
         "burst": a.burst, "completed": completed, "wall_s": round(wall, 2),
         "goodput_tasks_per_s": round(goodput, 5),
         "over_admission_rho": round(rho, 4),
+        "r_emp_D": (round(r_emp, 4) if r_emp is not None else None),
         "mean_available_abar": round(sum(r["a"] for r in rows) / len(rows), 3),
         "mean_guest_inflight": round(sum(r["n"] for r in rows) / len(rows), 3),
         "thermal_on": bool(thermal),
@@ -458,6 +504,7 @@ def main() -> None:
             "tau_c_hat": (None if math.isinf(tau_c_hat) else round(tau_c_hat, 2)),
             "frac_closed_loop": round(ad_closed[0] / len(ad_trace), 3),
             "n_decisions": len(ad_trace),
+            "r_emp_D": (round(r_emp, 4) if r_emp is not None else None),
         }
         if a.profile == "markov":
             r_true = (1 - 2 * min(a.p_flip, 0.5)) ** a.D
