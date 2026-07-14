@@ -134,3 +134,24 @@ So adaptive **is** best-of-both — on the goodput/politeness trade-off, not raw
 3. The live curve check should score the **matched-ρ advantage** / goodput-per-impoliteness, mirroring
    `tau_sweep.py`. No further GPU runs needed — the pulled data already carries goodput + ρ.
 
+## Pareto analyzer (age-D reverted; commit e00c416) — the law on the politeness axis
+
+`e9_adaptive_curve.py` now builds a static ρ→goodput frontier and reports the matched-ρ advantage plus
+the **politeness dividend** `ρ_aimd − ρ_adaptive` (the over-admission the switch sheds vs always-AIMD).
+That dividend is the clean live signature of `½·r(D)` — it grows monotonically as `r(D)` falls:
+
+| p | r(D) | ρ_aimd − ρ_adaptive |
+|---|---|---|
+| 0.01 | 0.94 | −0.01 |
+| 0.03 | 0.83 | −0.00 |
+| 0.08 | 0.59 | +0.01 |
+| 0.15 | 0.34 | +0.05 |
+| 0.40 | 0.01 | **+0.22** |
+
+When feedback is useful (high `r`) the switch stays closed-loop and sheds ~nothing; when feedback is
+useless (`r→0`) it sheds the full wasteful over-admission — exactly the `½·r(D)→0` behaviour, read as
+politeness rather than goodput. The matched-ρ *advantage* itself does not trace `½·r(D)` cleanly live
+because static is a near-flat trickle (no tunable ρ frontier); that clean tracing stays in the sim
+(`tau_sweep.py`). Figure `paper/figures/e9_adaptive_curve.{pdf,png}`: (left) `r̂`/`r_emp` on the curve;
+(right) the goodput–ρ Pareto with adaptive peeling off toward politeness at high `p`.
+
