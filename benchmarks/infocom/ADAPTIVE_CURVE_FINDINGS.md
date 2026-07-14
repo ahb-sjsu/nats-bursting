@@ -93,3 +93,44 @@ static should win at high p and the adaptive switch should recover it. `tau_swee
 Δ(D)=½·r(D) validation; the live rig now faithfully realizes the *capacity process* and the *estimator*,
 which is what this fix set out to do.
 
+---
+
+## Age-D actuation re-run (commit `bd4714f`) — hypothesis WRONG, real cause found
+
+Hypothesis: gate live AIMD/adaptive actuation on the age-D observation `a_{t-D}` (not the fresh probe)
+so at low `r(D)` the stale signal decorrelates, AIMD mis-tracks, static wins, and adaptive recovers it.
+Re-ran the full markov sweep under this change.
+
+**It made no material difference** — AIMD still beats static on raw goodput at *every* p:
+
+| p | r(D) | g_static | g_aimd | g_adap | ρ_static | ρ_aimd | ρ_adap |
+|---|---|---|---|---|---|---|---|
+| 0.01 | 0.94 | 0.064 | 0.071 | 0.072 | 0.201 | 0.062 | 0.067 |
+| 0.03 | 0.83 | 0.064 | 0.107 | 0.109 | 0.101 | 0.156 | 0.158 |
+| 0.08 | 0.59 | 0.064 | 0.102 | 0.102 | 0.068 | 0.257 | 0.250 |
+| 0.15 | 0.34 | 0.064 | 0.092 | 0.091 | 0.051 | 0.359 | 0.308 |
+| 0.40 | 0.01 | 0.064 | 0.104 | 0.083 | 0.038 | 0.438 | 0.222 |
+
+**Why the hypothesis was wrong:** raw goodput rewards *greed*. AIMD's extra goodput at high p comes
+entirely from **over-admitting** (ρ=0.438 at p=0.4 vs static's 0.038), not from tracking — sensing
+delay does not stop a greedy controller from over-admitting. So age-D actuation cannot produce a
+raw-goodput crossover; the ranking is a property of the *metric*, not the sensing.
+
+**The real result is on the goodput-vs-ρ Pareto (what the law is actually about).** `Δ(D)=½·r(D)` is
+the closed-loop goodput advantage **at matched over-admission** (`tau_sweep.py`:
+`advantage = g − static_goodput_at(ρ)`), not raw goodput. On that axis the live data is right:
+- **p=0.01 (trackable):** AIMD gets *more* goodput at *lower* ρ than static (0.071@0.062 vs
+  0.064@0.201) — strictly dominates; adaptive tracks it. Feedback's efficiency advantage is real.
+- **p=0.40 (untrackable):** AIMD's goodput edge is bought with 10× the over-admission (ρ 0.438 vs
+  0.038); the honest matched-ρ advantage has collapsed — exactly `½·r(D) → 0`. Adaptive correctly
+  **halves AIMD's over-admission** (0.222 vs 0.438) for a 20 % goodput trim.
+
+So adaptive **is** best-of-both — on the goodput/politeness trade-off, not raw goodput.
+
+**Corrected conclusions.**
+1. Reconcile fix: **validated** (estimator on `½·r(D)`; switch modulates 0.98→0.48). Keep.
+2. Age-D actuation change (`bd4714f`): **did not accomplish its goal** and changes the AIMD baseline
+   semantics — candidate for revert; the raw-goodput ranking is metric-driven, not sensing-driven.
+3. The live curve check should score the **matched-ρ advantage** / goodput-per-impoliteness, mirroring
+   `tau_sweep.py`. No further GPU runs needed — the pulled data already carries goodput + ρ.
+
