@@ -253,10 +253,46 @@ regime-adaptive controller tracks the envelope. \emph{Right:} sweeping $D$ colla
 the optimal advantage onto $\tfrac12 e^{-D/\tau_c}$ vs.\ $D/\tau_c$.}
 \label{fig:tausweep}
 \end{figure}
-%PENDING% A live NRP run of the regime-adaptive controller (a $\tau_c$ sweep via
-%PENDING% contention.py --profile markov against run.py, landing in-situ points on
-%PENDING% Fig.~\ref{fig:tausweep}) is the natural next anchor; the results here are
-%PENDING% the controller-level simulation, and the live Q3 pair are its endpoints.
+\paragraph{Live confirmation on GPU hardware.}
+We ran the regime-adaptive controller on the same $2{\times}$GV100 node across the
+Markov $\tau_c$ sweep ($p\in\{0.01,\dots,0.4\}$, $D{=}3$, two seeds), estimating
+$r(D)$ online from the sensed availability.\footnote{This required realizing the
+two-state capacity process faithfully on the GPU: the competitor reconciler is
+symmetric (it evicts over-target load on down-flips) rather than add-only with a
+fixed lifetime, which otherwise pins the sensed autocorrelation high independent of
+$p$.} Two claims transfer cleanly from the controller-level model to hardware.
+\textbf{(A1)} The online estimate lands on the law: $\hat r=(1-2\hat p)^D$ tracks
+$(1-2p)^D$ with mean $|\hat r-r|=0.07$, and the realized availability autocorrelation
+sits on the same curve (Fig.~\ref{fig:e9adapt}, left). \textbf{(A2)} The switch
+modulates as predicted---its closed-loop fraction falls from $0.98$ to $0.48$ as
+$r(D)$ drops past $\gamma$. The behavioural payoff, however, reads differently on
+real hardware than in the noise-free model, and the difference is instructive: raw
+goodput \emph{rewards over-admission}, so live AIMD out-goodputs static in
+\emph{every} regime---but at high flip rate that goodput is bought entirely with
+impoliteness ($\rho{=}0.44$ vs static's $0.04$), not with tracking. The simulated
+goodput crossover (AIMD $<$ static once $\tau_c\!\lesssim\!D$) therefore does not
+appear in \emph{raw} goodput on hardware; the law instead surfaces on the
+goodput--politeness Pareto (Fig.~\ref{fig:e9adapt}, right) as the over-admission the
+adaptive switch \emph{sheds} versus always-AIMD, which grows monotonically as
+feedback loses value ($\rho_{\text{aimd}}-\rho_{\text{adaptive}}$:
+$+0.01\!\to\!+0.22$ as $p$: $0.08\!\to\!0.4$). Adaptive matches AIMD where the
+neighbour is trackable and recovers static's politeness where it is not---best-of-both
+on the trade-off the law governs. The clean goodput-\emph{advantage} tracing of
+$\tfrac12 r(D)$ remains the controller-level result of Fig.~\ref{fig:tausweep}, as
+live static is a fixed trickle with no tunable $\rho$ frontier to measure against.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/e9_adaptive_curve.png}
+\caption{Live regime-adaptive controller on $2{\times}$GV100 (Markov $\tau_c$ sweep,
+$D{=}3$, two seeds). \emph{Left:} the online estimate $\hat r$ and the realized
+availability autocorrelation $r_{\text{emp}}$ land on $(1-2p)^D$; the
+closed-loop/static switch fires as $r(D)$ crosses $\gamma$. \emph{Right:} the
+goodput--over-admission Pareto---adaptive tracks AIMD when feedback is useful and
+peels off toward static's politeness as $p$ grows, shedding over-admission exactly
+where $r(D)\!\to\!0$.}
+\label{fig:e9adapt}
+\end{figure}
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
@@ -269,11 +305,17 @@ contention feedback breaks even with static---a pre-registered null we report ra
 than suppress (Q3); and (iv) the feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$
 holds at the controller level, the optimal policy sitting on it to within $0.013$
 while the regime-adaptive controller never falls below static (Q4), unifying the two
-live contention regimes as endpoints of one curve. Principal threats: contention is
-manufactured on a two-GPU node with $C{=}2$ and two synthetic profiles, not a
-production multi-tenant trace; and the law validation (Q4) and the regime-adaptive
-controller are established in controller-level simulation on the theory's two-state
-process, with the live cluster run of the adaptive policy left as the next anchor.
+live contention regimes as endpoints of one curve; a live GPU run of that controller
+confirms the online estimate $\hat r$ lands on the curve and the closed-loop/static
+switch modulates as $r(D)$ falls, with the law surfacing on hardware as a
+\emph{politeness dividend}---the over-admission the switch sheds versus always-AIMD,
+growing as feedback loses value---rather than a raw-goodput crossover, since raw
+goodput on real hardware rewards over-admission (Fig.~\ref{fig:e9adapt}). Principal
+threats: contention is manufactured on a two-GPU node with $C{=}2$ and synthetic
+profiles, not a production multi-tenant trace; the clean goodput-\emph{advantage}
+tracing of the law (Q4) remains controller-level, as live static is a fixed trickle
+with no tunable $\rho$ frontier to measure advantage against; and the live adaptive
+sweep is two seeds per point, a confirmatory anchor rather than the primary evidence.
 The full system path is nonetheless verified end-to-end (\S\ref{sec:impl}), and
 naive's impoliteness ($\rho\ge0.64$, $\ge$$38\%$ neighbour harm) is robust across
 every regime.

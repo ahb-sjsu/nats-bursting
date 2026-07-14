@@ -54,7 +54,9 @@ online and switches between closed- and open-loop admission to track the limit
 uniformly. We validate the law in simulation---the optimal policy sits on
 $\tfrac12 r(D)$ to within $0.013$, practical AIMD degrades below static exactly when
 $\tau_c\!\lesssim\!D$, and the regime-adaptive controller never falls below
-static---and on a workstation testbed under \emph{real, manufactured GPU contention}
+static (a live GPU run confirms its online $r(D)$ estimate lands on the curve and
+the switch's politeness dividend grows as feedback fails)---and on a workstation
+testbed under \emph{real, manufactured GPU contention}
 (with the full submission path verified end-to-end on NRP Nautilus): under structured
 contention feedback admission is the polite-efficient knee, $1.41\times$ static's
 goodput at $4\times$ lower over-admission \emph{than naive} while sparing the
