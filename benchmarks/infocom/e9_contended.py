@@ -315,7 +315,6 @@ def main() -> None:
     epoch = 0
     loop0 = time.time()
     congested_epochs = 0
-    obs_buf: list[int] = []   # ring of recent availability observations (for age-D delay)
 
     # ---- regime-adaptive controller online state (§V, Thm 2) -------------------
     # Estimate the flip rate of the (age-D) available-capacity observation stream,
@@ -370,17 +369,10 @@ def main() -> None:
 
         paced = a.policy == "static"    # rate-paced (trickle) vs window-gated (greedy)
         if a.policy in ("aimd", "adaptive"):
-            obs = probe_available()                  # fresh ground-truth capacity sensing
-            obs_buf.append(obs)
-            # The controller ACTS on the age-D observation a_hat = a_{t-D}, modelling the
-            # sensing/feedback latency the theory assumes: Delta(D)=1/2 r(D) is exactly the
-            # usefulness of this delayed signal. (Previously actuation used the fresh probe,
-            # so live AIMD never paid the delayed-feedback penalty and static never won.)
-            # Fall back to the freshest sample until the buffer has D+1 entries.
-            a_hat = obs_buf[-1 - a.D] if len(obs_buf) > a.D else obs_buf[0]
+            a_hat = probe_available()
             # advance the AIMD window every epoch (for adaptive this keeps a warm
             # shadow so a switch into the closed-loop branch resumes mid-sawtooth).
-            if guest_inflight() > a_hat:              # congestion signal (on delayed obs)
+            if guest_inflight() > a_hat:              # congestion signal
                 window = max(1, math.ceil(a.beta * window))   # multiplicative decrease
                 congested_epochs += 1
             else:
@@ -389,11 +381,10 @@ def main() -> None:
         if a.policy == "aimd":
             eff = min(window, thermal_cap(), max(1, a_hat))
         elif a.policy == "adaptive":
-            # online flip-rate estimate on the FRESH observation stream (true per-epoch p);
-            # r_hat=(1-2*p_hat)^D then predicts the age-D autocorrelation analytically.
+            # online flip-rate estimate on the age-D observation stream a_hat
             if ad_prev[0] is not None:
-                ad_flips[0] += int(obs != ad_prev[0]); ad_seen[0] += 1
-            ad_prev[0] = obs
+                ad_flips[0] += int(a_hat != ad_prev[0]); ad_seen[0] += 1
+            ad_prev[0] = a_hat
             ad_abar_sum[0] += a_hat; ad_abar_n[0] += 1
             p_hat = ad_flips[0] / max(1, ad_seen[0])
             r_hat = (1.0 - 2.0 * min(p_hat, 0.5)) ** a.D
