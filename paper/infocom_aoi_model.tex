@@ -115,7 +115,7 @@ matched over-admission levels, is
 attained at the kink $\rho=q/2$ by the Bayes threshold policy $m_t=\hat x_t$ (at a
 lower level $\rho<q/2$ the gain is the smaller $\rho(1-2q)/q$); i.e.\ \emph{the peak
 value of closed-loop admission is exactly half the autocorrelation of available
-capacity at the sensing lag}. The optimality of such memoryless threshold policies
+capacity at the sensing lag} (Fig.~\ref{fig:region}). The optimality of such memoryless threshold policies
 for symmetric two-state Markov observation is itself classical in the
 opportunistic-access setting~\cite{myopicaccess}; what is new here is the exact
 value $\tfrac12 r(D)$ of the resulting feedback advantage over the best static
@@ -141,6 +141,42 @@ $(\tfrac q2,\tfrac{1-q}2)$, achieved by $m_t=\hat x_t$. A static policy ignores
 $\hat x_t$ ($\theta_1=\theta_0=\theta$), giving $g=\rho=\theta/2$: the diagonal.
 The vertical gap at $\rho=q/2$ is $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfrac12 r(D)$.
 \end{proof}
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[>=Stealth]
+  % value units * 10 = cm.  q=q(D); drawn at q=0.2 (r=0.6).
+  % O(0,0) K(q/2,(1-q)/2)=(1,4) T(1/2,1/2)=(5,5) B((1-q)/2,q/2)=(4,1)
+  \draw[->] (0,0) -- (6.0,0) node[right] {$\rho$ (over-admission)};
+  \draw[->] (0,0) -- (0,6.0) node[above] {$g$ (goodput)};
+  \fill[black!8] (0,0) -- (1,4) -- (5,5) -- (4,1) -- cycle;
+  \node[black!55] at (4.05,1.55) {\footnotesize achievable};
+  \draw[very thick] (0,0) -- (1,4) -- (5,5);
+  \draw[dashed] (0,0) -- (5.4,5.4);
+  \node[sloped,above,black!70] at (3.25,3.25) {\footnotesize best static: $g=\rho$};
+  \draw[dotted] (1,0) -- (1,4);
+  \node[below] at (1,0) {\footnotesize $\tfrac{q}{2}$};
+  \fill (1,4) circle (2pt);
+  \node[above left=-1pt] at (1,4) {\footnotesize $\bigl(\tfrac{q}{2},\tfrac{1-q}{2}\bigr)$};
+  \node[align=center,anchor=south west] at (1.55,4.45)
+        {\footnotesize closed-loop optimum\\[-2pt]\footnotesize $m_t=\hat x_t$};
+  \fill (1,1) circle (1.6pt);
+  \draw[<->,thick] (1,1.16) -- (1,3.84);
+  \node[right=2pt] at (1,2.5) {$\Delta(D)=\tfrac12 r(D)$};
+  \fill (5,5) circle (1.6pt);
+  \node[below right=1pt] at (5,5) {\footnotesize $\bigl(\tfrac12,\tfrac12\bigr)$};
+\end{tikzpicture}}
+\caption{\textbf{The feedback advantage is geometry} (Thm.~\ref{thm:limit}).
+Under age-$D$ sensing the achievable over-admission/goodput pairs $(\rho,g)$ form
+the shaded hull; the best \emph{static} (observation-oblivious) policy is confined to
+the diagonal $g=\rho$. The closed-loop optimum is the frontier kink
+$(\tfrac q2,\tfrac{1-q}2)$, reached by the memoryless threshold $m_t=\hat x_t$, and
+its vertical distance to the diagonal is exactly $\Delta(D)=\tfrac12 r(D)$. As sensing
+ages, $q(D)\!\to\!\tfrac12$: the kink slides down onto the diagonal and the advantage
+vanishes (Cor.~\ref{cor:imp}).}
+\label{fig:region}
+\end{figure}
 
 \begin{corollary}[Impossibility as sensing ages]\label{cor:imp}
 $\Delta(D)\!\to\!0$ as $r(D)\!\to\!0$. For the symmetric two-state (Markov) model
