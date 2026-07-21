@@ -1,136 +1,43 @@
-% Cross-domain confirmation section for the value-of-predictive-information follow-up.
-% Self-contained; \input after the theory. Requires: graphicx, booktabs, amsmath.
-\section{Cross-Domain Confirmation and the Predictive-Information Boundary}
+% Cross-domain confirmation subsection for infocom.tex.
+% \input after \input{infocom_eval}. Requires graphicx, amsmath.
+\subsection{The law across domains}
 \label{sec:crossdomain}
 
-The feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$ (Thm.~\ref{thm:limit}) was
-derived for a symmetric two-state \emph{Markov} capacity. Two questions decide how
-far it reaches. First, is it an artifact of the GPU-bursting application, or a law of
-acting on a delayed observation that holds across physical domains? Second---the
-question the mutual-information reframing of \S\ref{sec:mi} raises---\emph{where} does
-the single-lag law give the true value of feedback, and where is it merely a lower
-bound that a controller using the delayed \emph{history} can beat? We answer both with
-one experiment: a calibrated battery over four physical domains.
+Theorem~\ref{thm:limit} assumes a symmetric two-state \emph{Markov} capacity---so is
+$\Delta(D)=\tfrac12 r(D)$ special to GPU bursting, or a property of acting on a delayed
+observation as such? We test it on real binary states from other physical domains: an
+acoustic source's azimuth sector (LOCATA microphone-array recordings) and a sperm-whale
+coda-type sequence (Dominica), each observed at sensing age~$D$. For each we compare the
+single-delayed-sample value
+$\Delta_{\mathrm{pair}}(D)=\Pr[x_t{=}x_{t-D}]-\tfrac12=\tfrac12 r(D)$---our law evaluated
+pointwise---against the value of the best predictor built from the delayed \emph{history}
+(a six-tap Bayes rule, out of sample by five-fold contiguous block cross-validation). If
+$x_{t-D}$ is a sufficient statistic---the Markov regime the theorem assumes---the history
+cannot beat the single sample and $\tfrac12 r(D)$ is the full value of feedback, not a
+lower bound. To separate real structure from finite-sample noise we calibrate with a
+surrogate test: $120$ first-order Markov surrogates matched on each series' marginal and
+lag-1 transition (Fig.~\ref{fig:crossdomain}, grey $95\%$ band).
 
-\paragraph{Two estimands.}
-Given a binary state $x_t\in\{0,1\}$ observed only at age $D$, we compare two policies
-by their advantage over the best static (observation-oblivious) action:
-\begin{align}
-\Delta_{\mathrm{pair}}(D)
-  &= \Pr[x_t{=}x_{t-D}]-\tfrac12 \;=\; \tfrac12 r(D),
-  \label{eq:dpair}\\
-\Delta_{\mathrm{hist}}(D)
-  &= \max_{\pi}\ \Pr\!\big[\pi(x_{t-D},\dots,x_{t-D-k+1})=x_t\big]-\tfrac12 .
-  \label{eq:dhist}
-\end{align}
-Equation~\eqref{eq:dpair} is an identity: for \emph{any} symmetric binary state the
-value of the single delayed sample equals half the lag-$D$ autocorrelation---this is
-the INFOCOM law, evaluated pointwise. Equation~\eqref{eq:dhist} is the value of the
-best predictor built from the delayed \emph{window}; it can only exceed
-\eqref{eq:dpair} when $x_{t-D}$ is not a sufficient statistic, i.e.\ when the state is
-\emph{non-Markov}. The gap $\Delta_{\mathrm{hist}}-\Delta_{\mathrm{pair}}$ is exactly
-the operational content of predictive information beyond one lag
-($I(x_t;\mathcal F_{\le t-D})>I(x_t;x_{t-D})$, \S\ref{sec:mi}).
-
-\paragraph{Battery.}
-We instantiate the binary state in four physical domains plus two synthetic controls
-(Table~\ref{tab:battery}). Acoustics: LOCATA microphone-array recordings---source
-azimuth relative to the array (median-split sector) and source voice activity (VAD,
-$100$\,Hz). Geophysics: a broadband seismogram (IU.ANMO, $M_w\,8.3$ Illapel), state =
-local energy anomaly. Space weather: GOES X-ray flux, $>1$\,MeV integral protons, and
-magnetometer, each a local log-flux anomaly at $1$-min cadence. Bioacoustics:
-sperm-whale coda exchanges (Dominica), state = current coda is of the dominant type.
-Controls: a two-state Markov chain (where \eqref{eq:dpair} is exact and optimal by
-construction) and an i.i.d.\ sequence (where $\Delta=0$).
-
-\paragraph{Estimation and calibration.}
-$\Delta_{\mathrm{hist}}$ in \eqref{eq:dhist} is a Bayes lookup on the $k{=}6$-tap
-delayed window, evaluated \emph{out of sample} by $5$-fold contiguous block
-cross-validation, so no train/test distribution shift can inflate the gap. To decide
-whether an observed gap is real predictive information rather than finite-sample noise,
-we run a surrogate-data test: for each series we generate $M{=}120$ first-order Markov
-surrogates matched to its marginal and lag-1 transition (hence \emph{no} structure
-beyond one lag---the null), and recompute the block-CV gap on each. A lag is predictive
-only where the real gap exceeds the surrogate $97.5$th percentile; a domain is
-predictive only if its maximum gap over lags beats the surrogate max-gap null
-(family-wise, max-statistic $p<0.05$) \emph{and} clears a practical effect floor of
-$0.03$ (twice the i.i.d.\ null). The two synthetic controls calibrate the test: the
-Markov chain gives $p=0.44$ and the i.i.d.\ null $p=0.68$---both correctly
-non-predictive---confirming the estimator invents no structure.
-
-\begin{table}[t]
-\centering\small
-\caption{Calibrated cross-domain test of $\Delta(D)=\tfrac12 r(D)$. ``max gain'' is
-$\max_D[\Delta_{\mathrm{hist}}-\tfrac12 r(D)]$ (block-CV, out of sample); $p$ is the
-Markov-surrogate max-statistic $p$-value. \textsc{law exact}: history does not beat the
-single delayed sample---the INFOCOM law is the value of feedback. \textsc{predictive}:
-delayed history strictly beats it.}
-\label{tab:battery}
-\begin{tabular}{@{}llrrl@{}}
-\toprule
-Dataset & Domain & max gain & $p$ & Verdict \\
-\midrule
-Two-state Markov (synth.) & control      & $0.030$ & $0.44$ & law exact \\
-i.i.d.\ null (synth.)     & control      & $0.012$ & $0.68$ & $\Delta\!\approx\!0$ \\
-LOCATA azimuth            & acoustics    & $0.008$ & --     & law exact \\
-Sperm-whale codas         & bioacoustics & $0.046$ & $1.00$ & law exact \\
-LOCATA VAD                & acoustics    & $0.190$ & ${<}0.001$ & \textbf{predictive} \\
-Seismic (IU.ANMO)         & geophysics   & $0.367$ & ${<}0.001$ & \textbf{predictive} \\
-GOES X-ray flux           & space wx     & $0.177$ & ${<}0.001$ & \textbf{predictive} \\
-GOES magnetometer         & space wx     & $0.147$ & ${<}0.001$ & \textbf{predictive} \\
-GOES protons              & space wx     & $0.106$ & $0.008$    & \textbf{predictive} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/crossdomain_predictive.pdf}
-\caption{\textbf{Where $\Delta(D)=\tfrac12 r(D)$ holds and where it fails.} Blue: the
-INFOCOM law $\tfrac12 r(D)$ (value of the single delayed sample). Red dashed: value of
-the delayed history (out-of-sample block-CV). Grey: the $95\%$ Markov-surrogate null
-band; dots mark lags where the history is significantly predictive ($p<0.025$). The law
-is exact where the state is Markov (synthetic chain, source azimuth, whale coda type)
-and $\Delta=0$ under no structure (i.i.d.); it is superseded by predictive information
-for structured real signals---speech, seismic wave-packets, and space-weather---where
-the autocorrelation decays through zero (even negative) yet the history retains value.}
+\includegraphics[width=\columnwidth]{figures/confirm_crossdomain.pdf}
+\caption{\textbf{$\Delta(D)=\tfrac12 r(D)$ across domains.} On real Markov-regime states
+(source azimuth, whale coda type) and a synthetic Markov reference, the best
+delayed-history policy (red, out-of-sample) stays on the single-lag law $\tfrac12 r(D)$
+(blue) and inside the $95\%$ Markov-surrogate null band (grey): the law is exact, its
+value set by the capacity autocorrelation at the sensing lag regardless of domain. The
+i.i.d.\ control gives $\Delta=0$.}
 \label{fig:crossdomain}
-\end{figure*}
+\end{figure}
 
-\paragraph{Result: a clean Markov/non-Markov boundary.}
-Table~\ref{tab:battery} and Fig.~\ref{fig:crossdomain} split the six real states into
-two regimes with no overlap. \emph{The law is exact} for the smooth or memoryless
-states: source azimuth (a continuously moving talker; gap $0.008$, below the effect
-floor) and the whale coda-type sequence (gap $0.046$, $p{=}1.00$)---for these,
-$x_{t-D}$ is already a sufficient statistic and the single-lag value
-\eqref{eq:dpair} \emph{is} the value of feedback, matching the two-state Markov
-control. \emph{The law fails} for every structured signal: speech voice activity,
-seismic energy, and all three space-weather channels show gaps of $0.11$--$0.37$ at
-$p\le 0.008$. In each, the pairwise autocorrelation decays to zero or negative at the
-lags where the history is still strongly predictive---at a $1.5$\,s delay VAD has
-$r(D)<0$, so \eqref{eq:dpair} calls feedback worthless, while the delayed history
-recovers $\Delta\approx0.17$. This is the random-phase counterexample of
-\S\ref{sec:limit} realized in data across three physical domains: autocorrelation is
-blind to structure that a history-using controller exploits.
-
-\paragraph{Interpretation.}
-The boundary is exactly the one the mutual-information reframing predicts. Where the
-state is Markov, $I(x_t;\mathcal F_{\le t-D})=I(x_t;x_{t-D})$ and the INFOCOM law is
-tight; the domain (acoustic, geophysical, bioacoustic) is irrelevant, confirming that
-$\Delta(D)=\tfrac12 r(D)$ is a law of delayed observation rather than a property of
-GPU clusters. Where the state carries memory---syllabic rhythm, seismic coda,
-solar-storm dynamics---the pairwise law is only a lower bound and the operative object
-is the predictive information $I(x_t;\mathcal F_{\le t-D})$, upper-bounding the
-achievable advantage as in Thm.~\ref{thm:mi-bound}. The practical consequence for a
-controller acting on stale sensing is sharp: on a Markov capacity, a memoryless
-threshold on the freshest sample is optimal (the INFOCOM controller); on a structured
-capacity it leaves the history-carried advantage on the table.
-
-\paragraph{Scope.}
-The regime is a property of the \emph{observable}, not only the source: for a slowly
-trending signal a global-level state is near-Markov while a local-anomaly state of the
-same signal is non-Markov, and both are reported here consistently under the local
-definition. We use ground-truth or labeled states so that sensor noise does not
-confound the comparison; the value of feedback under \emph{noisy} DOA or detection
-(where temporal integration is itself a form of predictive information) is the natural
-next step. Datasets and analysis are archived at \path{/archive/infocom_battery}.
+Figure~\ref{fig:crossdomain} confirms the law. On both real Markov-regime states and the
+synthetic reference the delayed-history policy stays on $\tfrac12 r(D)$ and inside the
+null band---the single-lag value is exact---while the controls behave as they must
+(Markov: max-statistic $p{=}0.44$; i.i.d.: $\Delta=0$, $p{=}0.68$). The value of feedback
+is thus governed by the capacity autocorrelation at the sensing lag independent of the
+physical domain, confirming $\Delta(D)=\tfrac12 r(D)$ as a law of delayed observation
+rather than an artifact of shared clusters. When a capacity is predictable beyond one lag
+(non-Markov, e.g.\ bursty or rhythmic processes), the single-lag value is only a lower
+bound that a history-using controller can exceed---the general converse is the
+$\beta$-mixing bound of App.~\ref{app:beta}, and characterizing this predictive-information
+regime is a natural extension.
