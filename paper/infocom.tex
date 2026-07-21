@@ -158,7 +158,7 @@ completion; idle storage volumes are reclaimed. Admins monitor utilization and
 ban namespaces that hold under-utilized requests---so politeness is not optional.
 
 \textbf{Network reality.} The guest reaches the cluster over a single
-PAT-forwarded port or a mesh VPN, with no inbound access. A control plane must
+PAT (port address translation)-forwarded port or a mesh VPN, with no inbound access. A control plane must
 therefore live behind that boundary and communicate over a messaging fabric that
 traverses it---motivating the NATS leaf-node design of \S\ref{sec:fabric}.
 

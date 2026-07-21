@@ -19,7 +19,9 @@ lag $D$ is
 \beta(D)=\mathbb E\!\left[\ \sup_{B\in\mathcal F_{\ge t}}\big|\mathbb P(B\mid\mathcal F_{\le t-D})-\mathbb P(B)\big|\ \right],
 \end{equation}
 with $\beta(D)\!\to\!0$ iff the process is absolutely regular; geometrically mixing
-processes satisfy $\beta(D)\le c_0\varrho^{D}$ for some $\varrho\in(0,1)$. Fix any
+processes satisfy $\beta(D)\le c_0\varrho^{D}$ for some $\varrho\in(0,1)$. (The
+$\beta$-mixing coefficient always carries its lag argument $\beta(D)$; it is unrelated
+to the AIMD back-off factor $\beta$ of the controller.) Fix any
 bounded per-epoch objective $R(w,a)$---e.g.\ the politeness Lagrangian
 $R_\lambda(w,a)=\min(w,a)-\lambda(w-a)^{+}$---with oscillation
 $\Omega\triangleq\max_{w,a}R-\min_{w,a}R$. A causal age-$D$ controller sets $w_t$

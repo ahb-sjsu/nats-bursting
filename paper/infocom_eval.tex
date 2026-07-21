@@ -143,11 +143,11 @@ $\rho{=}0.64$---while sparing the neighbour ($76\%$ of its throughput retained v
 naive's $62\%$). The target $\epsilon$ is grounded in the host policy: NRP acts on
 \emph{persistently} under-utilized requests rather than momentary dips below the
 $\ge\!40\%$ GPU floor, so $\epsilon$ is the tolerable share of epochs a pod may sit
-under-utilized; read that way the $\rho{=}0.15$ aimd holds is a deliberately
+under-utilized; read that way the $\rho{=}0.15$ that aimd holds is a deliberately
 conservative operating point, inside a $\sim\!0.1$--$0.2$ band consistent with that
 floor at our epoch length. naive's higher goodput ($0.101$) is bought \emph{entirely} at the
 neighbour's expense: it over-admits two-thirds of the time and steals $38\%$ of the
-competitor's throughput. H1 and H2 hold with disjoint CIs.
+competitor's throughput (Fig.~\ref{fig:harm}). H1 and H2 hold with disjoint CIs.
 
 \textbf{Under unpredictable contention (poisson), feedback breaks even---and we
 report it.} aimd's goodput ($0.062$) is statistically indistinguishable from
@@ -265,7 +265,7 @@ $p$.} Two claims transfer cleanly from the controller-level model to hardware.
 $(1-2p)^D$ with mean $|\hat r-r|=0.07$, and the realized availability autocorrelation
 sits on the same curve (Fig.~\ref{fig:e9adapt}, left). \textbf{(A2)} The switch
 modulates as predicted---its closed-loop fraction falls from $0.98$ to $0.48$ as
-$r(D)$ drops past $\gamma$. The behavioural payoff, however, reads differently on
+$r(D)$ drops past the switch threshold $\theta$. The behavioural payoff, however, reads differently on
 real hardware than in the noise-free model, and the difference is instructive: raw
 goodput \emph{rewards over-admission}, so live AIMD out-goodputs static in
 \emph{every} regime---but at high flip rate that goodput is bought entirely with
@@ -287,7 +287,7 @@ live static is a fixed trickle with no tunable $\rho$ frontier to measure agains
 \caption{Live regime-adaptive controller on $2{\times}$GV100 (Markov $\tau_c$ sweep,
 $D{=}3$, two seeds). \emph{Left:} the online estimate $\hat r$ and the realized
 availability autocorrelation $r_{\text{emp}}$ land on $(1-2p)^D$; the
-closed-loop/static switch fires as $r(D)$ crosses $\gamma$. \emph{Right:} the
+closed-loop/static switch fires as $r(D)$ crosses the threshold $\theta$. \emph{Right:} the
 goodput--over-admission Pareto---adaptive tracks AIMD when feedback is useful and
 peels off toward static's politeness as $p$ grows, shedding over-admission exactly
 where $r(D)\!\to\!0$.}
