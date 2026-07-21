@@ -96,7 +96,9 @@ The joint follows from the two symmetric marginals and the single correlation.
 For the Markov chain the $D$-step transition is
 $P^D=\tfrac12\!\left(\begin{smallmatrix}1+\lambda^D&1-\lambda^D\\1-\lambda^D&1+\lambda^D\end{smallmatrix}\right)$
 with $\lambda=1-2p$, so $\Pr[\text{disagree}]=\tfrac12(1-\lambda^D)$ and
-$r=\lambda^D$.
+$r=\lambda^D$ (the two-state chain's autocorrelation and its total-variation
+distance to stationarity $\tfrac12\lambda^D$ are standard mixing
+facts~\cite{lpw}).
 \end{proof}
 
 \begin{theorem}[Achievable region and the feedback advantage]\label{thm:limit}
@@ -113,7 +115,11 @@ matched over-admission levels, is
 attained at the kink $\rho=q/2$ by the Bayes threshold policy $m_t=\hat x_t$ (at a
 lower level $\rho<q/2$ the gain is the smaller $\rho(1-2q)/q$); i.e.\ \emph{the peak
 value of closed-loop admission is exactly half the autocorrelation of available
-capacity at the sensing lag}.
+capacity at the sensing lag}. The optimality of such memoryless threshold policies
+for symmetric two-state Markov observation is itself classical in the
+opportunistic-access setting~\cite{myopicaccess}; what is new here is the exact
+value $\tfrac12 r(D)$ of the resulting feedback advantage over the best static
+budget.
 \end{theorem}
 \begin{proof}
 For the symmetric two-state Markov chain the freshest sample
@@ -151,6 +157,21 @@ App.~\ref{app:beta} makes the general statement precise, extending the impossibi
 arbitrary (non-binary, non-Markov) capacity processes with the decay rate set by
 $\beta(D)$.
 \end{corollary}
+
+\paragraph{Provenance and scope.}
+The ingredients of \eqref{eq:adv} are classical, and we claim none of them: the
+value of information is nonnegative and convex in the prior~\cite{howard1966}, it is
+bounded by the payoff oscillation times the total-variation movement of
+beliefs~\cite{delaragossner}, that movement at sensing age $D$ is precisely the
+$\beta$-mixing coefficient~\cite{bradley2005}, and for the symmetric two-state chain
+the mixing facts and memoryless-threshold optimality are standard~\cite{lpw,myopicaccess}.
+Our contribution is their assembly under \emph{age-limited, exogenous} sensing---the
+exact identity $\Delta(D)=\tfrac12 r(D)$ with threshold achievability, its
+$\beta$-mixing converse (App.~\ref{app:beta}), and its confirmation on real cluster
+contention (\S\ref{sec:eval}). The exogenous structure is essential: unlike the
+driven-plant setting of networked control, the admission action here does not affect
+capacity, which is exactly what collapses the value of feedback onto a single
+predictability coefficient.
 
 \begin{corollary}[The square/Poisson experiments are two points on \eqref{eq:adv}]
 \label{cor:exp}

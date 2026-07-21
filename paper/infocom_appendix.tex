@@ -31,6 +31,10 @@ optimal per-epoch values and $\Delta(D)=V^\star(D)-V_{\mathrm{stat}}$.
 $\psi(\mu)\triangleq\max_w\sum_a R(w,a)\,\mu(a)$ is convex on the simplex and
 $\Omega$-Lipschitz in total variation:
 $|\psi(\mu)-\psi(\mu')|\le\Omega\,\|\mu-\mu'\|_{\mathrm{TV}}$.
+(Convexity is the classical source of the nonnegativity of information
+value~\cite{howard1966}; the Lipschitz-in-TV bound is the payoffs--beliefs duality
+of~\cite{delaragossner}. Theorem~\ref{thm:beta} below is thus the standard
+value-of-information bound specialized to the mixing coefficient.)
 \end{lemma}
 \begin{proof}
 $\psi$ is a pointwise maximum of linear functionals, hence convex. Let $w_\mu$
@@ -69,7 +73,9 @@ over a larger field.
 \end{proof}
 
 \begin{corollary}[Binary tightness]\label{cor:tight}
-For the symmetric two-state model, $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$, so
+For the symmetric two-state model, $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$
+(a standard mixing identity: the $\beta$-coefficient of a stationary chain is its
+stationary-averaged distance to stationarity~\cite{bradley2005,lpw}), so
 Thm.~\ref{thm:beta} reproduces the exact advantage of Thm.~\ref{thm:limit} up to the
 objective scale $\Omega$. The autocorrelation form $\tfrac12 r(D)$ is thus the tight
 refinement of the general $\beta$-mixing rate: the $\beta$-coefficient \emph{is} half
