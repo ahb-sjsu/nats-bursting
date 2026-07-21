@@ -217,8 +217,23 @@ $r(D)\!\approx\!1$ and feedback is near-maximally useful (low $\rho$, large good
 gain); \emph{memoryless (Poisson)} load drives $\tau_c\lesssim D$, so
 $r(D)\!\approx\!0$ and feedback collapses onto static---the pre-registered null.
 The single curve \eqref{eq:adv} predicts both regimes and the crossover between
-them.
+them (Fig.~\ref{fig:phase}).
 \end{corollary}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/feedback_phase.pdf}
+\caption{\textbf{The impossibility as a map} (Cor.~\ref{cor:imp},~\ref{cor:exp}).
+The value of feedback $\Delta(D)=\tfrac12 r(D)=\tfrac12 e^{-D/\tau_c}$ over the
+sensing-age\,/\,coherence-time plane. Closed-loop admission is worth acting on only in
+the upper-left, where the guest senses the neighbour faster than it changes
+($\tau_c\!\gg\!D$); across the ridge $D=\tau_c$ the advantage collapses onto static.
+The two pre-registered contention regimes of \S\ref{sec:eval} sit on opposite sides:
+\emph{structured (square)} load ($\tau_c\!\gg\!D$) near the maximum, \emph{memoryless
+(Poisson)} load ($\tau_c\!\lesssim\!D$) at the floor---the null the regime-adaptive
+controller is built to detect. Marker placement is illustrative.}
+\label{fig:phase}
+\end{figure}
 
 The binary reduction is not a special case but the atom of the general problem.
 

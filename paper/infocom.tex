@@ -135,11 +135,15 @@ $r(D)\!\to\!0$ prediction the adaptive controller detects and sidesteps.
 \draw[->] (leaf) -- (ctrl);
 \draw[->] (ctrl) -- (pods) node[midway,above]{Job};
 \draw[->] (pods) to[bend right=25] node[midway,below]{results.$\langle$id$\rangle$} (leaf);
+\draw[->,dashed] (pods.north) to[bend right=30]
+  node[midway,above,align=center]{congestion $s_t$\\[-1pt](age $D$)} (ctrl.north);
 \end{tikzpicture}}
 \caption{\sysname{} architecture. The home client submits over a federated
 NATS leaf link; the in-cluster controller admits jobs (pacing concurrency to the
 politeness budget) and launches GPU worker pods, whose results route back through
-the leaf.}
+the leaf. The dashed arc is the stale feedback the controller acts on: an age-$D$
+congestion signal $s_t$ whose delay bounds the achievable advantage
+(Thm.~\ref{thm:limit}).}
 \label{fig:arch}
 \end{figure}
 
