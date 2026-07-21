@@ -190,7 +190,8 @@ general they need not---a decorrelated process ($r(D){=}0$) can still be exactly
 predictable from its history (e.g.\ a random-phase deterministic square wave)---so for
 an \emph{arbitrary} capacity process the vanishing of the advantage is governed by the
 $\beta$-mixing coefficient, not by $r(D)$. At $D=0$, $\Delta=\tfrac12$ (capacity is
-perfectly trackable); the advantage halves every $\tau_c\ln 2$ epochs of added age.
+perfectly trackable); the advantage halves every $\tau_c\ln 2$ epochs of added age
+(mapped, with the measured contention sweep, in Fig.~\ref{fig:phase}).
 App.~\ref{app:beta} makes the general statement precise, extending the impossibility to
 arbitrary (non-binary, non-Markov) capacity processes with the decay rate set by
 $\beta(D)$.
@@ -219,21 +220,24 @@ $r(D)\!\approx\!1$ and feedback is near-maximally useful (low $\rho$, large good
 gain); \emph{memoryless (Poisson)} load drives $\tau_c\lesssim D$, so
 $r(D)\!\approx\!0$ and feedback collapses onto static---the pre-registered null.
 The single curve \eqref{eq:adv} predicts both regimes and the crossover between
-them (Fig.~\ref{fig:phase}).
+them.
 \end{corollary}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/feedback_phase.pdf}
-\caption{\textbf{The impossibility as a map} (Cor.~\ref{cor:imp},~\ref{cor:exp}).
+\caption{\textbf{The impossibility as a map} (Cor.~\ref{cor:imp}).
 The value of feedback $\Delta(D)=\tfrac12 r(D)=\tfrac12 e^{-D/\tau_c}$ over the
-sensing-age\,/\,coherence-time plane. Closed-loop admission is worth acting on only in
-the upper-left, where the guest senses the neighbour faster than it changes
-($\tau_c\!\gg\!D$); as $D$ grows past the ridge $D=\tau_c$ the advantage decays to zero.
-The two pre-registered contention regimes of \S\ref{sec:eval} sit on opposite sides:
-\emph{structured (square)} load ($\tau_c\!\gg\!D$) near the maximum, \emph{memoryless
-(Poisson)} load ($\tau_c\!\lesssim\!D$) at the floor---the null the regime-adaptive
-controller is built to detect. Marker placement is illustrative.}
+sensing-age\,/\,coherence-time plane (log $\tau_c$ axis); closed-loop admission is
+worth acting on only where the guest senses the neighbour faster than it changes
+($\tau_c\!\gg\!D$), and the advantage decays to zero as $D$ grows past the ridge
+$D=\tau_c$. Points are the \emph{measured} \textsc{e9} markov contention sweep of
+\S\ref{sec:eval} (fixed $D{=}3$; flip rate $p$ walks the coherence
+$\tau_c(p)=-1/\ln(1-2p)$ down the axis), each shaded by the adaptive controller's
+measured closed-loop fraction: deep in the trackable regime ($p{=}0.01$) it stays
+closed-loop ($0.98$), and it opens onto static ($0.48$) as the sweep crosses the ridge
+into the break-even regime ($p{=}0.4$, $r(D)\!\approx\!0$)---the null the controller
+is built to detect.}
 \label{fig:phase}
 \end{figure}
 
