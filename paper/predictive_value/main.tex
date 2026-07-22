@@ -1,0 +1,232 @@
+\documentclass[11pt]{article}
+\usepackage[letterpaper,margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
+\newcommand{\TV}{\mathrm{TV}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\usepackage{xcolor}
+
+\title{\textbf{The Value of Delayed Information:\\
+Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
+\large Exact Bayes envelope generally; mutual-information bound universally;\\
+closed form in the symmetric Markov case}
+\author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
+Department of Computer Engineering, San Jos\'e State University\\
+\texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
+\date{Working draft --- v0.1 (theory core complete; battery + related work open)}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A controller that acts on information of age $D$ --- a sensing delay, a
+telemetry lag, a stale cache --- can outperform the best static policy only to
+the extent that the delayed observation still \emph{predicts} the current
+state. Our companion systems work \cite{infocom} proves this exactly for
+symmetric two-state Markov capacity ($\Delta(D)=\tfrac12 r(D)$, the
+autocorrelation at the sensing lag) with a $\beta$-mixing converse. This paper
+supplies the general theory. We (i) isolate the exact object --- the
+\emph{Bayes envelope} $\Delta_Y = \E[\psi(\mu_Y)]-\psi(\bar\mu)$, the expected
+excess value of posterior over prior beliefs; (ii) prove the universal
+\emph{predictive-information envelope}
+$0\le\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Y)}$ for any bounded objective with
+oscillation $\Omega$, by Pinsker's inequality applied to the posterior
+process; (iii) derive the \emph{bit-budget corollary}: a telemetry path
+delivering $b$ bits per decision caps feedback value at
+$\Omega\sqrt{(b\ln 2)/2}$ regardless of what is encoded --- compression can
+preserve but never create feedback value; (iv) show the envelope is
+\emph{tight to leading order} in the canonical case: for the symmetric binary
+chain $I=\tfrac{r^2}{2}+O(r^4)$, so the bound reads
+$\Omega(\tfrac r2+O(r^3))$ against the exact $\tfrac12 r$; and (v) prove by a
+two-bit construction that no universal equality $\Delta=f(I)$ can hold:
+mutual information is a scalar, decision value is a geometry, and two
+observations with identical $I$ can carry all or none of the
+decision-relevant distinction. A five-domain empirical section
+(cluster contention, acoustic, seismic, space weather, bioacoustic)
+tests the law and its envelopes on real processes.
+\end{abstract}
+
+\section{Introduction}\label{sec:intro}
+\todo{motivation prose; position vs.\ AoI (freshness metrics without
+decision semantics), value-of-information (Howard \cite{howard1966}; De
+Lara--Gossner \cite{delaragossner}), remote estimation, predictive
+information (Bialek et al.), delayed-sharing structures (Witsenhausen).
+The one-line thesis: \emph{age matters only through predictive
+information, and predictive information matters only through the Bayes
+envelope.}}
+
+\section{Setting and the exact object}\label{sec:envelope}
+
+Let $X$ be the current exogenous state taking values in a finite set
+$\mathcal X$, with marginal $\bar\mu$. A controller observes a delayed
+quantity $Y$ (a delayed sample $X_{t-D}$, a delayed history, or any
+$\sigma(\mathcal F_{\le t-D})$-measurable statistic), chooses an action $w$,
+and receives a bounded one-step reward $R(w,x)$ with oscillation
+$\Omega=\max_{w,x}R-\min_{w,x}R$. Define the value of a belief
+$\mu\in\Delta(\mathcal X)$:
+\[
+\psi(\mu)\;=\;\max_{w}\sum_{x}R(w,x)\,\mu(x),
+\]
+a pointwise maximum of linear functionals, hence convex; and the posterior
+$\mu_Y=\mathbb P(X\in\cdot\mid Y)$, with $\E[\mu_Y]=\bar\mu$ by the tower
+property. The optimal $Y$-measurable controller attains
+$V^\star_Y=\E[\psi(\mu_Y)]$; the best static controller attains
+$V_{\mathrm{stat}}=\psi(\bar\mu)$. The exact object of this paper is the
+\textbf{Bayes envelope}
+\begin{equation}\label{eq:envelope}
+\Delta_Y \;=\; V^\star_Y - V_{\mathrm{stat}}
+\;=\; \E\bigl[\psi(\mu_Y)\bigr]-\psi(\bar\mu)\;\ge\;0,
+\end{equation}
+nonnegative by Jensen. Everything that follows is an envelope on
+\eqref{eq:envelope}; the companion paper's exact law is the case where
+\eqref{eq:envelope} admits a closed form.
+
+\begin{lemma}[Lipschitz value {\cite[App.~A]{infocom}}]\label{lem:lip}
+$|\psi(\mu)-\psi(\mu')|\le\Omega\,\|\mu-\mu'\|_{\TV}$, hence
+$\Delta_Y\le\Omega\,\E\|\mu_Y-\bar\mu\|_{\TV}$.
+\end{lemma}
+
+The total-variation route specializes to the $\beta$-mixing converse of
+\cite{infocom} when $Y$ is the full delayed history:
+$\Delta(D)\le\Omega\,\beta(D)$.
+
+\section{The predictive-information envelope}\label{sec:mi}
+
+\begin{theorem}[Predictive-information bound]\label{thm:mi}
+For any bounded objective with oscillation $\Omega$ and any delayed
+observable $Y$,
+\begin{equation}\label{eq:mi}
+0\;\le\;\Delta_Y\;\le\;\Omega\,\sqrt{\tfrac12\,I(X;Y)}
+\qquad\text{($I$ in nats; in bits, }\Omega\sqrt{\tfrac{\ln 2}{2}\,I_{\mathrm{bits}}}\text{).}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+By Lemma~\ref{lem:lip}, $\Delta_Y\le\Omega\,\E\|\mu_Y-\bar\mu\|_{\TV}$.
+Pinsker's inequality gives, for every realization $y$,
+$\|\mu_y-\bar\mu\|_{\TV}\le\sqrt{\tfrac12\KL(\mu_y\|\bar\mu)}$. Taking the
+expectation over $Y$ and applying Jensen to the concave square root,
+\[
+\E\|\mu_Y-\bar\mu\|_{\TV}
+\;\le\;\E\sqrt{\tfrac12\KL(\mu_Y\|\bar\mu)}
+\;\le\;\sqrt{\tfrac12\,\E\,\KL(\mu_Y\|\bar\mu)}
+\;=\;\sqrt{\tfrac12\,I(X;Y)},
+\]
+the last equality being the definition of mutual information as the expected
+KL divergence of posterior from prior.
+\end{proof}
+
+\begin{corollary}[Bit-limited telemetry]\label{cor:bits}
+If the sensing path delivers at most $b$ bits per decision --- $Y=g(Z)$ with
+$Z$ the raw delayed signal and $H(Y)\le b\ln 2$ nats --- then
+$\Delta_Y\le\Omega\sqrt{(b\ln 2)/2}$, and moreover
+$\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Z)}$ regardless of $g$ (data
+processing). Compression can \emph{preserve} feedback value; no encoding can
+create it.
+\end{corollary}
+
+\begin{proposition}[Leading-order tightness in the canonical case]
+\label{prop:tight}
+For the symmetric two-state Markov chain with lag-$D$ autocorrelation
+$r=r(D)$,
+\[
+I(X_t;X_{t-D})=\tfrac12\bigl[(1{+}r)\ln(1{+}r)+(1{-}r)\ln(1{-}r)\bigr]
+=\tfrac{r^2}{2}+\tfrac{r^4}{12}+O(r^6),
+\]
+so the right side of \eqref{eq:mi} equals
+$\Omega\bigl(\tfrac r2+O(r^3)\bigr)$, matching the exact law
+$\Delta(D)=\tfrac12 r(D)$ of \cite{infocom} to leading order (at the
+objective normalization $\Omega=1$). The information envelope is not loose
+where it matters.
+\end{proposition}
+
+\begin{proof}
+The joint distribution places mass $\tfrac{1+r}{4}$ on each agreeing pair and
+$\tfrac{1-r}{4}$ on each disagreeing pair; the stated $I$ follows by direct
+computation, and the expansion from
+$(1\pm r)\ln(1\pm r)=\pm r+\tfrac{r^2}{2}\mp\tfrac{r^3}{6}+\cdots$. Then
+$\sqrt{\tfrac12 I}=\tfrac r2\sqrt{1+\tfrac{r^2}{6}+O(r^4)}$.
+\end{proof}
+
+\section{No universal equality \texorpdfstring{$\Delta=f(I)$}{Delta=f(I)}}
+\label{sec:noequality}
+
+\begin{proposition}[Information is a scalar; value is a geometry]
+\label{prop:noneq}
+There is a state space, a bounded objective, and two observations
+$Y_1, Y_2$ with $I(X;Y_1)=I(X;Y_2)>0$ but
+$\Delta_{Y_1}=\tfrac{\Omega}{2}\cdot\tfrac12>0=\Delta_{Y_2}$. Hence no
+function $f$ with $\Delta_Y=f(I(X;Y))$ exists for all experiments.
+\end{proposition}
+
+\begin{proof}
+Let $X=(B_1,B_2)$ be two independent fair bits and let the objective depend
+only on $B_1$: actions $w\in\{0,1\}$, $R(w,x)=\Omega\,\mathbf 1[w=B_1]$
+(so the oscillation is $\Omega$). Static value: $\Omega/2$. Let $Y_1=B_1$
+and $Y_2=B_2$. Both have $I(X;Y_i)=\ln 2$. Observing $Y_1$ yields
+$V^\star=\Omega$, so $\Delta_{Y_1}=\Omega/2$; observing $Y_2$ leaves the
+posterior over $B_1$ uniform, so $\Delta_{Y_2}=0$. The two experiments share
+every information quantity in $I(X;Y)$ yet differ maximally in value: the
+envelope \eqref{eq:mi} is attained within a constant on one and vacuous on
+the other.
+\end{proof}
+
+\begin{remark}
+This is the precise sense in which the companion paper's binary law is
+special: there the state is one decision-relevant bit, so the geometry
+collapses to a one-parameter family and the envelope inverts to an exact
+closed form. The general exact object remains \eqref{eq:envelope}.
+\end{remark}
+
+\section{Envelope comparison}\label{sec:comparison}
+\todo{$\beta$-mixing vs.\ $\sqrt{I/2}$: incomparable in general (examples
+both ways); both $\sim r/2$ for the binary chain; when $Y$ is the full
+history, $I$ may exceed the single-sample information while $\beta$
+saturates. Table of the three envelopes (TV/$\beta$, MI, bit-budget) with
+their hypotheses and regimes.}
+
+\section{Exactness beyond two states}\label{sec:multistate}
+\todo{layer-cake lift (cite \cite[Prop.~2]{infocom}): exact
+$\Delta(D)=\sum_u\pi_u r_u(D)$ for monotone-threshold objectives ---
+already a multi-state exact law; characterize the objective class for which
+the Bayes envelope admits closed form; asymmetric two-state case.}
+
+\section{The law across domains}\label{sec:battery}
+\todo{full five-domain battery (cluster contention, LOCATA acoustic,
+PDAR seismic, GOES space weather, sperm-whale codas): measured
+$\Delta(D)$ vs.\ $\tfrac12 r(D)$ vs.\ the MI envelope; Markov-surrogate
+calibration; the INFOCOM paper carries one paragraph of this ---
+the full protocol, controls, and per-domain figures belong here.
+Data: /archive/infocom\_battery (Atlas).}
+
+\section{Related work}\label{sec:related}
+\todo{Howard VoI \cite{howard1966}; De Lara--Gossner \cite{delaragossner};
+AoI surveys; remote estimation / Witsenhausen delayed sharing; Bialek
+predictive information; rate-distortion with side information; NCS.}
+
+\section{Conclusion}\label{sec:conclusion}
+\todo{}
+
+\begin{thebibliography}{9}
+\bibitem{infocom}
+A.~H.~Bond. Polite bursting: the value of delayed feedback in age-limited
+admission control. Under submission, IEEE INFOCOM 2027.
+
+\bibitem{howard1966}
+R.~A.~Howard. Information value theory.
+\emph{IEEE Trans.\ Systems Science and Cybernetics} 2(1):22--26, 1966.
+
+\bibitem{delaragossner}
+M.~De~Lara, O.~Gossner. Payoffs-beliefs duality and the value of
+information. \emph{SIAM J.\ Optimization} 30(1):287--310, 2020.
+\end{thebibliography}
+
+\end{document}
