@@ -16,12 +16,11 @@
 
 \title{\textbf{The Value of Delayed Information:\\
 Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
-\large Exact Bayes envelope generally; mutual-information bound universally;\\
-closed form in the symmetric Markov case}
+\large Envelopes, exact laws, and witnesses for age-limited decisions}
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.2 (complete draft: theory, hinge law, envelope comparison, battery, related work)}
+\date{Working draft --- v0.3 (major revision: polyhedral restriction + trichotomy, sign branches, preview repair, corrected statistics; battery v4 executing)}
 
 \begin{document}
 \maketitle
@@ -45,20 +44,23 @@ $\Omega\sqrt{(b\ln 2)/2}$ regardless of what is encoded --- compression can
 preserve but never create feedback value; (iv) show the envelope is
 \emph{tight to leading order} in the canonical case: for the symmetric binary
 chain $I=\tfrac{r^2}{2}+O(r^4)$, so the bound reads
-$\Omega(\tfrac r2+O(r^3))$ against the exact $\tfrac12 r$; (v) prove by a
+$\Omega(\tfrac {|r|}2+O(|r|^3))$ against the exact $\tfrac12 |r|$; (v) prove by a
 two-bit construction that no universal equality $\Delta=f(I)$ can hold:
 mutual information is a scalar, decision value is a geometry, and two
 observations with identical $I$ can carry all or none of the
-decision-relevant distinction; and (vi) give a \emph{complete} exactness
-theory for binary state --- for any bounded objective the value of a delayed
-sample is a \emph{hinge law} in the lag covariance, linear beyond a dead
-zone and identically zero inside it, with the companion's law as the
-symmetric zero-threshold case. A nine-series battery (acoustics,
-bioacoustics, space weather, seismology, plus synthetic controls) confirms
-the law where lag-1-matched surrogates say it must hold, observes the
+decision-relevant distinction; and (vi) give an exactness
+theory for binary state in which the local decision geometry at the prior
+sets the correlation exponent: for finite action sets the value of a
+delayed sample is exactly a sum of \emph{hinges} in the lag covariance with
+sign-dependent dead zones; for smooth objectives it is exactly quadratic
+(squared error: $\Delta=C^2/\pi(1-\pi)$); the companion's linear law is the
+prior-on-kink boundary case. A nine-series battery (acoustics,
+bioacoustics, space weather, seismology, plus synthetic controls) finds no
+detectable history excess (equivalence-bounded within a registered margin)
+on the series where lag-1-matched surrogates predict none, observes the
 envelope's predicted $O(r^2)$ tightness on real data, and inverts the
-theorem into a certified lower bound on history information where the
-processes are non-Markov.
+theorem into confidence-certified lower bounds on history information where
+the processes are non-Markov.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -97,33 +99,42 @@ geometry. This sharpens against the classical exception --- for
 \emph{logarithmic} (unbounded) utility, Kelly and Barron--Cover
 \cite{kelly56,barroncover88} show the value of side information \emph{equals}
 $I$; boundedness is exactly what breaks equality down to an envelope.
-(\textbf{C4}) We give a complete exactness theory for binary state: for
-\emph{any} bounded objective the value of a delayed sample obeys a
-\emph{hinge law} $\Delta(D)=\sum_k \Delta s_k\,(|C(D)|-C^*_k)^+$ in the
-lag-$D$ covariance --- linear beyond a dead zone, identically zero inside
-it --- recovering the companion's $\tfrac12 r(D)$ as the symmetric,
-zero-threshold case and lifting to multi-state monotone objectives by the
-layer-cake decomposition (\S\ref{sec:multistate}). The dead zone is a
-qualitative prediction: for asymmetric states, weakly-correlated feedback is
-\emph{worthless}, not merely weak. (\textbf{C5}) We order the three
+(\textbf{C4}) We give an exactness theory for binary state whose organizing
+fact is that \emph{the local geometry of the value function at the prior
+sets the correlation exponent}. For finite action sets (polyhedral value
+functions) the value of a delayed sample is exactly a sum of
+\emph{hinges} in the lag-$D$ covariance, with sign-dependent dead-zone
+thresholds --- linear response beyond, identically zero within; for smooth
+objectives (e.g.\ squared-error prediction, where exactly
+$\Delta=C(D)^2/\pi(1-\pi)$) the response is \emph{quadratic}; and a prior
+sitting on a kink --- the companion's symmetric case --- is the unique
+configuration with threshold-free linear response
+(\S\ref{sec:multistate}). The dead zone is the sharp polyhedral form of the
+Radner--Stiglitz nonconcavity of the value of information
+\cite{radnerstiglitz84}: for asymmetric states under a polyhedral
+objective, weakly-correlated feedback is \emph{worthless}, not merely weak,
+and the sign of the correlation matters. (\textbf{C5}) We order the three
 envelopes (mixing, information, bit-budget) below the master
 total-variation envelope and prove mixing and information are incomparable
---- the \emph{preview process} shows $\beta(D)$ can stay at $\tfrac12$
-forever while the information envelope correctly decays
-(\S\ref{sec:comparison}). (\textbf{C6}) A nine-series battery across four
-physical domains confirms the law where surrogates say it should hold,
+--- for every lag and every $K$, a \emph{preview process} keeps
+$\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
+vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A nine-series
+battery across four physical domains bounds any undetected history excess
+within a registered equivalence margin where surrogates predict none,
 observes the envelope's tightness, and --- read backwards --- uses the
-theorem as a \emph{certified witness} of history information on non-Markov
-series: $I(X_t;\text{history})\ge 2\widehat\Delta^2$
+theorem as a certified witness of history information on non-Markov
+series, always through a one-sided lower confidence bound:
+$I(X_t;\text{history})\ge 2[(\widehat\Delta-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}).
 
-Our techniques are deliberately elementary --- Pinsker's inequality, Jensen,
-piecewise-linear convex analysis --- and we do not claim depth for them.
-The contribution is the assembly: a single decision-theoretic object
+The scope is stated precisely: this is a unified theory for
+\emph{exogenous one-step bounded-reward decisions} under delay --- the
+action does not move the state, the reward is single-stage. Within that
+scope the theory is closed on itself: one decision-theoretic object
 explaining an exact systems law, envelopes ordered by what they require
-(model, samples, or a bit rate), sharpness results tying envelope to law,
+(a model, samples, or a bit rate), sharpness results tying envelope to law,
 impossibility results delimiting both, and a falsifiable empirical program
-run on real processes in five domains.
+run on real processes from four physical domains.
 
 \section{Setting and the exact object}\label{sec:envelope}
 
@@ -187,27 +198,48 @@ KL divergence of posterior from prior.
 \end{proof}
 
 \begin{corollary}[Bit-limited telemetry]\label{cor:bits}
-If the sensing path delivers at most $b$ bits per decision --- $Y=g(Z)$ with
-$Z$ the raw delayed signal and $H(Y)\le b\ln 2$ nats --- then
-$\Delta_Y\le\Omega\sqrt{(b\ln 2)/2}$, and moreover
-$\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Z)}$ regardless of $g$ (data
-processing). Compression can \emph{preserve} feedback value; no encoding can
-create it.
+Suppose the delivered observation satisfies $H(Y)\le b\ln 2$ nats (in
+particular, whenever $Y$ takes at most $2^b$ values, or is the output of a
+prefix code of expected length $\le b$ bits). Then
+\[
+\Delta_Y\;\le\;\Omega\,\min\Bigl\{1,\ \sqrt{(b\ln 2)/2}\Bigr\},
+\]
+the clip because the trivial range bound $\Delta_Y\le\Omega$ beats the
+square root already at $b\ge 3$ bits.
 \end{corollary}
+
+\begin{lemma}[Garbling never helps: value monotonicity]\label{lem:blackwell}
+If $Y=g(Z)$ (deterministically or through any channel acting on $Z$ alone),
+then $\Delta_Y\le\Delta_Z$, and also
+$\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Z)}$.
+\end{lemma}
+\begin{proof}
+$\mu_Y=\E[\mu_Z\mid Y]$ by the tower property, so convexity of $\psi$ and
+Jensen give $\E\psi(\mu_Y)\le\E\psi(\mu_Z)$; subtract $\psi(\bar\mu)$. The
+second claim is Theorem~\ref{thm:mi} plus data processing
+($I(X;Y)\le I(X;Z)$). Note the two statements are different in kind: data
+processing alone bounds only the information \emph{envelope}; the Jensen
+step bounds the \emph{value itself} --- the Blackwell comparison-of-
+experiments order \cite{blackwell53} specialized to garbled delayed
+sensing. Together: compression can preserve feedback value; no encoding of
+the delayed signal can create it.
+\end{proof}
 
 \begin{proposition}[Leading-order tightness in the canonical case]
 \label{prop:tight}
-For the symmetric two-state Markov chain with lag-$D$ autocorrelation
-$r=r(D)$,
+For a stationary fair binary pair with lag-$D$ correlation $r=r(D)$,
 \[
 I(X_t;X_{t-D})=\tfrac12\bigl[(1{+}r)\ln(1{+}r)+(1{-}r)\ln(1{-}r)\bigr]
 =\tfrac{r^2}{2}+\tfrac{r^4}{12}+O(r^6),
 \]
-so the right side of \eqref{eq:mi} equals
-$\Omega\bigl(\tfrac r2+O(r^3)\bigr)$, matching the exact law
-$\Delta(D)=\tfrac12 r(D)$ of \cite{infocom} to leading order (at the
-objective normalization $\Omega=1$). The information envelope is not loose
-where it matters.
+an even function of $r$, and the exact single-sample value of the $0/1$
+prediction objective is $\Delta(D)=\tfrac12|r(D)|$ (negative correlation is
+exploited by reversing the prediction). The right side of \eqref{eq:mi}
+equals $\Omega\bigl(\tfrac{|r|}2+O(|r|^3)\bigr)$: the envelope matches the
+exact law to leading order at $\Omega=1$. (The companion's persistent-chain
+assumption --- flip probability $\le\tfrac12$ --- gives $r\ge 0$ and its
+statement $\tfrac12 r$; we carry the absolute value throughout.) The
+information envelope is not loose where it matters.
 \end{proposition}
 
 \begin{proof}
@@ -225,7 +257,7 @@ $\sqrt{\tfrac12 I}=\tfrac r2\sqrt{1+\tfrac{r^2}{6}+O(r^4)}$.
 \label{prop:noneq}
 There is a state space, a bounded objective, and two observations
 $Y_1, Y_2$ with $I(X;Y_1)=I(X;Y_2)>0$ but
-$\Delta_{Y_1}=\tfrac{\Omega}{2}\cdot\tfrac12>0=\Delta_{Y_2}$. Hence no
+$\Delta_{Y_1}=\tfrac{\Omega}{2}>0=\Delta_{Y_2}$. Hence no
 function $f$ with $\Delta_Y=f(I(X;Y))$ exists for all experiments.
 \end{proposition}
 
@@ -278,47 +310,72 @@ $\beta$-coefficient takes its supremum over the larger future field
 proof of Theorem~\ref{thm:mi}.
 \end{proof}
 
+Throughout, we use the companion's event-supremum convention
+\[
+\beta(D)\;=\;\E\Bigl[\ \sup_{B\in\mathcal F_{\ge t}}
+\bigl|\mathbb P(B\mid\mathcal F_{\le t-D})-\mathbb P(B)\bigr|\ \Bigr],
+\]
+which lower-bounds the absolute-regularity coefficient; conventions differ
+by factors of two across the literature, and every displayed constant below
+is tied to this one. Lower bounds on this $\beta$ are what vacuousness of
+the mixing envelope requires.
+
 \begin{proposition}[The two relaxations are incomparable]\label{prop:incomp}
 Neither relaxation dominates the other.
 \begin{enumerate}
 \item[(i)] \emph{Mixing strictly tighter:} for the symmetric two-state chain
-with $Y=X_{t-D}$, $\beta(D)=\tfrac12 r$ while
-$\sqrt{\tfrac12 I}=\tfrac r2\sqrt{1+\tfrac{r^2}{6}+O(r^4)}>\beta(D)$ for
-every $r\in(0,1)$.
-\item[(ii)] \emph{Information arbitrarily tighter:} for every $K\ge 2$ there
-is a stationary state process and objective with
-$\beta(D)=\tfrac12$ for all $D$ (the mixing envelope never decays) while
-$\sqrt{\tfrac12 I(X;\mathcal F_{\le t-D})}=\sqrt{\ln 2/(2K)}\to 0$, and
-indeed $\Delta=\Omega/(2K)$.
+with $Y=X_{t-D}$, $\beta(D)=\tfrac12 |r|$ while
+$\sqrt{\tfrac12 I}=\tfrac {|r|}2\sqrt{1+\tfrac{r^2}{6}+O(r^4)}>\beta(D)$ for
+every $|r|\in(0,1)$.
+\item[(ii)] \emph{Information arbitrarily tighter:} for every fixed lag $D$
+and every $K\ge 2$ there is a stationary state process and bounded
+objective with
+\[
+\beta(D)\;\ge\;\tfrac12,
+\qquad
+I(X_t;\mathcal F_{\le t-D})\;\le\;h_2(1/K)+\tfrac{\ln 2}{K}\;\xrightarrow[K\to\infty]{}\;0,
+\qquad
+\Delta\;=\;\tfrac{\Omega}{2K},
+\]
+where $h_2$ is the binary entropy in nats: the mixing envelope stays
+$\ge\Omega/2$ while the information envelope, and the true value, vanish.
 \end{enumerate}
 \end{proposition}
 
 \begin{proof}
 (i) is Proposition~\ref{prop:tight} together with
-$\beta(D)=\tfrac12 r(D)$ for the binary chain \cite[Cor.~binary]{infocom}.
-(ii) \emph{The preview process.} Let $c_t$ be i.i.d.\ fair bits, let
-$\Theta\sim\mathrm{Unif}\{0,\dots,K{-}1\}$ be an independent phase, and let
-the observable state be $X_t=(c_t,p_t)$ with
+$\beta(D)=\tfrac12 |r(D)|$ for the binary chain (Appendix~\ref{app:companion}).
+(ii) \emph{The preview process (one per $(D,K)$).} Fix $D$ and $K$, set
+$m=D+K$. Let $c_t$ be i.i.d.\ fair bits, let
+$\Theta\sim\mathrm{Unif}\{0,\dots,K{-}1\}$ be an independent phase
+(randomized to make the pair stationary), and let the observable state be
+$X_t=(c_t,p_t)$ with
 \[
 p_t \;=\; \begin{cases} c_{t+m} & t\equiv\Theta \pmod K\\
 \bot & \text{otherwise},\end{cases}
-\qquad m = D+K,
 \]
 a sensor that occasionally publishes a \emph{forecast} $m$ steps ahead. The
 objective depends only on the current payoff bit:
-$R(w,x)=\Omega\,\mathbf 1[w=c]$. \emph{Mixing:} the window
-$[t-m,\,t-D]$ has length $K$, hence contains exactly one preview slot
-$s\equiv\Theta$; that preview reveals $c_{s+m}\in\{c_t,\dots,c_{t+K}\}$, a
-present-or-future payoff bit, so some event in $\mathcal F_{\ge t}$ has
-conditional probability in $\{0,1\}$ against marginal $\tfrac12$:
-$\beta(D)=\tfrac12$ for every $D$. \emph{Information:} the delayed history
-determines $c_t$ exactly when $t-m\equiv\Theta\pmod K$ (probability $1/K$
-over the phase) and is independent of $c_t$ otherwise, so
-$I(c_t;\mathcal F_{\le t-D})=\tfrac{\ln 2}{K}$. \emph{Value:} feedback wins
-$\Omega/2$ on the revealed fraction $1/K$ and nothing elsewhere:
-$\Delta=\Omega/(2K)$. The mixing envelope is vacuous; the information
-envelope $\Omega\sqrt{\ln 2/(2K)}$ decays with $K$ (at rate $K^{-1/2}$
-against the true $K^{-1}$ --- loose, but not blind).
+$R(w,x)=\Omega\,\mathbf 1[w=c]$.
+\emph{Mixing (lower bound).} The window $[t-m,\,t-D]$ has length $K$, hence
+contains exactly one preview slot $s\equiv\Theta$; that preview is in the
+delayed past and reveals $c_{s+m}$ with $s+m\in[t,\,t+K]$, a
+present-or-future payoff bit. The event $B=\{c_{s+m}=1\}\in\mathcal F_{\ge t}$
+then has conditional probability in $\{0,1\}$ against marginal $\tfrac12$,
+so $\beta(D)\ge\tfrac12$. (Previews shared between past and future create
+further dependence; we claim only the lower bound, which is what vacuousness
+of the mixing envelope needs.)
+\emph{Information (upper bound).} $X_t$ is determined by the triple
+(payoff bit $c_t$; slot indicator $\mathbf 1[t\equiv\Theta]$; preview value
+when present, a \emph{future} bit independent of the past). The delayed
+history reveals the slot indicator (it determines $\Theta$) and reveals
+$c_t$ itself exactly when $t-m\equiv\Theta$ (probability $1/K$); hence
+$I(X_t;\mathcal F_{\le t-D})\le h_2(1/K)+\tfrac{\ln2}{K}$.
+\emph{Value.} Feedback wins $\Omega/2$ on the revealed fraction $1/K$ and
+nothing elsewhere: $\Delta=\Omega/(2K)$. The information envelope
+$\Omega\sqrt{(h_2(1/K)+\ln2/K)/2}$ decays with $K$ (rate
+$\widetilde O(K^{-1/2})$ against the true $K^{-1}$ --- loose, but not
+blind); the mixing envelope does not decay at all.
 \end{proof}
 
 \begin{remark}[Why keep the information form at all]
@@ -346,9 +403,15 @@ information & $\Omega\sqrt{I(X;Y)/2}$ & pair samples & decision geometry (Prop.~
 bit budget & $\Omega\sqrt{(b\ln 2)/2}$ & channel rate only & everything but the rate \\
 \bottomrule
 \end{tabular}
-\caption{The envelope family. Each successive row needs less knowledge and
-pays for it in tightness; the battery of \S\ref{sec:battery} measures the
-first three on real processes.}
+\caption{The envelope family. The structure is a \emph{branching}, not a
+hierarchy: both mixing and information relax the master TV envelope, in
+incomparable directions (Proposition~\ref{prop:incomp}), and the bit budget
+further relaxes the information branch via
+Lemma~\ref{lem:blackwell}:
+$\text{TV} \rightarrow \{\ \text{mixing};\ \ \text{information}
+\rightarrow \text{bit budget}\ \}$. Each branch trades knowledge for
+tightness in its own currency; the battery of \S\ref{sec:battery} measures
+the first three on real processes.}
 \label{tab:envelopes}
 \end{table}
 
@@ -359,44 +422,103 @@ When does the Bayes envelope admit a closed form --- an exact \emph{law}
 rather than an envelope? For binary state the answer is: always, and the
 form is a hinge.
 
-\begin{theorem}[The hinge law]\label{thm:hinge}
+\begin{theorem}[The hinge law, polyhedral case]\label{thm:hinge}
 Let $X_t\in\{0,1\}$ be stationary with $\pi=\mathbb P(X_t{=}1)\in(0,1)$, let
-$Y=X_{t-D}$, and write $C=C(D)=\operatorname{Cov}(X_t,X_{t-D})$. For any
-bounded objective, the value function $\psi$ is convex piecewise-linear in
-the scalar belief $p=\mathbb P(X_t{=}1\mid\cdot)$, with kinks
+$Y=X_{t-D}$, and write $C=C(D)=\operatorname{Cov}(X_t,X_{t-D})$. Assume the
+action set is finite --- or, more generally, that the value function
+$\psi(p)=\sup_w[pR(w,1)+(1-p)R(w,0)]$ is \emph{polyhedral} (a maximum of
+finitely many affine functions of the belief), with kinks
 $p^*_1<\dots<p^*_K$ and slope jumps $\Delta s_k>0$. Then, exactly,
 \[
-\Delta(D)\;=\;\sum_{k=1}^{K}\Delta s_k\;
-\Bigl(|C(D)|-C^*_k\Bigr)^{\!+},
-\qquad
-C^*_k=\begin{cases}
-(p^*_k-\pi)\,\pi & \pi\le p^*_k,\ C\ge 0\\
-(\pi-p^*_k)(1-\pi) & \pi> p^*_k,\ C\ge 0,
+\Delta(C)\;=\;
+\begin{cases}
+\displaystyle\sum_{k}\Delta s_k\,\bigl(C-a^+_k\bigr)^{\!+}, & C\ge 0,\\[6pt]
+\displaystyle\sum_{k}\Delta s_k\,\bigl((-C)-a^-_k\bigr)^{\!+}, & C< 0,
 \end{cases}
+\qquad
+\begin{aligned}
+a^+_k&=\begin{cases}(p^*_k-\pi)\,\pi, & p^*_k\ge\pi,\\
+(\pi-p^*_k)(1-\pi), & p^*_k<\pi,\end{cases}\\
+a^-_k&=\begin{cases}(p^*_k-\pi)(1-\pi), & p^*_k\ge\pi,\\
+(\pi-p^*_k)\,\pi, & p^*_k<\pi.\end{cases}
+\end{aligned}
 \]
-with the mirrored thresholds for $C<0$. In particular $\Delta(D)$ is a
-nondecreasing piecewise-linear function of $|C(D)|$ that is
-\textbf{identically zero on the dead zone} $|C(D)|\le\min_k C^*_k$.
+$\Delta$ is piecewise-linear and nondecreasing in $|C|$ \emph{on each
+covariance-sign branch}, identically zero on the branch dead zone; unless
+$\pi=\tfrac12$ or the kink set is symmetric about $\pi$, the two branches
+differ --- positive and negative correlation of the same magnitude can have
+different value, one of them zero.
 \end{theorem}
 
 \begin{proof}
-$\psi(p)=\max_w[pR(w,1)+(1-p)R(w,0)]$ is a maximum of finitely many affine
-functions of $p$, hence convex piecewise-linear; write
-$\psi(p)=\psi(p^*_1)+s_0(p-p^*_1)+\sum_k\Delta s_k (p-p^*_k)^+$. Observing
+Write $\psi(p)=\psi(p^*_1)+s_0(p-p^*_1)+\sum_k\Delta s_k (p-p^*_k)^+$
+(polyhedral by hypothesis). Observing
 $Y$ produces the two-point posterior $p_1=\pi+C/\pi$ (w.p.\ $\pi$) and
 $p_0=\pi-C/(1-\pi)$ (w.p.\ $1-\pi$), whose mean is $\pi$; the affine part
-of $\psi$ therefore cancels in
-$\Delta=\E[\psi(p_Y)]-\psi(\pi)$, leaving
-$\Delta=\sum_k\Delta s_k\{\E(p_Y-p^*_k)^+-(\pi-p^*_k)^+\}$. Fix $k$ and
-$C\ge0$ (so $p_0\le\pi\le p_1$). If $\pi\le p^*_k$:
+of $\psi$ cancels in $\Delta=\E[\psi(p_Y)]-\psi(\pi)$, leaving
+$\Delta=\sum_k\Delta s_k\{\E(p_Y-p^*_k)^+-(\pi-p^*_k)^+\}$. Fix $k$. For
+$C\ge0$ ($p_0\le\pi\le p_1$): if $p^*_k\ge\pi$,
 $\E(p_Y-p^*_k)^+=\pi(p_1-p^*_k)^+=(C-(p^*_k-\pi)\pi)^+$ and
-$(\pi-p^*_k)^+=0$. If $\pi>p^*_k$: by the pointwise identity $(x)^+-x=(-x)^+$,
-$\E(p_Y-p^*_k)^+-(\pi-p^*_k)=\E(p^*_k-p_Y)^+$, and only the lower posterior
-can fall below the kink, so this equals
-$(1-\pi)\,(p^*_k-p_0)^+=(C-(\pi-p^*_k)(1-\pi))^+$. The case
-$C<0$ mirrors with $p_0$ and $p_1$ exchanged. Summing over $k$ gives the
-statement.
+$(\pi-p^*_k)^+=0$; if $p^*_k<\pi$, the pointwise identity $(x)^+-x=(-x)^+$
+gives $\E(p_Y-p^*_k)^+-(\pi-p^*_k)=\E(p^*_k-p_Y)^+
+=(1-\pi)(p^*_k-p_0)^+=(C-(\pi-p^*_k)(1-\pi))^+$. For $C<0$ the posteriors
+trade places ($p_1<\pi<p_0$): if $p^*_k\ge\pi$, only $p_0$ can exceed the
+kink and $\E(p_Y-p^*_k)^+=(1-\pi)(p_0-p^*_k)^+=((-C)-(p^*_k-\pi)(1-\pi))^+$;
+if $p^*_k<\pi$, the same identity gives
+$\pi(p^*_k-p_1)^+=((-C)-(\pi-p^*_k)\pi)^+$. Summing over $k$ gives the two
+branches.
 \end{proof}
+
+\subsection{Smooth objectives: quadratic response, and the trichotomy}
+\label{sec:smooth}
+
+The polyhedral hypothesis is not decoration. For a continuous action set
+$\psi$ is a supremum of \emph{infinitely} many affine functions and need
+not be piecewise-linear, and the hinge law fails --- constructively:
+
+\begin{proposition}[Squared-error prediction: exactly quadratic]
+\label{prop:quadratic}
+For $w\in[0,1]$ and $R(w,x)=-(w-x)^2$ (oscillation $\Omega=1$),
+$\psi(p)=-p(1-p)$ is smooth and strictly convex, and, exactly,
+\[
+\Delta(D)\;=\;\operatorname{Var}(p_Y)\;=\;\frac{C(D)^2}{\pi(1-\pi)}:
+\]
+quadratic in the covariance, no hinge, no dead zone, for every $\pi$. More
+generally, whenever $\psi$ is twice continuously differentiable near $\pi$,
+\[
+\Delta(D)\;=\;\tfrac12\,\psi''(\pi)\operatorname{Var}(p_Y)+o(C^2)
+\;=\;\frac{\psi''(\pi)}{2\pi(1-\pi)}\,C(D)^2+o\bigl(C(D)^2\bigr).
+\]
+\end{proposition}
+\begin{proof}
+The optimal action under belief $p$ is $w=p$, so
+$\psi(p)=-p(1-p)=p^2-p$; then
+$\Delta=\E[\psi(p_Y)]-\psi(\pi)=\E[p_Y^2]-\pi^2=\operatorname{Var}(p_Y)$,
+exact because $\psi$ is quadratic, and
+$\operatorname{Var}(p_Y)=\pi(C/\pi)^2+(1-\pi)\bigl(C/(1-\pi)\bigr)^2
+=C^2/\pi(1-\pi)$. The general statement is the second-order Taylor
+expansion of $\psi$ at $\pi$ against the mean-$\pi$ posterior spread.
+\end{proof}
+
+\begin{remark}[The trichotomy: local decision geometry sets the
+correlation exponent]\label{rem:trichotomy}
+The cases exhaust the local behaviours of a convex $\psi$ at the prior, and
+each fixes how weak dependence buys value: \emph{prior on a kink}
+$\Rightarrow$ linear response $\Delta\propto|C|$; \emph{prior interior to a
+flat piece} $\Rightarrow$ dead zone, $\Delta=0$ until a threshold;
+\emph{smooth curvature} $\Rightarrow$ quadratic response
+$\Delta\propto C^2$. The companion's law is the first case --- symmetry
+puts the prior on the decision kink, the unique threshold-free polyhedral
+configuration. The dead zone is the sharp polyhedral form of the
+Radner--Stiglitz nonconcavity of the value of information
+\cite{radnerstiglitz84}, whose smooth setting is our third case (zero
+marginal value at zero information, but not identically zero). And the
+sign-dependence of Theorem~\ref{thm:hinge} means even the \emph{direction}
+of correlation matters away from symmetry: with $\pi=0.2$ and one kink at
+$p^*=0.3$, covariance $+0.03$ clears its threshold $(0.1)(0.2)=0.02$ and
+has value, while $-0.03$ sits inside its threshold $(0.1)(0.8)=0.08$ and is
+worthless.
+\end{remark}
 
 \begin{corollary}[The companion law, and why it is threshold-free]
 For the symmetric chain ($\pi=\tfrac12$) with the $0/1$ prediction
@@ -442,12 +564,14 @@ correlation or information alike.
 
 The companion paper had room for one paragraph of this study; the full
 protocol and results are reported here. The question has two halves. First,
-\emph{the law}: is $\Delta(D)=\tfrac12 r(D)$ --- exact for symmetric binary
-Markov capacity --- also the operative value of feedback on \emph{real}
-binary state processes, i.e., does history beyond the single delayed sample
-add value? Second, \emph{the envelope}: does the measured value respect, and
-how tightly does it approach, the predictive-information bound of
-Theorem~\ref{thm:mi}?
+\emph{single-sample sufficiency}: on real binary state processes, does
+history beyond the single delayed sample add decision value beyond the
+\emph{exact empirical single-sample Bayes value} --- computed from the
+pooled $2{\times}2$ lag table with no symmetry assumption, so that
+Theorem~\ref{thm:hinge}'s imbalance effects (dead zones included) are
+carried automatically? Second, \emph{the envelope}: does the measured value
+respect, and how tightly does it approach, the predictive-information bound
+of Theorem~\ref{thm:mi}?
 
 \subsection{Protocol}
 
@@ -461,45 +585,69 @@ as null. Each series is binarized by the domain's registered thresholding
 (the companion study's preparation scripts, unchanged).
 
 \textbf{The two estimands.} For each lag $D$ on a per-domain grid:
-(i) the pooled lag-$D$ autocorrelation $r(D)$, giving the law value
-$\tfrac12 r(D)$; (ii) the value of the best \emph{delayed-history} policy
-$\widehat\Delta_{\mathrm{hist}}(D)$: a $k{=}6$-lag lookup predictor trained
-and evaluated by blocked cross-validation (5 folds, contiguous blocks, no
-leakage across fold boundaries), reported as accuracy above chance ---
-the operational value of feedback for the $0/1$ prediction objective
-($\Omega=1$, for which the binary law reads exactly $\tfrac12 r$).
+(i) the \emph{exact empirical single-sample Bayes value}
+$\widehat V_1(D)=\sum_y \hat w_y \max(\hat p_y, 1-\hat p_y)
+-\max(\hat\pi,1-\hat\pi)$, the plug-in of \eqref{eq:envelope} for
+$Y=X_{t-D}$ computed from the pooled lag table --- for a balanced series
+this is $\tfrac12|r(D)|$, and for an imbalanced one it carries
+Theorem~\ref{thm:hinge}'s thresholds automatically (the per-domain class
+proportion $\hat\pi$ is reported alongside); (ii) the value of the best
+\emph{delayed-history} policy: a $k{=}6$-lag lookup predictor trained and
+evaluated by blocked cross-validation (5 folds, contiguous blocks),
+reported as accuracy above the \emph{best static (majority) policy}
+$\max(\hat\pi,1-\hat\pi)$ --- the correct static benchmark; accuracy above
+$\tfrac12$ overstates value whenever $\hat\pi\neq\tfrac12$. The
+\emph{history gain} is the difference (ii)$-$(i).
 
 \textbf{Surrogate calibration.} The null for ``history adds nothing beyond
 the law'' is a population of $60$ Markov surrogates per domain, each matched
 to the real series' lag-1 transition probabilities and evaluated by the
-identical pipeline. The gain
-$\widehat\Delta_{\mathrm{hist}}-\tfrac12 r$ is called significant only if
-its maximum over the lag grid exceeds the surrogate maxima at $p<0.05$
-\emph{and} clears a practical floor of $0.03$ (twice the i.i.d.\ null's
-estimator fluctuation) --- the dual criterion of the companion study.
+identical pipeline, with $M=299$ surrogates. Significance uses the exact
+Monte Carlo form $p=(1+\#\{T_j\ge T_{\mathrm{obs}}\})/(M+1)$ (smallest
+reportable value $1/300\approx0.0033$; entries at that floor are written
+$p<.004$, never $.00$), together with the companion study's practical floor
+of $0.03$ on the effect. Because each surrogate is Markov, its \emph{true}
+history gain is zero and its own exact $\widehat V_1$ is computable from
+its lag table, so the $M$ surrogate gain estimates form a genuine sample of
+the pipeline's \emph{estimation error under matched dependence}; its
+$95$th percentile $\varepsilon_{\mathrm{dom}}$ calibrates every one-sided
+bound below. \emph{Non-rejection is not exactness}: where the test does
+not fire, we report the one-sided upper confidence bound
+$U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ and claim ``no
+detectable excess (equivalent within the margin)'' only when $U<0.03$.
 
-\textbf{The envelope measurement.} New here: for each domain and lag, the
-plug-in mutual information $\widehat I(X_t;X_{t-D})$ from pooled pair counts
-($2{\times}2$ table; plug-in bias $\le 3/(2N)$ nats at the smallest pooled
-$N$ in the battery, negligible at the reported scale), and the envelope
-$\sqrt{\widehat I/2}$ of Theorem~\ref{thm:mi}. Because
-$\widehat\Delta_{\mathrm{hist}}$ is a noisy estimate, the registered check is
+\textbf{The envelope measurement.} For each domain and lag, the plug-in
+mutual information $\widehat I(X_t;X_{t-D})$ from pooled pair counts
+($2{\times}2$; plug-in bias $\le 3/(2N)$ nats, negligible at the pooled
+sample sizes reported) and the envelope $\sqrt{\widehat I/2}$ of
+Theorem~\ref{thm:mi}. Two registered uses. \emph{Forward} (envelope
+check): $\widehat\Delta_{\mathrm{hist}}(D)\le\sqrt{\widehat I(D)/2}
++\varepsilon_{\mathrm{dom}}$ --- an apparent violation smaller than the
+matched-dependence noise is estimator noise, not physics. \emph{Backward}
+(certified witness): a policy value is converted into an information lower
+bound only through its one-sided \emph{lower} confidence bound,
 \[
-\widehat\Delta_{\mathrm{hist}}(D)\;\le\;\sqrt{\widehat I(D)/2}\;+\;
-\varepsilon_{\mathrm{est}},
+I(X_t;\text{window})\;\ge\;2\,\bigl[(\widehat\Delta_{\mathrm{hist}}
+-\varepsilon_{\mathrm{dom}})^{+}\bigr]^{2},
 \]
-with $\varepsilon_{\mathrm{est}}$ the maximum absolute fluctuation of the
-same estimator on the i.i.d.\ null --- the null calibrates the noise floor,
-so an apparent ``violation'' smaller than what pure noise produces on a
-zero-information series is reported as estimator noise, not physics.
+never through the raw point estimate, whose positive noise would inflate
+the certificate.
 
 \subsection{Results}
 
-Table~\ref{tab:battery} reports, per domain: the maximum history gain beyond
-the law with its surrogate $p$-value; the per-domain noise bound
-$\varepsilon_{\mathrm{dom}}$ (the maximum of the surrogates' $97.5\%$ gain
-band --- surrogates have zero true history gain by construction and share the
-domain's series lengths, so they calibrate its estimator noise); the maximum
+\emph{[Interim: the table below is the v3 run --- chance baseline, $M=60$,
+point-estimate witnesses --- retained as the repository record while the v4
+run under the corrected protocol above ($M=299$, majority baseline, exact
+$\widehat V_1$, equivalence and certificate bounds) executes; the table and
+prose will be replaced by v4. Two v3 artifacts are already explained by the
+correction: env$/$law ratios below one are impossible in population for
+\emph{balanced} pairs ($\sqrt{I/2}\ge|r|/2$ is Pinsker), so the sub-unity
+entries flag exactly the imbalanced series the chance baseline mishandles;
+and the ``$p=.00$'' entries are $p<.017$ at $M=60$.]}
+
+Table~\ref{tab:battery} reports, per domain: the maximum history gain
+with its surrogate $p$-value; the per-domain noise bound
+$\varepsilon_{\mathrm{dom}}$; the maximum
 excess of the history policy over the \emph{single-lag} envelope
 $\sqrt{\hat I(X_t;X_{t-D})/2}$; and the tightness ratio
 envelope$/$law (median over lags with $r>0.05$).
@@ -510,11 +658,11 @@ envelope$/$law (median over lags with $r>0.05$).
 Domain & gain$_{\max}$ & $p$ & $\varepsilon_{\mathrm{dom}}$ &
 $\max(\widehat\Delta-\mathrm{env}_1)$ & env$/$law & verdict \\
 \midrule
-Two-state Markov (ref)   & $0.030$ & $.38$ & $0.069$ & $+0.023$ & $1.001$ & law exact \\
+Two-state Markov (ref)   & $0.030$ & $.38$ & $0.069$ & $+0.023$ & $1.001$ & no detectable excess \\
 i.i.d.\ null (control)   & $0.012$ & $.68$ & $0.016$ & $+0.012$ & ---     & $\Delta\approx 0$ \\
-LOCATA azimuth           & $0.008$ & $.05$ & $0.007$ & $-0.013$ & $1.099$ & law exact \\
-Sperm-whale codas        & $0.046$ & $.98$ & $0.112$ & $+0.045$ & $1.010$ & law exact \\
-GOES protons             & $0.029$ & $.77$ & $0.048$ & $+0.030$ & $0.998$ & law exact \\
+LOCATA azimuth           & $0.008$ & $.05$ & $0.007$ & $-0.013$ & $1.099$ & no detectable excess \\
+Sperm-whale codas        & $0.046$ & $.98$ & $0.112$ & $+0.045$ & $1.010$ & no detectable excess \\
+GOES protons             & $0.029$ & $.77$ & $0.048$ & $+0.030$ & $0.998$ & no detectable excess \\
 \addlinespace
 LOCATA VAD               & $0.100$ & $.00$ & $0.059$ & $\mathbf{+0.128}$ & $0.940$ & history adds \\
 GOES X-ray flux          & $0.185$ & $.00$ & $0.100$ & $+0.071$ & $0.937$ & history adds \\
@@ -574,13 +722,20 @@ certifies the window-information excess lower-block.
 \section{Related work}\label{sec:related}
 
 \emph{Value of information.} The Bayes envelope is the classical object of
-statistical decision theory \cite{howard1966,raiffa61}; De Lara and Gossner
-\cite{delaragossner} develop the payoffs--beliefs duality our Lipschitz
-lemma instantiates. The information envelope itself is assembled from
-textbook inequalities (Pinsker, Jensen), and we make no claim of depth for
-the inequality in isolation --- kindred moves appear wherever bounded value
-must be controlled by divergence, e.g.\ the information-ratio regret
-analyses of Russo and Van Roy \cite{russo16}. What we have not found
+statistical decision theory \cite{howard1966,raiffa61}, and its convex
+geometry is charted territory: De Lara and Gossner \cite{delaragossner}
+study the value function as a support function, characterize when
+information has positive value, and give local estimates near
+uninformative experiments. Our Lipschitz lemma instantiates their
+payoffs--beliefs duality; the hinge and dead-zone analysis of
+\S\ref{sec:multistate} is the exact delayed-binary specialization of that
+convex-analytic programme; the comparison-of-experiments order behind
+Lemma~\ref{lem:blackwell} is Blackwell's \cite{blackwell53}; and the
+Radner--Stiglitz nonconcavity \cite{radnerstiglitz84} anticipates the dead
+zone in smooth form. The information envelope itself is assembled from
+textbook inequalities --- kindred moves appear wherever bounded value must
+be controlled by divergence, e.g.\ the information-ratio regret analyses of
+Russo and Van Roy \cite{russo16}. What we have not found
 elsewhere is the assembly this paper is about: the envelope \emph{anchored
 to an exact law} (sharp to $O(r^3)$, with the $O(r^2)$ correction observed
 on real data), its ordering against mixing envelopes with both separations
@@ -595,12 +750,20 @@ brackets the landscape --- unbounded log utility buys equality, bounded
 utility only an envelope, and Proposition~\ref{prop:noneq} shows the gap is
 essential, not technical.
 
-\emph{Age of information.} AoI \cite{yates21} treats freshness as the
-object, with sampling-policy results such as \cite{sun17} optimizing age
-processes. Our thesis is complementary: age has decision value only through
-predictive information (the battery's i.i.d.\ null has perfect freshness
-semantics and zero value), and the hinge law shows even the map from
-correlation to value can have a dead zone freshness metrics cannot see.
+\emph{Age of information, and its critics.} AoI \cite{yates21} treats
+freshness as the object, with sampling-policy results such as \cite{sun17}
+optimizing age processes. That plain age is not decision significance is
+already argued \emph{within} the field: age-of-incorrect-information
+replaces the clock with an error-aware penalty \cite{maatouk20}, explicit
+AoI-vs-VoI scheduling comparisons exist for networked control
+\cite{ayan19}, and value-of-information metrics for feedback control have
+been quantified directly \cite{soleymani22}. Our claim is accordingly not
+that age lacks decision semantics --- that point is established --- but
+sharper: for exogenous one-step bounded-reward decisions the exact semantic
+object is the posterior Bayes envelope, which admits a universal
+mutual-information converse, an explicit binary geometry (hinges, dead
+zones, quadratic regimes), and an operational inversion into
+predictive-information witnesses.
 
 \emph{Delayed information in control.} Delayed-sharing information
 structures go back to Witsenhausen \cite{witsenhausen68} and are
@@ -621,7 +784,8 @@ predictive information from policy value alone.
 \section{Conclusion}\label{sec:conclusion}
 
 The companion paper measured one exact law on one system. This paper
-locates that law inside a small, complete theory: value of delayed
+locates that law inside a unified theory of exogenous one-step
+bounded-reward decisions under delay: value of delayed
 information is the Bayes envelope; the envelope is bounded by predictive
 information (universally), by mixing (given a model), and by the telemetry
 bit rate (given nothing); it is exactly a hinge in covariance for binary
@@ -629,11 +793,46 @@ state, exactly a layered sum for monotone multi-state objectives, and
 exactly nothing --- inside the dead zone --- for asymmetric weakly-coupled
 sensing. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the nine-series
-battery exercises all of them: the law holds where surrogates say it must,
+battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
 the envelope's predicted tightness appears with its $O(r^2)$ correction,
 and its violations, where the theory requires them, certify history
 information in nats. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
+
+\appendix
+\section{Companion results restated}\label{app:companion}
+
+For self-containedness we restate the companion results used above, with
+proofs where short; \cite{infocom} is under submission and unavailable to a
+reviewer.
+
+\paragraph{Mixing coefficient.} Throughout,
+$\beta(D)=\E[\sup_{B\in\mathcal F_{\ge t}}
+|\mathbb P(B\mid\mathcal F_{\le t-D})-\mathbb P(B)|]$ (event-supremum
+convention; a lower bound for the absolute-regularity coefficient, so the
+vacuousness results transfer conservatively).
+
+\paragraph{Binary chain.} For the symmetric two-state chain with flip
+probability $p$ and $r(D)=(1-2p)^D$: conditioning on the delayed state
+moves the law of $X_t$ by total variation $\tfrac12|r(D)|$ from either
+value of the conditioner, and the Markov property collapses the past to the
+delayed sample; hence $\beta(D)=\tfrac12|r(D)|$. The exact value of the
+$0/1$ prediction objective is $\Delta(D)=\tfrac12|r(D)|$: predict the
+delayed state if $r>0$, its complement if $r<0$; either beats the static
+$\tfrac12$ by half the correlation magnitude.
+
+\paragraph{Layer-cake lift (companion Prop.~2; statement and sketch).}
+For capacity $a_t\in\{0,\dots,C\}$, threshold indicators
+$x^u_t=\mathbf 1[a_t\ge u]$ with $\pi_u=\mathbb P(x^u_t{=}1)$, and
+objectives that are positive combinations of per-layer threshold rewards
+(goodput minus over-admission surplus in the companion's setting), the
+objective decomposes additively over layers via
+$\min(w,a)=\sum_u\mathbf 1[w\ge u]\,x^u_t$ and
+$(w-a)^+=\sum_u\mathbf 1[w\ge u](1-x^u_t)$; the age-$D$ optimum applies the
+per-layer binary policy (the delayed indicators, whose nesting is inherited
+from the observation), and the total advantage over the best comonotone
+static budget at matched surplus is
+$\Delta(D)=\sum_u\pi_u r_u(D)$, $r_u(D)=\mathrm{corr}(x^u_t,x^u_{t-D})$.
 
 \begin{thebibliography}{9}
 \bibitem{infocom}
@@ -682,6 +881,30 @@ partial history sharing: a common information approach.
 \bibitem{russo16}
 D.~Russo, B.~Van~Roy. An information-theoretic analysis of Thompson
 sampling. \emph{J.\ Machine Learning Research} 17(68):1--30, 2016.
+
+\bibitem{blackwell53}
+D.~Blackwell. Equivalent comparisons of experiments.
+\emph{Annals of Mathematical Statistics} 24(2):265--272, 1953.
+
+\bibitem{radnerstiglitz84}
+R.~Radner, J.~E.~Stiglitz. A nonconcavity in the value of information. In
+M.~Boyer, R.~Kihlstrom (eds.), \emph{Bayesian Models in Economic Theory},
+North-Holland, 33--52, 1984.
+
+\bibitem{maatouk20}
+A.~Maatouk, S.~Kriouile, M.~Assaad, A.~Ephremides. The age of incorrect
+information: a new performance metric for status updates.
+\emph{IEEE/ACM Trans.\ Networking} 28(5):2215--2228, 2020.
+
+\bibitem{ayan19}
+O.~Ayan, M.~Vilgelm, M.~Kl\"ugel, S.~Hirche, W.~Kellerer.
+Age-of-information vs.\ value-of-information scheduling for cellular
+networked control systems. In \emph{Proc.\ ACM/IEEE ICCPS}, 2019.
+
+\bibitem{soleymani22}
+T.~Soleymani, J.~S.~Baras, K.~H.~Johansson. Value of information in
+feedback control: quantification.
+\emph{IEEE Trans.\ Automatic Control} 67(7):3730--3737, 2022.
 
 \bibitem{bialek01}
 W.~Bialek, I.~Nemenman, N.~Tishby. Predictability, complexity, and

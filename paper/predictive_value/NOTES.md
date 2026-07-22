@@ -42,3 +42,30 @@ Pinsker upgrade path + the universal-equality caution. Steps 1–3 of its proof
 are verbatim INFOCOM App A (Lemma lip / Thm beta); step 4 (Pinsker+Jensen+
 E[KL]=I) is the only new inequality, verified cold this session including the
 binary tightness computation I = r²/2 + O(r⁴) ⇒ bound = Ω(r/2 + O(r³)).
+
+## Review round 1 (2026-07-22) — all major points verified correct, v0.3 lands the repairs
+
+1. **Hinge law over-claimed**: restricted to finite-action/polyhedral; smooth
+   counterexample added (squared error: Δ = C²/π(1−π), exactly quadratic);
+   the **trichotomy** (kink→linear / flat→dead zone / smooth→quadratic) is
+   now the organizing result — a strictly better paper.
+2. **Sign branches**: hinge thresholds differ by covariance sign (a⁺ vs a⁻,
+   π ↔ 1−π swap); reviewer's π=0.2/p*=0.3 example included.
+3. **Preview process repaired**: per-(D,K) quantifiers; MI ≤ h₂(1/K)+ln2/K
+   (phase term); β(D) ≥ ½ lower bound only; β convention stated.
+4. Prop noneq typo (Ω/2). 5. |r| throughout tightness.
+6-10. **Battery v4** (running): majority baseline, exact 2×2 Bayes value V̂₁
+   (imbalance/dead-zone aware), M=299, exact MC p (no more p=.00),
+   equivalence bound U = gain+ε < 0.03 for "no detectable excess",
+   witness via LCB I ≥ 2((Δ̂−ε)⁺)². env/law<1 in v3 = imbalance artifact,
+   explained in text.
+11. Blackwell garbling lemma added (value monotonicity, not just DPI).
+12. Bit budget: H(Y) ≤ b ln2 stated; clipped bound.
+13. Envelope table caption → branching structure.
+14. Appendix: companion results restated (β convention, binary chain,
+    layer-cake) — self-contained from [1].
+Related work: AoII (Maatouk), AoI-vs-VoI (Ayan), VoI-control (Soleymani),
+Radner–Stiglitz, Blackwell; positioning sharpened per review. Language:
+"no detectable excess", scope = exogenous one-step bounded-reward.
+**Lit-check cron (2:17am) also verifies: soleymani22/ayan19 citation details,
+hinge vs Chade–Schlee, Thm 2 folklore status.**
