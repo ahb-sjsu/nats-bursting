@@ -21,7 +21,7 @@ closed form in the symmetric Markov case}
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.1 (theory core complete; battery + related work open)}
+\date{Working draft --- v0.2 (complete draft: theory, hinge law, envelope comparison, battery, related work)}
 
 \begin{document}
 \maketitle
@@ -45,23 +45,85 @@ $\Omega\sqrt{(b\ln 2)/2}$ regardless of what is encoded --- compression can
 preserve but never create feedback value; (iv) show the envelope is
 \emph{tight to leading order} in the canonical case: for the symmetric binary
 chain $I=\tfrac{r^2}{2}+O(r^4)$, so the bound reads
-$\Omega(\tfrac r2+O(r^3))$ against the exact $\tfrac12 r$; and (v) prove by a
+$\Omega(\tfrac r2+O(r^3))$ against the exact $\tfrac12 r$; (v) prove by a
 two-bit construction that no universal equality $\Delta=f(I)$ can hold:
 mutual information is a scalar, decision value is a geometry, and two
 observations with identical $I$ can carry all or none of the
-decision-relevant distinction. A five-domain empirical section
-(cluster contention, acoustic, seismic, space weather, bioacoustic)
-tests the law and its envelopes on real processes.
+decision-relevant distinction; and (vi) give a \emph{complete} exactness
+theory for binary state --- for any bounded objective the value of a delayed
+sample is a \emph{hinge law} in the lag covariance, linear beyond a dead
+zone and identically zero inside it, with the companion's law as the
+symmetric zero-threshold case. A nine-series battery (acoustics,
+bioacoustics, space weather, seismology, plus synthetic controls) confirms
+the law where lag-1-matched surrogates say it must hold, observes the
+envelope's predicted $O(r^2)$ tightness on real data, and inverts the
+theorem into a certified lower bound on history information where the
+processes are non-Markov.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
-\todo{motivation prose; position vs.\ AoI (freshness metrics without
-decision semantics), value-of-information (Howard \cite{howard1966}; De
-Lara--Gossner \cite{delaragossner}), remote estimation, predictive
-information (Bialek et al.), delayed-sharing structures (Witsenhausen).
-The one-line thesis: \emph{age matters only through predictive
-information, and predictive information matters only through the Bayes
-envelope.}}
+
+Everywhere a controller acts on stale state --- a scheduler admitting jobs
+against capacity sensed seconds ago, a trader on delayed quotes, a relay on
+an outdated channel estimate --- the same question recurs: \emph{what is the
+value of information of age $D$?} The age-of-information literature
+\cite{yates21} measures freshness; freshness, however, has no decision
+semantics: a maximally fresh sample of an i.i.d.\ process is worthless, and
+a stale sample of a slowly-mixing one is nearly as good as the present. Our
+companion systems paper \cite{infocom} made this precise in one setting,
+proving that for symmetric two-state Markov capacity the advantage of
+age-$D$ feedback over the best static policy is \emph{exactly}
+$\Delta(D)=\tfrac12 r(D)$ --- the autocorrelation at the sensing lag --- and
+measuring the law on a live GPU cluster. This paper supplies the theory that
+result belongs to. The thesis is one line:
+\begin{center}\emph{Age matters only through predictive information, and
+predictive information matters only through the Bayes envelope.}\end{center}
+
+Concretely: (\textbf{C1}) we isolate the exact object --- the Bayes envelope
+$\Delta_Y=\E[\psi(\mu_Y)]-\psi(\bar\mu)$, classical in decision theory
+\cite{howard1966,raiffa61,delaragossner} --- and prove the universal
+\emph{predictive-information envelope}
+$\Delta_Y\le\Omega\sqrt{I(X;Y)/2}$ (Theorem~\ref{thm:mi}), with the
+\emph{bit-budget corollary}: $b$ bits of telemetry per decision cap feedback
+value at $\Omega\sqrt{(b\ln2)/2}$, so compression can preserve but never
+create feedback value. (\textbf{C2}) We show the envelope is \emph{sharp
+where it matters}: on the canonical binary chain it matches the exact law to
+$O(r^3)$ (Proposition~\ref{prop:tight}) --- and the battery of
+\S\ref{sec:battery} \emph{observes} this tightness on real data, including
+the predicted $O(r^2)$ correction. (\textbf{C3}) We prove no universal
+equality $\Delta=f(I)$ exists for bounded objectives
+(Proposition~\ref{prop:noneq}): information is a scalar, value is a
+geometry. This sharpens against the classical exception --- for
+\emph{logarithmic} (unbounded) utility, Kelly and Barron--Cover
+\cite{kelly56,barroncover88} show the value of side information \emph{equals}
+$I$; boundedness is exactly what breaks equality down to an envelope.
+(\textbf{C4}) We give a complete exactness theory for binary state: for
+\emph{any} bounded objective the value of a delayed sample obeys a
+\emph{hinge law} $\Delta(D)=\sum_k \Delta s_k\,(|C(D)|-C^*_k)^+$ in the
+lag-$D$ covariance --- linear beyond a dead zone, identically zero inside
+it --- recovering the companion's $\tfrac12 r(D)$ as the symmetric,
+zero-threshold case and lifting to multi-state monotone objectives by the
+layer-cake decomposition (\S\ref{sec:multistate}). The dead zone is a
+qualitative prediction: for asymmetric states, weakly-correlated feedback is
+\emph{worthless}, not merely weak. (\textbf{C5}) We order the three
+envelopes (mixing, information, bit-budget) below the master
+total-variation envelope and prove mixing and information are incomparable
+--- the \emph{preview process} shows $\beta(D)$ can stay at $\tfrac12$
+forever while the information envelope correctly decays
+(\S\ref{sec:comparison}). (\textbf{C6}) A nine-series battery across four
+physical domains confirms the law where surrogates say it should hold,
+observes the envelope's tightness, and --- read backwards --- uses the
+theorem as a \emph{certified witness} of history information on non-Markov
+series: $I(X_t;\text{history})\ge 2\widehat\Delta^2$
+(\S\ref{sec:battery}).
+
+Our techniques are deliberately elementary --- Pinsker's inequality, Jensen,
+piecewise-linear convex analysis --- and we do not claim depth for them.
+The contribution is the assembly: a single decision-theoretic object
+explaining an exact systems law, envelopes ordered by what they require
+(model, samples, or a bit rate), sharpness results tying envelope to law,
+impossibility results delimiting both, and a falsifiable empirical program
+run on real processes in five domains.
 
 \section{Setting and the exact object}\label{sec:envelope}
 
@@ -290,11 +352,91 @@ first three on real processes.}
 \label{tab:envelopes}
 \end{table}
 
-\section{Exactness beyond two states}\label{sec:multistate}
-\todo{layer-cake lift (cite \cite[Prop.~2]{infocom}): exact
-$\Delta(D)=\sum_u\pi_u r_u(D)$ for monotone-threshold objectives ---
-already a multi-state exact law; characterize the objective class for which
-the Bayes envelope admits closed form; asymmetric two-state case.}
+\section{Exactness: a complete account for binary state, and its limits}
+\label{sec:multistate}
+
+When does the Bayes envelope admit a closed form --- an exact \emph{law}
+rather than an envelope? For binary state the answer is: always, and the
+form is a hinge.
+
+\begin{theorem}[The hinge law]\label{thm:hinge}
+Let $X_t\in\{0,1\}$ be stationary with $\pi=\mathbb P(X_t{=}1)\in(0,1)$, let
+$Y=X_{t-D}$, and write $C=C(D)=\operatorname{Cov}(X_t,X_{t-D})$. For any
+bounded objective, the value function $\psi$ is convex piecewise-linear in
+the scalar belief $p=\mathbb P(X_t{=}1\mid\cdot)$, with kinks
+$p^*_1<\dots<p^*_K$ and slope jumps $\Delta s_k>0$. Then, exactly,
+\[
+\Delta(D)\;=\;\sum_{k=1}^{K}\Delta s_k\;
+\Bigl(|C(D)|-C^*_k\Bigr)^{\!+},
+\qquad
+C^*_k=\begin{cases}
+(p^*_k-\pi)\,\pi & \pi\le p^*_k,\ C\ge 0\\
+(\pi-p^*_k)(1-\pi) & \pi> p^*_k,\ C\ge 0,
+\end{cases}
+\]
+with the mirrored thresholds for $C<0$. In particular $\Delta(D)$ is a
+nondecreasing piecewise-linear function of $|C(D)|$ that is
+\textbf{identically zero on the dead zone} $|C(D)|\le\min_k C^*_k$.
+\end{theorem}
+
+\begin{proof}
+$\psi(p)=\max_w[pR(w,1)+(1-p)R(w,0)]$ is a maximum of finitely many affine
+functions of $p$, hence convex piecewise-linear; write
+$\psi(p)=\psi(p^*_1)+s_0(p-p^*_1)+\sum_k\Delta s_k (p-p^*_k)^+$. Observing
+$Y$ produces the two-point posterior $p_1=\pi+C/\pi$ (w.p.\ $\pi$) and
+$p_0=\pi-C/(1-\pi)$ (w.p.\ $1-\pi$), whose mean is $\pi$; the affine part
+of $\psi$ therefore cancels in
+$\Delta=\E[\psi(p_Y)]-\psi(\pi)$, leaving
+$\Delta=\sum_k\Delta s_k\{\E(p_Y-p^*_k)^+-(\pi-p^*_k)^+\}$. Fix $k$ and
+$C\ge0$ (so $p_0\le\pi\le p_1$). If $\pi\le p^*_k$:
+$\E(p_Y-p^*_k)^+=\pi(p_1-p^*_k)^+=(C-(p^*_k-\pi)\pi)^+$ and
+$(\pi-p^*_k)^+=0$. If $\pi>p^*_k$: by the pointwise identity $(x)^+-x=(-x)^+$,
+$\E(p_Y-p^*_k)^+-(\pi-p^*_k)=\E(p^*_k-p_Y)^+$, and only the lower posterior
+can fall below the kink, so this equals
+$(1-\pi)\,(p^*_k-p_0)^+=(C-(\pi-p^*_k)(1-\pi))^+$. The case
+$C<0$ mirrors with $p_0$ and $p_1$ exchanged. Summing over $k$ gives the
+statement.
+\end{proof}
+
+\begin{corollary}[The companion law, and why it is threshold-free]
+For the symmetric chain ($\pi=\tfrac12$) with the $0/1$ prediction
+objective ($K{=}1$, $p^*=\tfrac12$, $\Delta s=2$):
+$C^*=0$ and $C(D)=\tfrac14 r(D)$, so
+$\Delta(D)=2\cdot\tfrac14 r(D)=\tfrac12 r(D)$ --- the exact law of
+\cite{infocom}. Symmetry places the prior \emph{on} the kink, which is the
+unique configuration with no dead zone; the linear-in-$r$ law is the
+degenerate hinge.
+\end{corollary}
+
+\begin{remark}[The dead zone is a prediction, not a curiosity]
+For $\pi\neq p^*$ the hinge says weakly-correlated delayed feedback is
+\emph{worthless} --- not slightly valuable --- until $|C(D)|$ crosses
+$C^*$: below threshold, both posteriors fall on one side of the decision
+kink and the optimal action never changes. Operationally: a rare-event
+admission controller ($\pi$ small, $p^*$ moderate) gains \emph{nothing}
+from telemetry until its sensing age satisfies
+$|C(D)|>(p^*-\pi)\pi$ --- an exact, testable cutoff for when to stop paying
+for freshness at all. None of the envelopes of \S\ref{sec:comparison} see
+this: the dead zone is a fact about geometry (posteriors vs.\ kink), which
+is precisely what scalar information summaries discard
+(Proposition~\ref{prop:noneq}).
+\end{remark}
+
+\begin{remark}[Beyond two states: the layer-cake lift, and the boundary]
+The companion's layer-cake result \cite[Prop.~2]{infocom} lifts binary
+exactness to capacities $a_t\in\{0,\dots,C\}$ with monotone threshold
+objectives: the objective decomposes over layer indicators
+$x^u_t=\mathbf 1[a_t\ge u]$ and the total advantage is the exact sum
+$\Delta(D)=\sum_u\pi_u r_u(D)$ --- each layer a binary experiment, each
+governed by its hinge (there with symmetric thresholds, so zero dead zones).
+The boundary of exactness is now visible from both sides: exact laws hold
+precisely when the posterior family is effectively one-dimensional (a
+scalar belief per layer, moved along a line by the observation); the
+two-bit construction of Proposition~\ref{prop:noneq} is the minimal
+experiment whose posterior geometry is genuinely two-dimensional, and there
+the value ceases to be a function of any scalar summary of dependence ---
+correlation or information alike.
+\end{remark}
 
 \section{The law and its envelopes across domains}\label{sec:battery}
 
@@ -430,12 +572,68 @@ the same surrogate machinery that certifies the law's exactness upper-block
 certifies the window-information excess lower-block.
 
 \section{Related work}\label{sec:related}
-\todo{Howard VoI \cite{howard1966}; De Lara--Gossner \cite{delaragossner};
-AoI surveys; remote estimation / Witsenhausen delayed sharing; Bialek
-predictive information; rate-distortion with side information; NCS.}
+
+\emph{Value of information.} The Bayes envelope is the classical object of
+statistical decision theory \cite{howard1966,raiffa61}; De Lara and Gossner
+\cite{delaragossner} develop the payoffs--beliefs duality our Lipschitz
+lemma instantiates. The information envelope itself is assembled from
+textbook inequalities (Pinsker, Jensen), and we make no claim of depth for
+the inequality in isolation --- kindred moves appear wherever bounded value
+must be controlled by divergence, e.g.\ the information-ratio regret
+analyses of Russo and Van Roy \cite{russo16}. What we have not found
+elsewhere is the assembly this paper is about: the envelope \emph{anchored
+to an exact law} (sharp to $O(r^3)$, with the $O(r^2)$ correction observed
+on real data), its ordering against mixing envelopes with both separations
+constructed, and its inversion into a certified information witness.
+
+\emph{The logarithmic exception.} For log-utility gambling the value of
+side information \emph{equals} mutual information: Kelly \cite{kelly56}
+for the growth rate, Barron and Cover \cite{barroncover88} for the general
+bound $\Delta\le I$ with equality characterizations. Log utility is
+unbounded, escaping our $\Omega$-bounded class; the pair of results
+brackets the landscape --- unbounded log utility buys equality, bounded
+utility only an envelope, and Proposition~\ref{prop:noneq} shows the gap is
+essential, not technical.
+
+\emph{Age of information.} AoI \cite{yates21} treats freshness as the
+object, with sampling-policy results such as \cite{sun17} optimizing age
+processes. Our thesis is complementary: age has decision value only through
+predictive information (the battery's i.i.d.\ null has perfect freshness
+semantics and zero value), and the hinge law shows even the map from
+correlation to value can have a dead zone freshness metrics cannot see.
+
+\emph{Delayed information in control.} Delayed-sharing information
+structures go back to Witsenhausen \cite{witsenhausen68} and are
+systematized by the common-information approach \cite{nayyar13}; remote
+estimation studies the estimation face of the same trade
+\cite{sun17}. Our setting is the tractable exogenous corner of that world
+--- the action does not affect the state --- which is exactly what makes
+closed forms and universal envelopes available.
+
+\emph{Predictive information.} Bialek, Nemenman and Tishby
+\cite{bialek01} study $I(\text{past};\text{future})$ as a measure of
+process complexity. Theorems~\ref{thm:mi} and \ref{thm:hinge} are, in that
+vocabulary, statements about what predictive information can and cannot buy
+a bounded-utility decision maker --- with the battery's witness bound
+$I\ge 2\widehat\Delta^2$ operating as a decision-theoretic estimator of
+predictive information from policy value alone.
 
 \section{Conclusion}\label{sec:conclusion}
-\todo{}
+
+The companion paper measured one exact law on one system. This paper
+locates that law inside a small, complete theory: value of delayed
+information is the Bayes envelope; the envelope is bounded by predictive
+information (universally), by mixing (given a model), and by the telemetry
+bit rate (given nothing); it is exactly a hinge in covariance for binary
+state, exactly a layered sum for monotone multi-state objectives, and
+exactly nothing --- inside the dead zone --- for asymmetric weakly-coupled
+sensing. Beyond one effective dimension, no scalar summary of dependence
+determines value at all. Each claim is falsifiable, and the nine-series
+battery exercises all of them: the law holds where surrogates say it must,
+the envelope's predicted tightness appears with its $O(r^2)$ correction,
+and its violations, where the theory requires them, certify history
+information in nats. The instrument reads in both directions; that, more
+than any single inequality, is what we hope survives.
 
 \begin{thebibliography}{9}
 \bibitem{infocom}
@@ -449,6 +647,45 @@ R.~A.~Howard. Information value theory.
 \bibitem{delaragossner}
 M.~De~Lara, O.~Gossner. Payoffs-beliefs duality and the value of
 information. \emph{SIAM J.\ Optimization} 30(1):287--310, 2020.
+
+\bibitem{raiffa61}
+H.~Raiffa, R.~Schlaifer. \emph{Applied Statistical Decision Theory}.
+Harvard University, 1961.
+
+\bibitem{kelly56}
+J.~L.~Kelly, Jr. A new interpretation of information rate.
+\emph{Bell System Technical Journal} 35:917--926, 1956.
+
+\bibitem{barroncover88}
+A.~R.~Barron, T.~M.~Cover. A bound on the financial value of information.
+\emph{IEEE Trans.\ Information Theory} 34(5):1097--1100, 1988.
+
+\bibitem{yates21}
+R.~D.~Yates, Y.~Sun, D.~R.~Brown~III, S.~K.~Kaul, E.~Modiano, S.~Ulukus.
+Age of information: an introduction and survey.
+\emph{IEEE J.\ Selected Areas in Communications} 39(5):1183--1210, 2021.
+
+\bibitem{sun17}
+Y.~Sun, E.~Uysal-Biyikoglu, R.~D.~Yates, C.~E.~Koksal, N.~B.~Shroff.
+Update or wait: how to keep your data fresh.
+\emph{IEEE Trans.\ Information Theory} 63(11):7492--7508, 2017.
+
+\bibitem{witsenhausen68}
+H.~S.~Witsenhausen. A counterexample in stochastic optimum control.
+\emph{SIAM J.\ Control} 6(1):131--147, 1968.
+
+\bibitem{nayyar13}
+A.~Nayyar, A.~Mahajan, D.~Teneketzis. Decentralized stochastic control with
+partial history sharing: a common information approach.
+\emph{IEEE Trans.\ Automatic Control} 58(7):1644--1658, 2013.
+
+\bibitem{russo16}
+D.~Russo, B.~Van~Roy. An information-theoretic analysis of Thompson
+sampling. \emph{J.\ Machine Learning Research} 17(68):1--30, 2016.
+
+\bibitem{bialek01}
+W.~Bialek, I.~Nemenman, N.~Tishby. Predictability, complexity, and
+learning. \emph{Neural Computation} 13:2409--2463, 2001.
 \end{thebibliography}
 
 \end{document}
