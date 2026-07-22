@@ -39,9 +39,9 @@ the poll. The relevant $D$ depends on the question: detecting a \emph{newly
 admitted} pod's (un)productivity incurs the $\sim\!2.5$\,s cold-start term, while
 probing \emph{already-running} pods costs only the $\sim\!27$\,ms poll. In the
 epoch-based model of \S\ref{sec:limit} one epoch is a single completion-gated
-admission decision, so the cold-start-dominated age maps to $D\!\approx\!3$ epochs
----the value swept in the law validation (Q4)---while the $27$\,ms poll is sub-epoch
-for already-running pods.
+admission decision, whose measured mean duration is $\approx\!1.1$\,s, so the $2.46$\,s
+cold-start age is $D\!\approx\!2$--$3$ epochs (swept in Q4); the $27$\,ms poll is
+sub-epoch for already-running pods.
 Substituting into Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)\bar a)$,
 the $2.46$\,s term makes $D$ a \emph{first-order} contributor to the achievable
 compliance---not a rounding error---which is precisely the systems$\leftrightarrow$theory
@@ -64,10 +64,11 @@ repeats per cell, at two scales (GPU pool $C{=}2$; CPU pool $C{=}8$).
 Table~\ref{tab:e8} and Fig.~\ref{fig:pareto} report the
 result. \textbf{aimd is the polite-efficient frontier point}: it holds the budget
 exactly ($\rho=0$ at both scales) while delivering $1.72\times$ (GPU) and
-$3.18\times$ (CPU) the goodput of static at the \emph{same} politeness, and it
-matches naive's goodput without ever exceeding the budget. naive achieves its
-goodput only by over-admitting ($\rho=0.54$ / $0.95$); static stays polite but
-under-utilizes the budget. Both pre-registered hypotheses---H1 (aimd $>$ static
+$3.18\times$ (CPU) the goodput of static at the \emph{same} politeness. At the GPU
+scale ($C{=}2$) it also matches naive's goodput without exceeding the budget; at the
+CPU scale ($C{=}8$), where naive over-admits flagrantly ($\rho=0.95$), naive buys
+${\sim}2\times$ aimd's goodput ($0.578$ vs $0.293$)---aimd trades that headroom for
+politeness. Static stays polite but under-utilizes the budget. Both pre-registered hypotheses---H1 (aimd $>$ static
 goodput at equal $\rho$) and H2 (naive impolite, $\rho>0$)---hold with disjoint
 95\% CIs at both scales.
 
@@ -75,7 +76,7 @@ goodput at equal $\rho$) and H2 (naive impolite, $\rho>0$)---hold with disjoint
 \centering
 \caption{End-to-end goodput vs.\ politeness (4 reps, mean\,$\pm$\,95\% CI). aimd
 holds the budget ($\rho=0$) at static's politeness but $1.7$--$3.2\times$ its
-goodput, and matches naive's goodput without over-admitting.}
+goodput, and matches naive's goodput at the GPU scale without over-admitting.}
 \label{tab:e8}
 \small
 \begin{tabular}{llcc}
@@ -134,12 +135,11 @@ abundance did. \textbf{Under structured contention (square), aimd is the
 polite-efficient knee}: $1.41\times$ static's goodput ($0.091$ vs $0.064$\,tasks/s,
 disjoint CIs) at $\rho{=}0.15$---a $4\times$ lower over-admission than naive's
 $\rho{=}0.64$---while sparing the neighbour ($76\%$ of its throughput retained vs
-naive's $62\%$). The target $\epsilon$ is grounded in the host policy: NRP acts on
-\emph{persistently} under-utilized requests rather than momentary dips below the
-$\ge\!40\%$ GPU floor, so $\epsilon$ is the tolerable share of epochs a pod may sit
-under-utilized; read that way the $\rho{=}0.15$ that aimd holds is a deliberately
-conservative operating point, inside a $\sim\!0.1$--$0.2$ band consistent with that
-floor at our epoch length. naive's higher goodput ($0.101$) is bought \emph{entirely} at the
+naive's $62\%$). The target $\epsilon$ and the switch threshold $\theta$ were fixed \emph{before} the
+runs (E9 pre-registration): $\epsilon$ is grounded in the host policy---NRP acts on
+\emph{persistently} under-utilized requests, not momentary dips below the $\ge\!40\%$
+GPU floor---so $\epsilon\!\in\![0.1,0.2]$ is the tolerable share of under-utilized
+epochs, and the $\rho{=}0.15$ aimd holds sits inside it. naive's higher goodput ($0.101$) is bought \emph{entirely} at the
 neighbour's expense: it over-admits two-thirds of the time and steals $38\%$ of the
 competitor's throughput (Fig.~\ref{fig:harm}). H1 and H2 hold with disjoint CIs.
 

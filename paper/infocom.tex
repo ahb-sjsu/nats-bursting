@@ -180,9 +180,10 @@ link, submissions flowing on \texttt{burst.submit} and results returning on
 \texttt{results.>} by interest propagation, with no inbound cluster access. What
 matters for the controller is that this view is \emph{aged}---the leaf round-trip and
 the CUDA cold-start of a freshly admitted pod together set the sensing age $D$ of
-\S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. To keep that loop fresh the
-tensors crossing the link are compressed by random-rotation quantization
-\cite{turboquantpro,turboquant} (fewer bytes, smaller $D$). The fabric's own
+\S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. The tensors crossing the link are
+compressed by random-rotation quantization \cite{turboquantpro,turboquant}; this aids
+bandwidth on the hop, but the sensing age $D$ is dominated by CUDA cold-start, not
+transport (\S\ref{sec:eval}), so compression does not reduce $D$. The fabric's own
 design---leaf-federation tradeoffs, JetStream durability, single-port traversal---and
 the transport and node-level thermal subsystems are a systems contribution developed
 and characterized in a companion paper~\cite{companion}; here the fabric is simply the
