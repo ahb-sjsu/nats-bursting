@@ -1,43 +1,15 @@
-% Cross-domain confirmation subsection for infocom.tex.
-% \input after \input{infocom_eval}. Requires graphicx, amsmath.
-\subsection{The law across domains}
-\label{sec:crossdomain}
-
-Theorem~\ref{thm:limit} assumes a symmetric two-state \emph{Markov} capacity---so is
-$\Delta(D)=\tfrac12 r(D)$ special to GPU bursting, or a property of acting on a delayed
-observation as such? We test it on real binary states from other physical domains: an
-acoustic source's azimuth sector (LOCATA microphone-array recordings) and a sperm-whale
-coda-type sequence (Dominica), each observed at sensing age~$D$. For each we compare the
-single-delayed-sample value
-$\Delta_{\mathrm{pair}}(D)=\Pr[x_t{=}x_{t-D}]-\tfrac12=\tfrac12 r(D)$---our law evaluated
-pointwise---against the value of the best predictor built from the delayed \emph{history}
-(a six-tap Bayes rule, out of sample by five-fold contiguous block cross-validation). If
-$x_{t-D}$ is a sufficient statistic---the Markov regime the theorem assumes---the history
-cannot beat the single sample and $\tfrac12 r(D)$ is the full value of feedback, not a
-lower bound. To separate real structure from finite-sample noise we calibrate with a
-surrogate test: $120$ first-order Markov surrogates matched on each series' marginal and
-lag-1 transition (Fig.~\ref{fig:crossdomain}, grey $95\%$ band).
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/confirm_crossdomain.pdf}
-\caption{\textbf{$\Delta(D)=\tfrac12 r(D)$ across domains.} On real Markov-regime states
-(source azimuth, whale coda type) and a synthetic Markov reference, the best
-delayed-history policy (red, out-of-sample) stays on the single-lag law $\tfrac12 r(D)$
-(blue) and inside the $95\%$ Markov-surrogate null band (grey): the law is exact, its
-value set by the capacity autocorrelation at the sensing lag regardless of domain. The
-i.i.d.\ control gives $\Delta=0$.}
-\label{fig:crossdomain}
-\end{figure}
-
-Figure~\ref{fig:crossdomain} confirms the law. On both real Markov-regime states and the
-synthetic reference the delayed-history policy stays on $\tfrac12 r(D)$ and inside the
-null band---the single-lag value is exact---while the controls behave as they must
-(Markov: max-statistic $p{=}0.44$; i.i.d.: $\Delta=0$, $p{=}0.68$). The value of feedback
-is thus governed by the capacity autocorrelation at the sensing lag independent of the
-physical domain, confirming $\Delta(D)=\tfrac12 r(D)$ as a law of delayed observation
-rather than an artifact of shared clusters. When a capacity is predictable beyond one lag
-(non-Markov, e.g.\ bursty or rhythmic processes), the single-lag value is only a lower
-bound that a history-using controller can exceed---the general converse is the
-$\beta$-mixing bound of App.~\ref{app:beta}, and characterizing this predictive-information
-regime is a natural extension.
+% Cross-domain confirmation for infocom.tex (text-only, 9-page limit).
+% \input after \input{infocom_eval}. Figure confirm_crossdomain.pdf lives in the repo.
+\paragraph{The law across domains.}
+Theorem~\ref{thm:limit} assumes a symmetric two-state \emph{Markov} capacity---is
+$\Delta(D)=\tfrac12 r(D)$ special to GPU bursting, or a property of delayed observation?
+We tested it on real binary states from other physical domains---acoustic source azimuth
+(LOCATA) and sperm-whale coda type (Dominica). On each, the value of the best predictor
+from the delayed \emph{history} (out-of-sample block cross-validation) stays on the
+single-lag value $\tfrac12 r(D)$ and inside a $95\%$ band of $120$ Markov surrogates
+matched on the lag-1 transition (max gaps $0.008$ and $0.046$; controls: synthetic Markov
+$p{=}0.44$, i.i.d.\ $\Delta{=}0$): the single-lag law is exact, not a lower bound. The
+value of feedback is thus set by the capacity autocorrelation at the sensing lag
+independent of physical domain. For a capacity predictable beyond one lag (non-Markov) it
+is only a lower bound, the general converse being the $\beta$-mixing bound of
+App.~\ref{app:beta}.

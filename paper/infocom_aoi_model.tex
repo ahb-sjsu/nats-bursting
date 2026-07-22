@@ -117,7 +117,7 @@ matched over-admission levels, is
 attained at the kink $\rho=q/2$ by the Bayes threshold policy $m_t=\hat x_t$ (at a
 lower level $\rho<q/2$ the gain is the smaller $\rho(1-2q)/q$); i.e.\ \emph{the peak
 value of closed-loop admission is exactly half the autocorrelation of available
-capacity at the sensing lag} (Fig.~\ref{fig:region}). The optimality of such memoryless threshold policies
+capacity at the sensing lag} (Fig.~\ref{fig:theory}a). The optimality of such memoryless threshold policies
 for symmetric two-state Markov observation is itself classical in the
 opportunistic-access setting~\cite{myopicaccess}; what is new here is the exact
 value $\tfrac12 r(D)$ of the resulting feedback advantage over the best static
@@ -144,9 +144,10 @@ $\hat x_t$ ($\theta_1=\theta_0=\theta$), giving $g=\rho=\theta/2$: the diagonal.
 The vertical gap at $\rho=q/2$ is $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfrac12 r(D)$.
 \end{proof}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
+\begin{minipage}[b]{0.40\textwidth}\centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[>=Stealth]
   % value units * 10 = cm.  q=q(D); drawn at q=0.2 (r=0.6).
   % O(0,0) K(q/2,(1-q)/2)=(1,4) T(1/2,1/2)=(5,5) B((1-q)/2,q/2)=(4,1)
@@ -168,17 +169,21 @@ The vertical gap at $\rho=q/2$ is $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfr
   \node[right=2pt] at (1,2.5) {$\Delta(D)=\tfrac12 r(D)$};
   \fill (5,5) circle (1.6pt);
   \node[below right=1pt] at (5,5) {\footnotesize $\bigl(\tfrac12,\tfrac12\bigr)$};
-\end{tikzpicture}}
-\caption{\textbf{The feedback advantage is geometry} (Thm.~\ref{thm:limit}).
-Under age-$D$ sensing the achievable over-admission/goodput pairs $(\rho,g)$ form
-the shaded hull; the best \emph{static} (observation-oblivious) policy is confined to
-the diagonal $g=\rho$. The closed-loop optimum is the frontier kink
-$(\tfrac q2,\tfrac{1-q}2)$, reached by the memoryless threshold $m_t=\hat x_t$, and
-its vertical distance to the diagonal is exactly $\Delta(D)=\tfrac12 r(D)$. As sensing
-ages, $q(D)\!\to\!\tfrac12$: the kink slides down onto the diagonal and the advantage
-vanishes (Cor.~\ref{cor:imp}).}
-\label{fig:region}
-\end{figure}
+\end{tikzpicture}}\\[2pt]{\footnotesize (a) the feedback advantage is geometry}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.56\textwidth}\centering
+\includegraphics[width=\linewidth]{figures/feedback_phase.pdf}\\[2pt]{\footnotesize (b) the impossibility as a map}
+\end{minipage}
+\caption{\textbf{(a)} Under age-$D$ sensing the achievable $(\rho,g)$ pairs form the shaded
+hull; static policies lie on the diagonal $g=\rho$, and the closed-loop optimum
+$(\tfrac q2,\tfrac{1-q}2)$ (memoryless threshold $m_t=\hat x_t$) sits a vertical
+$\Delta(D)=\tfrac12 r(D)$ above it (Thm.~\ref{thm:limit}). \textbf{(b)} The same value
+$\tfrac12 e^{-D/\tau_c}$ over the sensing-age/coherence-time plane (log $\tau_c$); points
+are the measured \textsc{e9} Markov contention sweep (Cor.~\ref{cor:imp}), each shaded by
+the adaptive controller's closed-loop fraction, opening onto static as $D$ crosses
+$\tau_c$.}
+\label{fig:theory}
+\end{figure*}
 
 \begin{corollary}[Impossibility as sensing ages]\label{cor:imp}
 $\Delta(D)\!\to\!0$ as $r(D)\!\to\!0$. For the symmetric two-state (Markov) model
@@ -191,7 +196,7 @@ predictable from its history (e.g.\ a random-phase deterministic square wave)---
 an \emph{arbitrary} capacity process the vanishing of the advantage is governed by the
 $\beta$-mixing coefficient, not by $r(D)$. At $D=0$, $\Delta=\tfrac12$ (capacity is
 perfectly trackable); the advantage halves every $\tau_c\ln 2$ epochs of added age
-(mapped, with the measured contention sweep, in Fig.~\ref{fig:phase}).
+(mapped in Fig.~\ref{fig:theory}b).
 App.~\ref{app:beta} makes the general statement precise, extending the impossibility to
 arbitrary (non-binary, non-Markov) capacity processes with the decay rate set by
 $\beta(D)$.
@@ -223,23 +228,6 @@ The single curve \eqref{eq:adv} predicts both regimes and the crossover between
 them.
 \end{corollary}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/feedback_phase.pdf}
-\caption{\textbf{The impossibility as a map} (Cor.~\ref{cor:imp}).
-The value of feedback $\Delta(D)=\tfrac12 r(D)=\tfrac12 e^{-D/\tau_c}$ over the
-sensing-age\,/\,coherence-time plane (log $\tau_c$ axis); closed-loop admission is
-worth acting on only where the guest senses the neighbour faster than it changes
-($\tau_c\!\gg\!D$), and the advantage decays to zero as $D$ grows past the ridge
-$D=\tau_c$. Points are the \emph{measured} \textsc{e9} markov contention sweep of
-\S\ref{sec:eval} (fixed $D{=}3$; flip rate $p$ walks the coherence
-$\tau_c(p)=-1/\ln(1-2p)$ down the axis), each shaded by the adaptive controller's
-measured closed-loop fraction: deep in the trackable regime ($p{=}0.01$) it stays
-closed-loop ($0.98$), and it opens onto static ($0.48$) as the sweep crosses the ridge
-into the break-even regime ($p{=}0.4$, $r(D)\!\approx\!0$)---the null the controller
-is built to detect.}
-\label{fig:phase}
-\end{figure}
 
 The binary reduction is not a special case but the atom of the general problem.
 

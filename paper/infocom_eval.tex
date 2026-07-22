@@ -61,7 +61,7 @@ variance-free testbed (local-process workers on \ifblind the workstation node\el
 registry jitter), pre-registered with randomized interleaved trial order and four
 repeats per cell, at two scales (GPU pool $C{=}2$; CPU pool $C{=}8$).
 
-Table~\ref{tab:e8} and Figs.~\ref{fig:pareto-gpu}--\ref{fig:pareto-cpu} report the
+Table~\ref{tab:e8} and Fig.~\ref{fig:pareto} report the
 result. \textbf{aimd is the polite-efficient frontier point}: it holds the budget
 exactly ($\rho=0$ at both scales) while delivering $1.72\times$ (GPU) and
 $3.18\times$ (CPU) the goodput of static at the \emph{same} politeness, and it
@@ -95,23 +95,17 @@ scale & policy & goodput (tasks/s) & over-budget $\rho$ \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.92\columnwidth]{figures/pareto_gpu.png}
-\caption{Goodput vs.\ over-budget $\rho$, GPU pool ($C{=}2$). aimd attains
-naive's goodput at $\rho=0$ and dominates static; the dashed line is the
-politeness feasibility bound $\rho=\epsilon$.}
-\label{fig:pareto-gpu}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.92\columnwidth]{figures/pareto_cpu.png}
-\caption{Goodput vs.\ over-budget $\rho$, CPU pool ($C{=}8$). With surplus
-capacity the separation widens: aimd delivers $3.18\times$ static's goodput at
-$\rho=0$, while naive buys goodput only by flagrant over-admission ($\rho=0.95$).}
-\label{fig:pareto-cpu}
-\end{figure}
+\includegraphics[width=0.44\textwidth]{figures/pareto_gpu.png}\hspace{0.04\textwidth}
+\includegraphics[width=0.44\textwidth]{figures/pareto_cpu.png}
+\caption{End-to-end goodput vs.\ over-budget $\rho$. \emph{Left:} GPU pool ($C{=}2$)---aimd
+attains naive's goodput at $\rho{=}0$ and dominates static. \emph{Right:} CPU pool
+($C{=}8$)---with surplus capacity the separation widens (aimd delivers $3.18\times$
+static's goodput at $\rho{=}0$), while naive buys goodput only by flagrant over-admission
+($\rho{=}0.95$). Dashed line: politeness feasibility bound $\rho=\epsilon$.}
+\label{fig:pareto}
+\end{figure*}
 
 \emph{Scope.} This isolates the admission \emph{algorithm} on a controlled node;
 the full pod-scheduling path (controller~$\to$~node-targeted GPU
@@ -206,7 +200,7 @@ contention & policy & goodput (tasks/s) & $\rho$ & kept \\
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.80\columnwidth]{figures/e9_competitor_harm.png}
+\includegraphics[width=0.62\columnwidth]{figures/e9_competitor_harm.png}
 \caption{Harm to the other tenant (throughput lost). naive steals $\sim$$38\%$ in
 both regimes; aimd spares the neighbour under structured contention ($24\%$), but
 under memoryless contention its mistimed admissions harm it as much as---here more
@@ -255,31 +249,20 @@ the optimal advantage onto $\tfrac12 e^{-D/\tau_c}$ vs.\ $D/\tau_c$.}
 \end{figure}
 \paragraph{Live confirmation on GPU hardware.}
 We ran the regime-adaptive controller on the same $2{\times}$GV100 node across the
-Markov $\tau_c$ sweep ($p\in\{0.01,\dots,0.4\}$, $D{=}3$, two seeds), estimating
-$r(D)$ online from the sensed availability.\footnote{This required realizing the
-two-state capacity process faithfully on the GPU: the competitor reconciler is
-symmetric (it evicts over-target load on down-flips) rather than add-only with a
-fixed lifetime, which otherwise pins the sensed autocorrelation high independent of
-$p$.} Two claims transfer cleanly from the controller-level model to hardware.
-\textbf{(A1)} The online estimate lands on the law: $\hat r=(1-2\hat p)^D$ tracks
-$(1-2p)^D$ with mean $|\hat r-r|=0.07$, and the realized availability autocorrelation
-sits on the same curve (Fig.~\ref{fig:e9adapt}, left). \textbf{(A2)} The switch
-modulates as predicted---its closed-loop fraction falls from $0.98$ to $0.48$ as
-$r(D)$ drops past the switch threshold $\theta$. The behavioural payoff, however, reads differently on
-real hardware than in the noise-free model, and the difference is instructive: raw
-goodput \emph{rewards over-admission}, so live AIMD out-goodputs static in
-\emph{every} regime---but at high flip rate that goodput is bought entirely with
-impoliteness ($\rho{=}0.44$ vs static's $0.04$), not with tracking. The simulated
-goodput crossover (AIMD $<$ static once $\tau_c\!\lesssim\!D$) therefore does not
-appear in \emph{raw} goodput on hardware; the law instead surfaces on the
+Markov $\tau_c$ sweep ($p\in\{0.01,\dots,0.4\}$, $D{=}3$, two seeds), estimating $r(D)$
+online. Two claims transfer from the model. \textbf{(A1)} The online estimate lands on
+the law: $\hat r=(1-2\hat p)^D$ tracks $(1-2p)^D$ with $|\hat r-r|=0.07$
+(Fig.~\ref{fig:e9adapt}, left). \textbf{(A2)} The switch modulates as predicted, its
+closed-loop fraction falling $0.98\!\to\!0.48$ as $r(D)$ drops past the threshold
+$\theta$. Hardware differs instructively: raw goodput \emph{rewards over-admission}, so
+live AIMD out-goodputs static in every regime---but at high flip rate that goodput is
+bought with impoliteness ($\rho{=}0.44$ vs $0.04$), not tracking. The simulated goodput
+crossover thus does not appear in \emph{raw} goodput; the law instead surfaces on the
 goodput--politeness Pareto (Fig.~\ref{fig:e9adapt}, right) as the over-admission the
-adaptive switch \emph{sheds} versus always-AIMD, which grows monotonically as
-feedback loses value ($\rho_{\text{aimd}}-\rho_{\text{adaptive}}$:
-$+0.01\!\to\!+0.22$ as $p$: $0.08\!\to\!0.4$). Adaptive matches AIMD where the
-neighbour is trackable and recovers static's politeness where it is not---best-of-both
-on the trade-off the law governs. The clean goodput-\emph{advantage} tracing of
-$\tfrac12 r(D)$ remains the controller-level result of Fig.~\ref{fig:tausweep}, as
-live static is a fixed trickle with no tunable $\rho$ frontier to measure against.
+adaptive switch \emph{sheds} versus always-AIMD, growing as feedback loses value
+($\rho_{\text{aimd}}-\rho_{\text{adaptive}}\!:\,+0.01\!\to\!+0.22$ as
+$p\!:\,0.08\!\to\!0.4$). Adaptive is best-of-both---matching AIMD where the neighbour is
+trackable and recovering static's politeness where it is not.
 
 \begin{figure}[t]
 \centering
