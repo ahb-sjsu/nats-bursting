@@ -284,6 +284,10 @@ The threshold $\theta$ is set from the target $\epsilon$ via \eqref{eq:adv} (we 
 $\gamma$ for the chain's spectral gap in Thm.~\ref{thm:adapt}).}}
 \end{center}
 
+The \emph{tracking regime} for the AIMD analysis assumes \textbf{(A1)} stationary
+capacity $a_t\equiv a$ with $w_{\min}\le a\le K$; \textbf{(A2)} reliable detection of an
+overshoot within $D$ epochs; and \textbf{(A3)} fixed $\alpha,\beta,w_{\min},K$.
+
 \begin{proposition}[Sawtooth realization of the kink]\label{prop:bound}
 Under stationary capacity $a$ and (A1)--(A3) of the tracking regime, AIMD forms a
 periodic sawtooth about $a$ with long-run over-admission
@@ -299,29 +303,26 @@ Thm.~\ref{thm:limit}; $D$ enters both here and in \eqref{eq:adv}, the
 systems$\leftrightarrow$theory hinge the paper turns on.)
 \end{proof}
 
-\begin{theorem}[Uniform near-optimality]\label{thm:adapt}
-Let capacity be a symmetric two-state process with coherence time $\tau_c$
-unknown to the guest. The empirical correlation is consistent,
-$\hat r_n\!\to\!r(D)$ a.s.\ (ergodicity), with
-$\Pr[|\hat r_n-r(D)|>t]\le 2e^{-cnt^2}$ for a mixing constant $c>0$
-(Hoeffding for functions of a geometrically mixing chain). Hence the
-regime-adaptive controller attains the feedback advantage $\Delta(D)$ up to
-$O\!\big(\sqrt{\log n/n}\big)$ (i.e.\ comes within that error of the age-$D$ optimum)
-\emph{uniformly in} $\tau_c$, whereas (i) fixed AIMD's excess over-admission stays
-bounded below by a positive constant as $\tau_c/D\!\to\!0$, and (ii) the fixed static
-budget forfeits a positive constant of goodput as $\tau_c/D\!\to\!\infty$. The regret rate is
-$O(D\sqrt{\log N/(\gamma N)})$ over horizon $N$, with $\gamma$ the chain's spectral
-gap (App.~\ref{app:regret}).
+\begin{theorem}[Near-optimality]\label{thm:adapt}
+Let capacity be a symmetric two-state process with spectral gap
+$\gamma=2\min(p,1-p)$. The empirical correlation is consistent with
+$\Pr[|\hat r_n-r(D)|>t]\le 2e^{-c_0\gamma n t^2/D^2}$ (the $D^2$ from the $2D$-Lipschitz
+map $p\mapsto(1-2p)^D$, so the constant carries explicit $D,\gamma$ dependence). Hence on
+any class with $\gamma\ge\gamma_0>0$ the regime-adaptive controller attains $\Delta(D)$
+with regret $O(D/\sqrt{\gamma_0 N})$ over horizon $N$ (App.~\ref{app:regret}), and $O(1/N)$
+for any fixed process. The $\gamma\ge\gamma_0$ restriction is essential: as
+$\tau_c\!\to\!\infty$, $\gamma\!\to\!0$ while sensing becomes trivial ($r(D)\!\to\!1$), so
+a $\gamma$-free ``uniform'' rate is neither attainable nor needed. The separations are the
+endpoints of Cor.~\ref{cor:imp}: fixed AIMD's excess over-admission stays bounded below as
+$\tau_c/D\!\to\!0$, and static forfeits a constant of goodput as $\tau_c/D\!\to\!\infty$.
 \end{theorem}
 \begin{proof}[Proof sketch]
-Consistency and the concentration bound give a correct regime decision after
-$n=O(\log(1/\delta)/(\,r{-}\theta\,)^2)$ probes w.p.\ $1-\delta$; conditioned on the
-correct branch, Cor.~\ref{cor:imp} (static branch, where feedback is worthless) and
-Prop.~\ref{prop:bound} (AIMD branch) bound the per-epoch gap, and averaging over the $O(1)$ misclassified
-prefix yields the stated regret. The separations (i)--(ii) are the two endpoints of
-Cor.~\ref{cor:imp}: at small $\tau_c$ AIMD sits at $\rho\!\approx\!\tfrac14$ while
-the optimum is $\rho\!\to\!0$; at large $\tau_c$ static forfeits
-$\Delta\!\to\!\tfrac12$.
+The concentration bound gives a correct regime decision after
+$n=O(\log(1/\delta)/(r{-}\theta)^2)$ probes w.p.\ $1-\delta$; conditioned on the correct
+branch, Cor.~\ref{cor:imp} (static) and Prop.~\ref{prop:bound} (AIMD) bound the per-epoch
+gap, and averaging over the $O(1)$ misclassified prefix yields the regret. At small
+$\tau_c$ AIMD sits at $\rho\!\approx\!\tfrac14$ while the optimum is $\rho\!\to\!0$; at
+large $\tau_c$ static forfeits $\Delta\!\to\!\tfrac12$.
 \end{proof}
 
 \paragraph{Scope, honestly.}
@@ -331,11 +332,9 @@ any symmetric stationary $x_t$ the value $\tfrac12 r(D)$ of \eqref{eq:adv} is
 freshest sample---and it is the \emph{exact} feedback advantage when $x_t$ is Markov,
 since then $\hat x_t$ is a sufficient statistic for $x_t$ (Thm.~\ref{thm:limit}). For a
 general non-Markov symmetric process a history-using controller can do strictly better
-than $\tfrac12 r(D)$---e.g.\ a random-phase deterministic square wave of period $4D$
-has $r(D){=}0$ yet its phase, hence $x_t$ exactly, is recoverable from the delayed
-history, so a causal controller attains $\Delta=\tfrac12$, not $0$---so the exact
-equality is Markov-specific and the general \emph{converse} is the $\beta$-mixing
-bound of App.~\ref{app:beta}, not $r(D)$. Prop.~\ref{prop:layercake} lifts the
+than $\tfrac12 r(D)$ (e.g.\ a random-phase square wave with $r(D){=}0$ stays exactly
+predictable from its phase), so the exact equality is Markov-specific and the general
+\emph{converse} is the $\beta$-mixing bound of App.~\ref{app:beta}. Prop.~\ref{prop:layercake} lifts the
 construction to any integer $C$ once over-admission is scored by \emph{amount} rather
 than by the $0/1$ indicator (the two coincide at $C{=}2$, so our testbed is
 unaffected). (ii) \emph{Stationarity:}
@@ -345,9 +344,7 @@ tracks (\S\ref{sec:controller}). (iii) \emph{Fixed age $D$:} if the freshest
 sample has a random age $A$ whose value the controller can read, the advantage is
 the age-averaged $\Delta=\tfrac12\,\mathbb{E}[r(A)]$---the same law under the age
 law---and the impossibility $\Delta\to0$ persists whenever $A\gg\tau_c$ almost
-surely. A matching
-lower bound in the process's $\beta$-mixing coefficient, for general non-binary
-capacity, is deferred to the appendix. The point stands: \textbf{politeness under
+surely. The point stands: \textbf{politeness under
 age-limited sensing is worth exactly what the neighbour's load is predictable
 across the sensing delay, and a controller should measure that predictability and
 adapt.}

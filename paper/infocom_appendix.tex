@@ -91,17 +91,16 @@ $p\mapsto(1-2p)^{D}$ is $2D$-Lipschitz on $[0,\tfrac12]$, $|\hat r_n-r(D)|\le
 2D|\hat p_n-p|$; hence with a threshold margin $|r(D)-\theta|\ge\Delta\theta$ the branch
 is wrong with probability $\le 2\exp(-c_0\gamma n(\Delta\theta)^{2}/4D^{2})$.
 
-\begin{theorem}[Uniform regret]\label{thm:regret}
+\begin{theorem}[Regret]\label{thm:regret}
 Set $\theta$ at the branch \emph{indifference} level, where the two branches' values are
-$L$-Lipschitz in $r(D)$ and coincide. Then the regime-adaptive controller's
-time-averaged value over horizon $N$ obeys $\sup_{\tau_c}\mathrm{Regret}_N=
-O(D/\sqrt{\gamma N})$, and $\mathrm{Regret}_N=O(1/N)$ for any fixed process with
-$r(D)\neq\theta$.
+$L$-Lipschitz in $r(D)$ and coincide. On any process class with spectral gap
+$\gamma\ge\gamma_0>0$ the regime-adaptive controller's regret over horizon $N$ is
+$O(D/\sqrt{\gamma_0 N})$, and $O(1/N)$ for any fixed process with $r(D)\neq\theta$.
 \end{theorem}
 \begin{proof}[Proof sketch]
-A wrong branch costs at most $L\Delta\theta$; averaging the wrong-branch bound gives
-$\mathrm{Regret}_N\le L\min(\Delta\theta,\,8D^{2}/(c_0\gamma N\Delta\theta))$, which is
-$O(1/N)$ for fixed $\Delta\theta$ and, maximized over $\tau_c$ at
-$\Delta\theta^\star=\sqrt{8D^{2}/(c_0\gamma N)}$, yields $O(D/\sqrt{\gamma N})$.
+A wrong branch costs $\le L\Delta\theta$; averaging the wrong-branch bound gives
+$\mathrm{Regret}_N\le L\min(\Delta\theta,\,8D^{2}/(c_0\gamma N\Delta\theta))$, optimized at
+$\Delta\theta^\star=\sqrt{8D^{2}/(c_0\gamma N)}$ to $O(D/\sqrt{\gamma N})$ ($O(1/N)$ for
+fixed $\Delta\theta$).
 \end{proof}
 
