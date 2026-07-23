@@ -1,0 +1,83 @@
+[
+ {
+  "title": "Two-state Markov",
+  "n_lags": 21,
+  "obs_max": 0.005562643531513141,
+  "sel_L05": 0.00015303252006391955,
+  "sel_U95": 0.015412094922174024,
+  "I_cond_LB_selection_aware": 4.6837904394227876e-08,
+  "seconds": 19.6
+ },
+ {
+  "title": "i.i.d. null",
+  "n_lags": 21,
+  "obs_max": 0.012349397590361445,
+  "sel_L05": 0.007857364756496605,
+  "sel_U95": 0.020281124497991968,
+  "I_cond_LB_selection_aware": 0.0001234763618332699,
+  "seconds": 20.2
+ },
+ {
+  "title": "LOCATA azimuth",
+  "n_lags": 22,
+  "obs_max": -0.0007239919803965248,
+  "sel_L05": -0.0008910670527957229,
+  "sel_U95": 0.0003433279926756695,
+  "I_cond_LB_selection_aware": 0.0,
+  "seconds": 25.9
+ },
+ {
+  "title": "LOCATA VAD",
+  "n_lags": 21,
+  "obs_max": 0.0015178345560333923,
+  "sel_L05": 0.0,
+  "sel_U95": 0.059763203570543016,
+  "I_cond_LB_selection_aware": 0.0,
+  "seconds": 33.7
+ },
+ {
+  "title": "Sperm-whale codas",
+  "n_lags": 21,
+  "obs_max": 0.042805569881382156,
+  "sel_L05": 0.03969362875611165,
+  "sel_U95": 0.08450704225352113,
+  "I_cond_LB_selection_aware": 0.003151168327656027,
+  "seconds": 13.4
+ },
+ {
+  "title": "GOES X-ray flux",
+  "n_lags": 19,
+  "obs_max": 0.024754500818330607,
+  "sel_L05": 0.017491816693944354,
+  "sel_U95": 0.05996328778299,
+  "I_cond_LB_selection_aware": 0.0006119273025091007,
+  "seconds": 9.7
+ },
+ {
+  "title": "GOES magnetometer",
+  "n_lags": 19,
+  "obs_max": 0.03408861015577584,
+  "sel_L05": 0.025785694973739125,
+  "sel_U95": 0.04865934095256245,
+  "I_cond_LB_selection_aware": 0.0013298041305574303,
+  "seconds": 9.9
+ },
+ {
+  "title": "GOES protons",
+  "n_lags": 20,
+  "obs_max": 0.026873385012919897,
+  "sel_L05": 0.019735614511433155,
+  "sel_U95": 0.06170798898071626,
+  "I_cond_LB_selection_aware": 0.0007789889602877818,
+  "seconds": 3.2
+ },
+ {
+  "title": "Seismic ANMO",
+  "n_lags": 19,
+  "obs_max": 0.15697211155378485,
+  "sel_L05": 0.14533466135458167,
+  "sel_U95": 0.16884462151394422,
+  "I_cond_LB_selection_aware": 0.04224432758210187,
+  "seconds": 12.2
+ }
+]

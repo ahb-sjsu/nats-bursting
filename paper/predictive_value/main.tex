@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Decisions}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.8 (review round 4: consolidated on battery v5; sign-branch thresholds; certification language scoped)}
+\date{Working draft --- v0.9 (selection-aware bootstrap executed: seismic certificate survives at 0.042 nats, three routes agree)}
 
 \begin{document}
 \maketitle
@@ -59,12 +59,14 @@ delayed sample is exactly a sum of \emph{hinges} in the lag covariance with
 sign-dependent dead zones; for twice-smooth objectives the weak-correlation response is quadratic
 to leading order, and for squared error exactly $C^2/[\pi(1-\pi)]$; the
 companion's linear law is the prior-on-kink polyhedral case. A nine-series battery (acoustics,
-bioacoustics, space weather, seismology, plus synthetic controls) finds no
-detectable history excess (equivalence-bounded within a registered margin)
-on the series where lag-1-matched surrogates predict none, observes the
-envelope's predicted $O(r^2)$ tightness on real data, and inverts the
-incremental theorem into model-calibrated lower bounds on conditional
-history information where the processes are non-Markov.
+bioacoustics, space weather, seismology, plus synthetic controls)
+establishes registered-class equivalence on four series, leaves one
+noise-limited, finds two smaller detected gains at or below the practical
+floor, and finds one clearly material history gain; it illustrates the
+predicted $O(r^2)$ tightness correction on real binary pair
+distributions, and inverts the incremental theorem into model-calibrated,
+dependence-aware lower bounds on conditional history information where
+the history structure is found.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -95,8 +97,10 @@ value at $\Omega\sqrt{(b\ln2)/2}$, so compression can preserve but never
 create feedback value. (\textbf{C2}) We show the envelope is \emph{sharp
 where it matters}: on the canonical binary chain it matches the exact law to
 $O(r^3)$ (Proposition~\ref{prop:tight}) --- and the battery of
-\S\ref{sec:battery} \emph{observes} this tightness on real data, including
-the predicted $O(r^2)$ correction. (\textbf{C3}) We prove no universal
+\S\ref{sec:battery} \emph{illustrates} this tightness on real binary
+pair distributions, including the predicted $O(r^2)$ correction (a
+consistency illustration: $\hat I$, $\hat r$, and $\widehat V_1$ derive
+from the same lag table). (\textbf{C3}) We prove no universal
 equality $\Delta=f(I)$ exists for bounded objectives
 (Proposition~\ref{prop:noneq}): information is a scalar, value is a
 geometry. This sharpens against the classical exception --- for
@@ -125,12 +129,11 @@ total-variation envelope and prove mixing and information are incomparable
 --- for every lag and every $K$, a \emph{preview process} keeps
 $\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
 vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A nine-series
-battery across four physical domains bounds any undetected history excess
-within a registered equivalence margin where surrogates predict none,
-observes the envelope's tightness, and --- read backwards --- uses the
-incremental theorem as a certified witness of \emph{conditional} history
-information on non-Markov series, always through a one-sided
-model-calibrated lower bound:
+battery across four physical domains establishes registered-class
+equivalence on four series, leaves one noise-limited, and finds one
+clearly material history gain; read backwards, the incremental theorem
+converts that gain into a model-calibrated, dependence-aware lower bound
+on \emph{conditional} history information, always one-sided:
 $I(X_t;\text{history}\mid X_{t-D})\ge
 2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}).
@@ -442,7 +445,7 @@ does not. In short: mixing is the sharper analysis tool when a model is in
 hand; information is the operational one when only data or a bit budget is.
 \end{remark}
 
-\begin{table}[h]\centering\small
+\begin{table}[!ht]\centering\small
 \begin{tabular}{llll}
 \toprule
 Envelope & Bound on $\Delta_Y$ & Needs & Blind spot \\
@@ -736,20 +739,27 @@ incremental value), blocks resampled within runs at the selected lag
 $D^*$. Because $D^*$ is an argmax over the lag grid that the bootstrap
 treats as fixed, the i.i.d.\ null's paired interval calibrates the
 \emph{selection} bias not covered (its upper end $\approx0.02$); paired
-lower bounds are claimed only above that floor, and repeating the lag
-selection inside each bootstrap replicate is the registered refinement
-for the camera-ready analysis. Validity checks pass:
+lower bounds are claimed only above that floor. The selection-aware
+refinement has been executed: repeating the entire lag selection inside
+each block-bootstrap replicate (blocks resampled with shared starts
+across all registered lags, the maximizing lag re-selected per replicate,
+the one-sided bound taken from the resulting max-statistic distribution).
+The i.i.d.\ null quantifies the percentile-of-max procedure's residual
+optimism at $+0.008$ --- so certificates are claimed only where the
+parametric-bootstrap detection test also fires, which excludes the
+noisy short-series maxima the winner's curse can manufacture (whale,
+protons). Validity checks pass:
 the Markov reference's interval straddles zero (no phantom conditional
 information) and azimuth's is slightly negative (the overfitting cost of
 the richer class).
 \emph{Non-rejection is not exactness}: where the test does not fire, we
-report the model-calibrated upper bound
-$U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ and claim ``no
-detectable excess (equivalent within the margin)'' only when $U<0.03$.
+report the model-calibrated two-tail upper bound
+$U_2=\text{gain}_{\max}+\varepsilon_{\mathrm{under}}$ and claim ``no
+detectable excess (equivalent within the margin)'' only when $U_2<0.03$.
 
 \textbf{The two information measurements.} For each domain and lag, the
 plug-in $\widehat I(X_t;X_{t-D})$ from pooled pair counts ($2{\times}2$;
-plug-in bias $\le 3/(2N)$ nats, negligible at the pooled sample sizes
+first-order plug-in bias $O(1/N)$, negligible at the pooled sample sizes
 reported) and the envelope $\sqrt{\widehat I/2}$. Their registered uses
 follow the two theorems, matched to the observable each governs.
 \emph{Single sample} (Theorem~\ref{thm:mi} at $Y=X_{t-D}$): the exact
@@ -764,12 +774,15 @@ model-calibrated lower bound certifies \emph{conditional} predictive
 information:
 \[
 I(X_t;\,\text{history}\mid X_{t-D})\;\ge\;
-2\,\bigl[(\text{gain}_{\max}-\varepsilon_{\mathrm{dom}})^{+}\bigr]^{2},
+2\,\bigl[(\text{gain}_{\max}-\varepsilon_{\mathrm{over}})^{+}\bigr]^{2},
 \]
 never through the raw point estimate, whose positive noise would inflate
 the certificate. The total-information witness
 $I(X_t;\text{window})\ge2[(\widehat\Delta_{\mathrm{hist}}
--\varepsilon_{\mathrm{dom}})^{+}]^{2}$ is retained separately.
+-\varepsilon_{\mathrm{over}})^{+}]^{2}$ is retained separately, with the
+caveat that its estimator differs from the incremental-gain estimator and
+in principle requires its own overestimation calibration; the gain-error
+quantile is reused as an approximation and labelled as such.
 
 \subsection{Results}
 
@@ -794,7 +807,7 @@ conservative for the incremental value.
 \begin{tabular}{lrrrrrrcl}
 \toprule
 Domain & $\hat\pi$ & gain & $p$ & $\varepsilon_{\mathrm{ov}}$ &
-$\varepsilon_{\mathrm{un}}$ & $U_2$ & paired 95\% CI & verdict \\
+$\varepsilon_{\mathrm{un}}$ & $U_2$ & paired boot.@ (fixed $D^*$) & verdict \\
 \midrule
 Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $[-.003,+.014]$ & equivalent \\
 i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $[+.005,+.020]$ & selection floor \\
@@ -811,9 +824,11 @@ Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{
 \emph{registered six-lag lookup class}: ``equivalent'' $=$ $U_2<0.03$
 under both-tail calibration; ``not established'' $=$ no detection but
 $U_2\ge0.03$; ``detected (exploratory)'' $=$ statistically detected at
-the practical floor with a paired bound at the selection floor. The
-i.i.d.\ null's \emph{positive} paired interval is the empirical
-lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
+the practical floor with a paired bound at the selection floor. VAD's degenerate $[.000,.000]$ interval is genuine: at its $D^*{=}1$
+the $k{=}6$ policy and the exact single-sample policy reduce to the same
+majority rule on every fold, so the paired difference is identically
+zero. The i.i.d.\ null's \emph{positive} paired interval is the
+empirical lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
 paired bounds, since $D^*$ is an argmax the bootstrap treats as fixed).
 Bold: the one interval that dwarfs every calibration concern.}
 \label{tab:battery}
@@ -833,7 +848,9 @@ the equivalence side: $\varepsilon_{\mathrm{under}}$ is near zero or
 negative on most series, so VAD and the whale codas join the
 class-equivalent block. Sub-unity envelope ratios disappeared with the
 imbalance correction (balanced-domain tightness ratios $1.11$--$1.35$, on
-the Pinsker side of unity as population theory requires).
+the Pinsker side of unity as population theory requires --- a consistency
+illustration rather than an independent test, since $\hat I$, $\hat r$,
+and $\widehat V_1$ derive from the same pooled lag table).
 
 \textbf{Only seismic exhibits a clearly material history gain.} X-ray
 and magnetometer show smaller statistically detected gains at or below
@@ -858,19 +875,19 @@ this an \emph{empirical} dead zone.)
 
 \textbf{The conditional lower bound stands --- once at strength.} By
 Theorem~\ref{thm:incr}, seismic's history gain converts into a lower
-bound on conditional predictive information. The \emph{primary} result
-is the dependence-aware one: the moving-block interval
-$[+.146,+.168]$ gives $I(X_t;\text{history}\mid X_{t-D})\ge
-2(0.146)^2\approx0.043$ nats, with the stated caveat that $D^*$ was
-selected before bootstrapping (the i.i.d.-calibrated selection floor,
-$0.02$, is dwarfed sevenfold). The fitted-Markov surrogate route
-corroborates with $2(0.158-0.014)^2\approx0.041$ nats --- two
-complementary calibration routes, agreeing to within a few percent ---
-alongside the total-information witness
-$I(X_t;\text{window})\ge0.176$ nats. History knows what the last
+bound on conditional predictive information. The \emph{primary} result is now fully
+dependence- \emph{and} selection-aware: with the lag selection repeated
+inside every block-bootstrap replicate, the one-sided bound is
+$+0.1453$, giving
+$I(X_t;\text{history}\mid X_{t-D^*})\ge 2(0.1453)^2\approx0.042$
+nats --- a certificate in the defensible sense. Two further routes
+corroborate to within a few percent: the fixed-$D^*$ moving-block
+interval ($[+.146,+.168]$, $\approx0.042$) and the fitted-Markov
+surrogate calibration ($2(0.158-0.014)^2\approx0.041$) --- alongside
+the total-information witness $I(X_t;\text{window})\ge0.176$ nats. History knows what the last
 sample does not; that is what ``aftershock clustering'' means in
-information units. Magnetometer's paired bound ($+.022$) sits at the
-selection floor and is reported as exploratory. The instrument reads in
+information units. Magnetometer's selection-aware bound ($+.026$, certificate
+$\approx0.001$ nats) is small and reported as exploratory. The instrument reads in
 both directions: class equivalence or bounded excess on most series; a
 dependence-aware conditional-information lower bound exactly where the
 history structure is found.
@@ -958,8 +975,8 @@ sensing. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the nine-series
 battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
 the envelope's predicted tightness appears with its $O(r^2)$ correction,
-and history gains beyond the single-sample value certify conditional
-predictive information in nats. The instrument reads in both directions; that, more
+and history gains beyond the single-sample value yield dependence-aware
+lower bounds on conditional predictive information in nats. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
 
 \appendix

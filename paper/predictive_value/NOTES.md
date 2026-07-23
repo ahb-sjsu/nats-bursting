@@ -180,3 +180,27 @@ results reading 4 dual-certificate, artifacts archived
   Decisions". Selection-inside-bootstrap = registered camera-ready
   refinement.
 Reviewer: "after those changes, genuinely submission-ready."
+
+## Review round 5 + selection-aware execution (2026-07-23 ~02:00) — v0.9
+
+THE FINAL STATISTICAL OPERATION EXECUTED (v5c): lag selection repeated
+inside every block-bootstrap replicate (shared block starts across lags,
+max re-selected per replicate, bound from the max-statistic distribution).
+- BUG CAUGHT ON FIRST RUN: 64-fraction cap truncated block coverage for
+  large-n domains (seismic mean shrunk ~20x, 0.157->0.0098 — impossible
+  numbers exposed it); fixed with kk_max-sized draws.
+- RESULT: seismic selL05 = +0.1453 -> I_cond >= 0.042 nats,
+  dependence- AND selection-aware — survives, as the reviewer predicted.
+  THREE routes agree 0.041-0.042. Markov ref ~0 ✓; iid residual optimism
+  +0.008 (2.5x better than fixed-D* floor); claims gated on the detection
+  test (excludes whale's winner's-curse +0.040 at p=1.0, protons p=.11);
+  magnetometer exploratory (0.001 nats).
+Cleanup: U2/eps_under notation unified; I_cond uses eps_over; window-
+witness calibration caveat; abstract/C6 precise counts (four equivalent,
+one noise-limited, two at/below floor, one material); O(r^2) ->
+"illustrates ... consistency illustration" (same-table caveat); certify
+language scoped (theorem exact; empirical = calibrated/dependence-aware/
+selection-aware as earned); paired-CI column relabelled "at fixed D*";
+VAD [0,0] explained (identical policies at D*=1); MI bias O(1/N);
+Table 1 float [!ht]; conclusion wording. Title: Age-Limited Decisions.
+Reviewer bottom line round 5: "With those changes, ready to submit."
