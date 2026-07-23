@@ -2,6 +2,7 @@
 \usepackage[letterpaper,margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
 \newtheorem{theorem}{Theorem}
 \newtheorem{proposition}[theorem]{Proposition}
@@ -529,6 +530,21 @@ $\pi(p^*_k-p_1)^+=((-C)-(\pi-p^*_k)\pi)^+$. Summing over $k$ gives the two
 branches.
 \end{proof}
 
+\begin{figure}[t]\centering
+\includegraphics[width=.72\linewidth]{fig_trichotomy.pdf}
+\caption{The contact-order trichotomy (Theorem~\ref{thm:contact}),
+drawn exactly. Polyhedral objective with $\pi{=}.35$, one kink at
+$p^*{=}.45$, $\Delta s{=}2$: sign-dependent hinges with dead-zone
+thresholds $a^+{=}.035$ (positive branch) and $a^-{=}.065$ (negative
+branch) --- anticorrelation of the same magnitude can be worthless where
+positive correlation has value. The symmetric case is the threshold-free
+degenerate hinge; squared error responds quadratically with no dead
+zone. The axis spans exactly the feasible covariance range
+$[-\pi^2,\,\pi(1{-}\pi)]$; for stronger asymmetry (e.g.\
+$\pi{=}.2$, $p^*{=}.3$) the negative-branch threshold exceeds the
+feasible range entirely and anticorrelated sensing is worthless at
+\emph{every} achievable covariance.}
+\label{fig:trichotomy}\end{figure}
 \subsection{Beyond polyhedral objectives: contact-order response}
 \label{sec:smooth}
 
@@ -843,7 +859,40 @@ Bold: the one interval that dwarfs every calibration concern.}
 \label{tab:battery}
 \end{table}
 
+\begin{figure}[t]\centering
+\includegraphics[width=.72\linewidth]{fig_tightness.pdf}
+\caption{Tightness of the information envelope on approximately
+balanced binary pairs (Proposition~\ref{prop:tight}). Curve: the exact
+ratio $\sqrt{I(r)/2}\,/\,(|r|/2)$; dashes: the leading correction
+$1+r^2/12$; points: per-lag plug-in ratios
+$\sqrt{\hat I/2}\,/\,(|\hat r|/2)$ for the five approximately
+balanced battery series ($|\hat\pi-\tfrac12|<.035$, $|r|>.05$). A
+consistency illustration rather than an independent test ($\hat I$ and
+$\hat r$ derive from the same pooled lag table): the plug-in points
+ride the predicted curve across the full correlation range. (The ratio
+to the exact \emph{value} $\widehat V_1$ lifts above this curve at
+small $r$ for the mildly imbalanced series --- that is
+Theorem~\ref{thm:hinge}'s threshold, not envelope slack; see
+Fig.~\ref{fig:trichotomy}.)}
+\label{fig:tightness}\end{figure}
+
 Four readings, in increasing order of consequence.
+
+\begin{figure}[t]\centering
+\includegraphics[width=.9\linewidth]{fig_battery.pdf}
+\caption{The battery at a glance. Dots: maximum history-class gain over
+the exact single-sample value; grey bars: the model-calibrated interval
+$[\hat g-\varepsilon_{\mathrm{over}},\hat g+\varepsilon_{\mathrm{under}}]$;
+ticks: the moving-block one-sided bounds at fixed $D^*$ (upper, teal)
+and with in-replicate lag selection (lower, orange); dotted line: the
+registered practical floor. Only seismic separates decisively from both
+zero and the floor; the i.i.d.\ null's positive selection-aware tick
+is the empirical winner's-curse floor; whale's wide bar is the
+short-series noise the verdict language respects. Where
+$\varepsilon_{\mathrm{under}}<0$ (whale, i.i.d.) the bias-corrected
+upper endpoint $U_2$ sits \emph{below} the point estimate --- the
+estimator is upward-biased there, and the bound says so.}
+\label{fig:battery}\end{figure}
 
 \textbf{The protocol corrections changed the conclusions, honestly.}
 Under the original chance baseline, four series appeared to carry history

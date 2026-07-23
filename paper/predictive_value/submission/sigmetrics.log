@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  23 JUL 2026 00:25
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  23 JUL 2026 01:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1132,7 +1132,17 @@ LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
 Underfull \vbox (badness 1152) has occurred while \output is active []
 
  [6.6]
-Overfull \hbox (3.19014pt too wide) in paragraph at lines 529--531
+<fig_trichotomy.pdf, id=187, 260.17201pt x 187.902pt>
+File: fig_trichotomy.pdf Graphic file (type pdf)
+<use fig_trichotomy.pdf>
+Package pdftex.def Info: fig_trichotomy.pdf  used on input line 521.
+(pdftex.def)             Requested size: 284.99268pt x 205.83842pt.
+
+
+Class acmart Warning: A possible image without description on input line 534.
+
+[7.7 <./fig_trichotomy.pdf>]
+Overfull \hbox (3.19014pt too wide) in paragraph at lines 544--546
 [][][]\T1/LinuxLibertineT-TLF/m/sc/10 (-20) Proposition 6.2 (Squared-er-ror pre
 -dic-tion: ex-actly qua-dratic). []\T1/LinuxLibertineT-TLF/m/it/10 (-20) For $\
 OML/nxlmi/m/it/10 w \LMS/ntxsy/m/n/10 2 »\OT1/LinuxLibertineT-TLF/m/n/10 (-20) 
@@ -1141,36 +1151,67 @@ OML/nxlmi/m/it/10 w \LMS/ntxsy/m/n/10 2 »\OT1/LinuxLibertineT-TLF/m/n/10 (-20)
 n/10 ¹\OML/nxlmi/m/it/10 w; x\LMS/ntxsy/m/n/10 º \U/ntxmia/m/it/10 =
  []
 
-[7.7] [8.8] [9.9]
-LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 78
-2.
+[8.8] [9.9]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [10.10]
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 79
+7.
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/inconsolata\t1zi4.fd
 File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 )
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 10.0pt on input line 782.
+(Font)              scaled to size 10.0pt on input line 797.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zi4' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 8.0pt on input line 799.
+(Font)              scaled to size 8.0pt on input line 814.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 6.0pt on input line 799.
+(Font)              scaled to size 6.0pt on input line 814.
+<fig_tightness.pdf, id=282, 260.17201pt x 187.902pt>
+File: fig_tightness.pdf Graphic file (type pdf)
+<use fig_tightness.pdf>
+Package pdftex.def Info: fig_tightness.pdf  used on input line 850.
+(pdftex.def)             Requested size: 284.99268pt x 205.83842pt.
 
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+Class acmart Warning: A possible image without description on input line 864.
 
-[10.10{C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/inconsolata
-/i4-t1-4.enc}]
-Underfull \vbox (badness 1924) has occurred while \output is active []
+<fig_battery.pdf, id=289, 354.12299pt x 209.58301pt>
+File: fig_battery.pdf Graphic file (type pdf)
+<use fig_battery.pdf>
+Package pdftex.def Info: fig_battery.pdf  used on input line 869.
+(pdftex.def)             Requested size: 356.23782pt x 210.84888pt.
 
- [11.11]
-[12.12]
+Class acmart Warning: A possible image without description on input line 882.
+
+[11.11{C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/inconsolata
+/i4-t1-4.enc}] [12.12 <./fig_tightness.pdf>] [13.13 <./fig_battery.pdf>]
+Underfull \vbox (badness 5119) has occurred while \output is active []
+
+ [14.14]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1028.
- [13.13]
+(Font)              scaled to size 8.0pt on input line 1076.
+
+[15.15]
+
+Class acmart Warning: Some images may lack descriptions.
+(acmart)              ACM is committed to complying with the upcoming US ADA ht
+tps://accessiblyapp.com/accessibility-compliance/ada/ and European Accessibilit
+y Act (EAA) https://accessiblyapp.com/accessibility-compliance/eaa/ regulations
+ by actively working to ensure our publications and application services are ac
+cessible to individuals with disabilities, adhering to the WCAG guidelines to p
+rovide a seamless experience for all users, and regularly reviewing our accessi
+bility practices to maintain compliance with evolving standards. 
+(acmart)              To this end, we strongly encourage our authors to provide
+ alternative text and captions for images and multimedia content. It is also im
+portant to optimize color contrast for the visually impaired. Taking these impo
+rtant steps when creating your papers will ensure that the widest possible audi
+ence can ingest your work..
+
 
 Class acmart Warning: ACM reference format is mandatory 
 (acmart)              for papers over one page. 
@@ -1187,22 +1228,22 @@ File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\se-utf8.def
 File: se-utf8.def 2019/11/29 v1.12 stringenc: UTF-8
-) [14.14] (sigmetrics.aux)
+) [16.16] (sigmetrics.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
 Package rerunfilecheck Info: File `sigmetrics.out' has not changed.
-(rerunfilecheck)             Checksum: 19E294CCB9021EABBA43E93E6FAFAE0F;2802.
+(rerunfilecheck)             Checksum: 2CFF12D5E379613ED015F169C16CBBC9;2803.
  ) 
 Here is how much of TeX's memory you used:
- 21837 strings out of 467870
- 361028 string characters out of 5418355
- 833063 words of memory out of 5000000
- 49313 multiletter control sequences out of 15000+600000
- 907358 words of font info for 694 fonts, out of 8000000 for 9000
+ 21904 strings out of 467870
+ 362617 string characters out of 5418355
+ 835921 words of memory out of 5000000
+ 49339 multiletter control sequences out of 15000+600000
+ 910775 words of font info for 718 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 90i,17n,131p,1375b,738s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,17n,131p,1375b,782s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/inconsolata/
 Inconsolata-zi4r.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/
 public/newtx/LibertineMathMI.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/
@@ -1224,9 +1265,9 @@ ic/newtx/NewTXMI7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1
 e1/public/newtx/txmiaX.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/
 type1/public/newtx/txsym.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/font
 s/type1/public/newtx/txsys.pfb>
-Output written on sigmetrics.pdf (14 pages, 729656 bytes).
+Output written on sigmetrics.pdf (16 pages, 808212 bytes).
 PDF statistics:
- 398 PDF objects out of 1000 (max. 8388607)
- 75 named destinations out of 1000 (max. 500000)
- 141961 words of extra memory for PDF output out of 154059 (max. 10000000)
+ 605 PDF objects out of 1000 (max. 8388607)
+ 80 named destinations out of 1000 (max. 500000)
+ 141976 words of extra memory for PDF output out of 154059 (max. 10000000)
 
