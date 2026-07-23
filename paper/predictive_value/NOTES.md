@@ -89,3 +89,25 @@ null; ε = model-calibrated, moving-block bootstrap as upgrade path);
 results recalibrated ("only seismic clearly material"; "empirical dead
 zone"; dropped ≫10⁶ and "exactly where physics says"); endtabular leak +
 M=60/299 inconsistency fixed. 14pp clean.
+
+## Review round 3 (2026-07-22) — 8.2/10; v0.6 lands the statistical-scope repair
+
+- **Policy-class scoping**: estimand (ii) = Δ_{P,W} (registered six-lag
+  lookup class), NOT the Bayes history value. Positives transfer upward
+  (V_π ≤ V*_W) → seismic conditional certificate sound; negatives bound
+  the class only → "no additional value detected by the registered
+  six-lag lookup policy," never unrestricted sufficiency. Scope-of-estimand
+  paragraph added; table verdicts scoped.
+- **Two-tail calibration**: ε_over = q95(E) for lower certificates (exact),
+  ε_under = −q05(E) for equivalence bounds; v4 recorded only ε_over and
+  uses it both sides — stated limitation; both tails in the moving-block
+  upgrade path.
+- **env.excess column → I_cond,LB** (the conditional-information
+  certificate in nats: seismic .041 bold; mag/xray .001; else 0).
+- Cor |r|; abstract "model-calibrated ... conditional"; conclusion
+  violations line replaced; §6.1 retitled "Beyond polyhedral objectives:
+  contact-order response"; 3 CR-corrupted \ref{thm:contact/incr} repaired
+  (the \r escape gotcha — same class as the tab-frac and endtabular bugs:
+  ALWAYS chr(92) in python edit scripts).
+Remaining for submission build: dependence-aware intervals (moving-block),
+both tails resolved, lit-check verdicts (2:17am cron), drop version line.

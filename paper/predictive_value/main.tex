@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.5 (review round 2: incremental-information theorem, contact-order law, statistical renaming)}
+\date{Working draft --- v0.6 (review round 3: policy-class scoping, two-tail calibration, conditional-certificate column, ref repairs)}
 
 \begin{document}
 \maketitle
@@ -63,8 +63,8 @@ bioacoustics, space weather, seismology, plus synthetic controls) finds no
 detectable history excess (equivalence-bounded within a registered margin)
 on the series where lag-1-matched surrogates predict none, observes the
 envelope's predicted $O(r^2)$ tightness on real data, and inverts the
-theorem into confidence-certified lower bounds on history information where
-the processes are non-Markov.
+incremental theorem into model-calibrated lower bounds on conditional
+history information where the processes are non-Markov.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -471,8 +471,7 @@ When does the Bayes envelope admit a closed form --- an exact \emph{law}
 rather than an envelope? For binary state with a finite action set, the
 exact law is a sum of hinges; for general convex value functions, the
 \emph{local contact order} of the value function at the prior determines
-the weak-correlation exponent (Theorem~
-ef{thm:contact}).
+the weak-correlation exponent (Theorem~\ref{thm:contact}).
 
 \begin{theorem}[The hinge law, polyhedral case]\label{thm:hinge}
 Let $X_t\in\{0,1\}$ be stationary with $\pi=\mathbb P(X_t{=}1)\in(0,1)$, let
@@ -521,7 +520,7 @@ $\pi(p^*_k-p_1)^+=((-C)-(\pi-p^*_k)\pi)^+$. Summing over $k$ gives the two
 branches.
 \end{proof}
 
-\subsection{Smooth objectives: quadratic response, and the trichotomy}
+\subsection{Beyond polyhedral objectives: contact-order response}
 \label{sec:smooth}
 
 The polyhedral hypothesis is not decoration. For a continuous action set
@@ -538,8 +537,7 @@ $\psi(p)=-p(1-p)$ is smooth and strictly convex, and, exactly,
 quadratic in the covariance, no hinge, no dead zone, for every $\pi$. More
 generally, whenever $\psi$ is twice continuously differentiable near $\pi$
 with $\psi''(\pi)>0$ (if the curvature vanishes the response is of higher
-order; Theorem~
-ef{thm:contact}),
+order; Theorem~\ref{thm:contact}),
 \[
 \Delta(D)\;=\;\tfrac12\,\psi''(\pi)\operatorname{Var}(p_Y)+o(C^2)
 \;=\;\frac{\psi''(\pi)}{2\pi(1-\pi)}\,C(D)^2+o\bigl(C(D)^2\bigr).
@@ -611,8 +609,8 @@ worthless.
 \begin{corollary}[The companion law, and why it is threshold-free]
 For the symmetric chain ($\pi=\tfrac12$) with the $0/1$ prediction
 objective ($K{=}1$, $p^*=\tfrac12$, $\Delta s=2$):
-$C^*=0$ and $C(D)=\tfrac14 r(D)$, so
-$\Delta(D)=2\cdot\tfrac14 r(D)=\tfrac12 r(D)$ --- the exact law of
+$C^*=0$ and $|C(D)|=\tfrac14 |r(D)|$, so
+$\Delta(D)=2\cdot\tfrac14 |r(D)|=\tfrac12 |r(D)|$ --- the exact law of
 \cite{infocom}. Symmetry places the prior \emph{on} the kink, which is the
 unique configuration with no dead zone; the linear-in-$r$ law is the
 degenerate hinge.
@@ -687,6 +685,20 @@ $\max(\hat\pi,1-\hat\pi)$ --- the correct static benchmark; accuracy above
 $\tfrac12$ overstates value whenever $\hat\pi\neq\tfrac12$. The
 \emph{history gain} is the difference (ii)$-$(i).
 
+\emph{Scope of the estimand.} Estimand (ii) is the value of one
+\emph{registered policy class} $\mathcal P$ (six-lag lookup), i.e.\
+$\widehat\Delta_{\mathcal P,W}=\sup_{\pi\in\mathcal P}V(\pi;W)
+-V_{\mathrm{stat}}$, \emph{not} the Bayes history value $\Delta_W$ of
+Theorem~\ref{thm:incr}. The asymmetry matters. Since
+$V(\pi;W)\le V^\star_W$ for every $\pi$, any demonstrated improvement over
+the exact single-sample value lower-bounds $\Delta_W-\Delta_Z$ --- so
+\emph{positive} certificates transfer upward and the conditional-information
+witnesses below are sound. \emph{Negative} findings bound only the class:
+where the lookup policy finds nothing, some richer policy class could still
+extract history value, so verdicts of that kind are stated as ``no
+additional value detected by the registered six-lag lookup policy,'' never
+as unrestricted single-sample sufficiency.
+
 \textbf{Surrogate calibration.} The null for ``history adds nothing beyond
 the law'' is a population of Markov surrogates per domain, each matched
 to the real series' lag-1 transition probabilities and evaluated by the
@@ -700,12 +712,22 @@ $1/300\approx0.0033$, written $p<.004$, never $.00$), together with the
 companion study's practical floor of $0.03$ on the effect. Because each
 surrogate is Markov, its true history gain is zero and its own exact
 $\widehat V_1$ is computable from its lag table, so the $M$ surrogate gain
-estimates sample the pipeline's estimation error \emph{under the fitted
-Markov model}; the $95$th percentile $\varepsilon_{\mathrm{dom}}$ is
-therefore a \emph{model-calibrated} (not distribution-free) bound, and
-every one-sided interval below inherits that qualification --- a
-dependence-aware alternative (moving-block bootstrap on held-out paired
-loss differences) is the registered upgrade path for a submission build.
+estimates sample the pipeline's estimation error $E$ \emph{under the
+fitted Markov model}. The two tails play different roles: a lower
+certificate needs the \emph{over}-estimation tail,
+$\varepsilon_{\mathrm{over}}=q_{0.95}(E)$, giving
+$L=\hat g-\varepsilon_{\mathrm{over}}$; an upper (equivalence) bound needs
+the \emph{under}-estimation tail,
+$\varepsilon_{\mathrm{under}}=-q_{0.05}(E)$, giving
+$U=\hat g+\varepsilon_{\mathrm{under}}$; the two coincide only under a
+symmetry condition. The present run recorded the single upper-tail
+quantile $\varepsilon_{\mathrm{dom}}=\varepsilon_{\mathrm{over}}$ and uses
+it on both sides --- exact for every lower certificate, an approximation
+for the equivalence labels, which therefore carry it as a stated
+limitation. Both are \emph{model-calibrated} (not distribution-free)
+bounds; a dependence-aware alternative (moving-block bootstrap on held-out
+paired loss differences, with both tails resolved) is the registered
+upgrade path for a submission build.
 \emph{Non-rejection is not exactness}: where the test does not fire, we
 report the model-calibrated upper bound
 $U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ and claim ``no
@@ -753,28 +775,29 @@ where applicable.
 \begin{tabular}{lrrrrrrl}
 \toprule
 Domain & $\hat\pi$ & gain$_{\max}$ & $p$ & $\varepsilon_{\mathrm{dom}}$ &
-$U$ & env.\ excess & verdict \\
+$U$ & $I^{\mathrm{cond}}_{\mathrm{LB}}$ & verdict \\
 \midrule
-Two-state Markov (ref) & $.470$ & $+.000$ & $.78$ & $.006$ & $.007$ & $-.007$ & equivalent \\
-i.i.d.\ null (control) & $.497$ & $+.012$ & $.023$ & $.011$ & $.023$ & $+.009$ & below floor \\
-LOCATA azimuth         & $.494$ & $+.008$ & $.063$ & $.009$ & $.016$ & $-.026$ & equivalent \\
-LOCATA VAD             & $.636$ & $-.000$ & $.82$  & $.052$ & $.052$ & $-.027$ & no excess detected$^{\dagger}$ \\
-Sperm-whale codas      & $.483$ & $+.046$ & $1.0$  & $.117$ & $.164$ & $+.027$ & no excess detected$^{\dagger}$ \\
-GOES protons           & $.489$ & $+.029$ & $.11$  & $.033$ & $.063$ & $+.021$ & no excess detected$^{\dagger}$ \\
-GOES X-ray flux        & $.421$ & $+.028$ & $<.004$ & $.008$ & $.036$ & $-.008$ & detected, below floor \\
-GOES magnetometer      & $.456$ & $+.033$ & $<.004$ & $.010$ & $.043$ & $-.004$ & history adds (at floor) \\
-Seismic ANMO           & $.508$ & $+.158$ & $<.004$ & $.014$ & $.171$ & $\mathbf{+.148}$ & history adds (certified) \\
+Two-state Markov (ref) & $.470$ & $+.000$ & $.78$ & $.006$ & $.007$ & $0$ & equivalent$^{*}$ \\
+i.i.d.\ null (control) & $.497$ & $+.012$ & $.023$ & $.011$ & $.023$ & $.000$ & below floor \\
+LOCATA azimuth         & $.494$ & $+.008$ & $.063$ & $.009$ & $.016$ & $0$ & equivalent$^{*}$ \\
+LOCATA VAD             & $.636$ & $-.000$ & $.82$  & $.052$ & $.052$ & $0$ & none detected$^{\dagger}$ \\
+Sperm-whale codas      & $.483$ & $+.046$ & $1.0$  & $.117$ & $.164$ & $0$ & none detected$^{\dagger}$ \\
+GOES protons           & $.489$ & $+.029$ & $.11$  & $.033$ & $.063$ & $0$ & none detected$^{\dagger}$ \\
+GOES X-ray flux        & $.421$ & $+.028$ & $<.004$ & $.008$ & $.036$ & $.001$ & detected, below floor \\
+GOES magnetometer      & $.456$ & $+.033$ & $<.004$ & $.010$ & $.043$ & $.001$ & history adds (at floor) \\
+Seismic ANMO           & $.508$ & $+.158$ & $<.004$ & $.014$ & $.171$ & $\mathbf{.041}$ & history adds (certified) \\
 \bottomrule
 \end{tabular}
 \caption{Battery v4 (corrected protocol; \texttt{battery\_v4.json}).
-``Equivalent'' $=$ $U<0.03$; $^{\dagger}$``no excess detected'' $=$ test
-does not fire but $U\ge 0.03$, so equivalence is \emph{not} established
-(noise-limited) --- a distinction the uncorrected protocol could not
-express. Bold: the only single-lag-envelope excess clearing the
-model-calibrated noise bound --- per Theorem~
-ef{thm:incr} a signature of
-higher-order dependence, not a violation. Pooled pair counts range from $2.0$k (protons) to $21$k
-(azimuth) per lag.}
+$I^{\mathrm{cond}}_{\mathrm{LB}}=2[(\hat g-\varepsilon_{\mathrm{dom}})^+]^2$
+nats: the model-calibrated conditional-information certificate of
+Theorem~\ref{thm:incr} --- the scientifically meaningful quantity; bold
+where material. Verdicts are statements about the \emph{registered
+six-lag lookup class}: $^{*}$``equivalent'' $=$ $U<0.03$ under the
+symmetric-tail approximation stated in the protocol;
+$^{\dagger}$``none detected'' $=$ test does not fire but $U\ge 0.03$, so
+class equivalence is \emph{not} established (noise-limited). Pooled pair
+counts range from $2.0$k (protons) to $21$k (azimuth) per lag.}
 \label{tab:battery}
 \end{table}
 
@@ -795,11 +818,15 @@ side of unity, exactly as population theory requires).
 
 \textbf{Only seismic exhibits a clearly material history gain.} X-ray and
 magnetometer show smaller statistically detected gains at or below the
-registered practical threshold; the remaining series show no detected
-excess, with equivalence established only where the model-calibrated upper
+registered practical threshold; on the remaining series \emph{no
+additional value was detected by the registered six-lag lookup policy},
+with class equivalence established only where the model-calibrated upper
 bound falls below the margin (Markov reference, azimuth). Where noise is
-wide (short whale exchanges, sparse protons), the verdict stays at ``no
-excess detected,'' honestly labelled.
+wide (short whale exchanges, sparse protons), the verdict stays at ``none
+detected,'' honestly labelled --- and none of these negative findings
+asserts unrestricted single-sample sufficiency: a richer policy class
+could in principle extract value the lookup class does not
+(\S protocol, scope of the estimand).
 
 \textbf{An empirical dead zone.} The imbalanced GOES series exhibit
 Theorem~\ref{thm:hinge}'s geometry at the plug-in level: X-ray
@@ -906,8 +933,8 @@ sensing. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the nine-series
 battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
 the envelope's predicted tightness appears with its $O(r^2)$ correction,
-and its violations, where the theory requires them, certify history
-information in nats. The instrument reads in both directions; that, more
+and history gains beyond the single-sample value certify conditional
+predictive information in nats. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
 
 \appendix
