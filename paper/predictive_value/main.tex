@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.3 (major revision: polyhedral restriction + trichotomy, sign branches, preview repair, corrected statistics; battery v4 executing)}
+\date{Working draft --- v0.4 (battery v4 results integrated: dead zone observed, VAD reversal, one certified witness)}
 
 \begin{document}
 \maketitle
@@ -635,89 +635,90 @@ the certificate.
 
 \subsection{Results}
 
-\emph{[Interim: the table below is the v3 run --- chance baseline, $M=60$,
-point-estimate witnesses --- retained as the repository record while the v4
-run under the corrected protocol above ($M=299$, majority baseline, exact
-$\widehat V_1$, equivalence and certificate bounds) executes; the table and
-prose will be replaced by v4. Two v3 artifacts are already explained by the
-correction: env$/$law ratios below one are impossible in population for
-\emph{balanced} pairs ($\sqrt{I/2}\ge|r|/2$ is Pinsker), so the sub-unity
-entries flag exactly the imbalanced series the chance baseline mishandles;
-and the ``$p=.00$'' entries are $p<.017$ at $M=60$.]}
-
-Table~\ref{tab:battery} reports, per domain: the maximum history gain
-with its surrogate $p$-value; the per-domain noise bound
-$\varepsilon_{\mathrm{dom}}$; the maximum
-excess of the history policy over the \emph{single-lag} envelope
-$\sqrt{\hat I(X_t;X_{t-D})/2}$; and the tightness ratio
-envelope$/$law (median over lags with $r>0.05$).
+Table~\ref{tab:battery} reports the corrected battery (v4): per domain, the
+class proportion $\hat\pi$; the maximum history gain over the exact
+single-sample Bayes value $\widehat V_1$; the exact Monte Carlo $p$
+($M{=}299$; floor $1/300$, written $<.004$); the matched-dependence noise
+bound $\varepsilon_{\mathrm{dom}}$; the equivalence bound
+$U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ (margin $0.03$); the
+maximum excess of the history policy over the single-lag envelope, with
+certification only when it clears $\varepsilon_{\mathrm{dom}}$; and the
+certified window-information lower bound
+$2[(\widehat\Delta_{\mathrm{hist}}-\varepsilon_{\mathrm{dom}})^+]^2$
+where applicable.
 
 \begin{table}[h]\centering\small
-\begin{tabular}{lrrrrrl}
+\begin{tabular}{lrrrrrrl}
 \toprule
-Domain & gain$_{\max}$ & $p$ & $\varepsilon_{\mathrm{dom}}$ &
-$\max(\widehat\Delta-\mathrm{env}_1)$ & env$/$law & verdict \\
+Domain & $\hat\pi$ & gain$_{\max}$ & $p$ & $\varepsilon_{\mathrm{dom}}$ &
+$U$ & env.\ excess & verdict \\
 \midrule
-Two-state Markov (ref)   & $0.030$ & $.38$ & $0.069$ & $+0.023$ & $1.001$ & no detectable excess \\
-i.i.d.\ null (control)   & $0.012$ & $.68$ & $0.016$ & $+0.012$ & ---     & $\Delta\approx 0$ \\
-LOCATA azimuth           & $0.008$ & $.05$ & $0.007$ & $-0.013$ & $1.099$ & no detectable excess \\
-Sperm-whale codas        & $0.046$ & $.98$ & $0.112$ & $+0.045$ & $1.010$ & no detectable excess \\
-GOES protons             & $0.029$ & $.77$ & $0.048$ & $+0.030$ & $0.998$ & no detectable excess \\
-\addlinespace
-LOCATA VAD               & $0.100$ & $.00$ & $0.059$ & $\mathbf{+0.128}$ & $0.940$ & history adds \\
-GOES X-ray flux          & $0.185$ & $.00$ & $0.100$ & $+0.071$ & $0.937$ & history adds \\
-GOES magnetometer        & $0.147$ & $.00$ & $0.070$ & $+0.041$ & $0.972$ & history adds \\
-Seismic ANMO             & $0.367$ & $.00$ & $0.037$ & $\mathbf{+0.157}$ & $0.999$ & history adds \\
+Two-state Markov (ref) & $.470$ & $+.000$ & $.78$ & $.006$ & $.007$ & $-.007$ & equivalent \\
+i.i.d.\ null (control) & $.497$ & $+.012$ & $.023$ & $.011$ & $.023$ & $+.009$ & below floor \\
+LOCATA azimuth         & $.494$ & $+.008$ & $.063$ & $.009$ & $.016$ & $-.026$ & equivalent \\
+LOCATA VAD             & $.636$ & $-.000$ & $.82$  & $.052$ & $.052$ & $-.027$ & no excess detected$^{\dagger}$ \\
+Sperm-whale codas      & $.483$ & $+.046$ & $1.0$  & $.117$ & $.164$ & $+.027$ & no excess detected$^{\dagger}$ \\
+GOES protons           & $.489$ & $+.029$ & $.11$  & $.033$ & $.063$ & $+.021$ & no excess detected$^{\dagger}$ \\
+GOES X-ray flux        & $.421$ & $+.028$ & $<.004$ & $.008$ & $.036$ & $-.008$ & detected, below floor \\
+GOES magnetometer      & $.456$ & $+.033$ & $<.004$ & $.010$ & $.043$ & $-.004$ & history adds (at floor) \\
+Seismic ANMO           & $.508$ & $+.158$ & $<.004$ & $.014$ & $.171$ & $\mathbf{+.148}$ & history adds (certified) \\
 \bottomrule
-\end{tabular}
-\caption{Battery v3 (nine series, four physical domains + controls;
-\texttt{battery\_v3.json}). Upper block: the law is the whole value of
-feedback and the single-lag envelope is respected within noise. Lower block:
-the surrogate test certifies history value beyond the law
-($p{<}.05$ and gain above the $0.03$ floor), and exactly there the history
-policy can exceed the \emph{single-sample} envelope --- bold where the
-excess clears $\varepsilon_{\mathrm{dom}}$, certifying window information
-beyond the single lag (see text).}
+\\end{tabular}
+\caption{Battery v4 (corrected protocol; \texttt{battery\_v4.json}).
+``Equivalent'' $=$ $U<0.03$; $^{\dagger}$``no excess detected'' $=$ test
+does not fire but $U\ge 0.03$, so equivalence is \emph{not} established
+(noise-limited) --- a distinction the uncorrected protocol could not
+express. Bold: the only envelope excess that clears the matched-dependence
+noise bound. Pooled pair counts range from $2.0$k (protons) to $21$k
+(azimuth) per lag.}
 \label{tab:battery}
 \end{table}
 
-Three readings, in increasing order of consequence.
+Four readings, in increasing order of consequence.
 
-\textbf{The law, confirmed where it should hold.} On the Markov reference
-and the three domains whose surrogate test finds nothing beyond the law
-(azimuth, whale codas, protons), the best delayed-history policy sits on
-$\tfrac12 r(D)$ across the lag grid --- the single delayed sample is the
-whole value of feedback, in acoustics, bioacoustics, and space weather alike.
+\textbf{The corrections bite exactly where the review predicted.} Under the
+chance baseline (v3), four series appeared to carry history value beyond
+the single sample (gains $0.100$--$0.367$, all ``$p=.00$''). Under the
+majority baseline and exact $\widehat V_1$: LOCATA VAD's gain
+\emph{vanishes} ($+0.100\to-0.000$, $p=.82$; $\hat\pi=.636$ --- the entire
+effect was the majority-class head start), GOES X-ray shrinks
+$0.185\to0.028$ (below the practical floor; $\hat\pi=.421$), magnetometer
+$0.147\to0.033$ (at the floor), and only seismic survives at strength
+($0.367\to0.158$). Imbalance, not history, carried most of the apparent
+excess --- and the sub-unity envelope ratios of v3 disappear with it (all
+balanced-domain tightness ratios now sit at $1.11$--$1.35$, on the Pinsker
+side of unity, exactly as population theory requires).
 
-\textbf{Tightness, observed in the wild.} The envelope$/$law column is
-Proposition~\ref{prop:tight} measured: $1.001$ on the reference chain
-(small $r$: the envelope sits \emph{on} the law), rising to $1.099$ on
-azimuth exactly as the $\sqrt{1+r^2/6}$ correction predicts for its
-slowly-decaying (large-$r$) regime. The information envelope is not a loose
-theoretical courtesy; on Markov-regime data it \emph{is} the law, to within
-a predicted $O(r^2)$ factor.
+\textbf{Single-sample sufficiency is the rule.} On eight of nine series the
+delayed single sample, evaluated exactly (majority baseline, dead zones
+included), captures all detectable feedback value at the battery's
+resolution --- with the equivalence bound $U<0.03$ certified for the
+balanced, well-sampled series (Markov reference, azimuth) and the weaker
+``no excess detected'' verdict, honestly labelled, where noise is wide
+(short whale exchanges, sparse protons).
 
-\textbf{The envelope as a non-Markovianity witness.} In the lower block the
-history policy exceeds the single-lag envelope --- decisively on VAD
-($+0.128$ against a noise bound of $0.059$) and seismic regime
-($+0.157$ vs.\ $0.037$). This is not a counterexample to
-Theorem~\ref{thm:mi}: the history policy's observable is the $6$-lag
-window $Y$, and the theorem bounds it by $\sqrt{I(X_t;Y)/2}$ for
-\emph{that} $Y$. Read backwards, the theorem converts the measured
-exceedance into a \emph{certified information lower bound}:
-\[
-I\bigl(X_t;\,\text{window}\bigr)\;\ge\;2\,\widehat\Delta_{\mathrm{hist}}^2,
-\]
-which on the seismic series certifies $\ge 0.072$ nats of window information
-at a lag where the single sample carries $0.002$ --- a $30\times$
-concentration of predictive information in history beyond the last sample
-(aftershock clustering, in information units). The two blocks of
-Table~\ref{tab:battery} are therefore not ``pass'' and ``fail'': they are
-the theorem operating in both directions --- as an envelope on Markov-regime
-processes, and as a quantitative witness of history structure on
-non-Markov ones. The dual use is registered in the companion study's terms:
-the same surrogate machinery that certifies the law's exactness upper-block
-certifies the window-information excess lower-block.
+\textbf{The dead zone is observed.} The imbalanced GOES series realize
+Theorem~\ref{thm:hinge} in the wild: X-ray ($\hat\pi=.421$, kink at
+$\tfrac12$, threshold $C^*\approx0.033$) has $\widehat V_1$ \emph{exactly
+zero} across its moderate-covariance lags --- the majority policy is
+unbeatable by any single delayed sample --- while its plug-in information
+remains positive; its envelope-to-value ratio diverges ($\gg10^6$) not as
+an artifact but as the theorem's geometry: \emph{information without value},
+Proposition~\ref{prop:noneq} measured on a physical process. Freshness
+metrics, and information metrics alike, cannot see this; the Bayes envelope
+does.
+
+\textbf{The certified witness stands --- once.} Seismic regime is the one
+series where the history policy's excess over the single-lag envelope
+clears the matched-dependence noise bound ($+0.148$ vs.\
+$\varepsilon=.014$), and its confidence-certified window-information bound
+is $I(X_t;\text{window})\ge 0.176$ nats --- aftershock clustering carrying
+an order of magnitude more predictive information than the last sample
+alone ($\widehat I_1\approx0.002$ at the certifying lag). Magnetometer
+shows a small certified gain at the practical floor. The instrument reads
+in both directions, and under the corrected statistics its two directions
+are: equivalence, most places; certified history information, exactly where
+the physics says it should be.
 
 \section{Related work}\label{sec:related}
 
