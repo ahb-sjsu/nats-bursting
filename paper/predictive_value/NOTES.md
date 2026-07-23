@@ -111,3 +111,27 @@ M=60/299 inconsistency fixed. 14pp clean.
   ALWAYS chr(92) in python edit scripts).
 Remaining for submission build: dependence-aware intervals (moving-block),
 both tails resolved, lit-check verdicts (2:17am cron), drop version line.
+
+## Lit check (2026-07-22 ~23:00, WebSearch inline — agents still limited)
+
+1. **Thm 2 folklore status: PARTIALLY KNOWN, exact form not surfaced.**
+   Adjacent classical families: MI<->Bayes-error (Fano/Feder–Merhav;
+   "Bayesian Error Based Sequences of MI Bounds" arXiv:1409.6654),
+   MI<->variation (Pinsker line), regret-information (Russo–Van Roy;
+   "On Bits and Bandits" arXiv:2405.16581). No verbatim
+   Delta <= Omega*sqrt(I/2) for bounded objectives found. Paper now says
+   so explicitly ("we claim assembly and anchoring, not the inequality").
+2. **Hinge vs econ: phenomenon known, form not.** Radner–Stiglitz 1984 ✓;
+   **Chade–Schlee JET 107(2):421–452, 2002** (general sufficient
+   conditions for the nonconcavity) verified and now cited at both
+   Radner–Stiglitz mentions. Exact covariance-parametrized hinge for
+   delayed binary sensing: not surfaced. (Also noted: Whitmeyer
+   arXiv:2404.01190 — not cited, could be for submission.)
+3. **Citation corrections:** soleymani22 authors = Soleymani, Baras,
+   HIRCHE (Johansson only in the 2023 Global Optimality follow-up) —
+   FIXED. ayan19 ICCPS 2019 ✓ verified. NEW cite: Soleymani–Baras–
+   Johansson, "Relation between value and age of information in feedback
+   control," arXiv:2403.11926 (2024) — directly the value-age relation,
+   added to the AoI-critics paragraph.
+4. AoI x MI at sensing lag: nothing found bounding decision value by MI
+   at the lag — the niche looks open.

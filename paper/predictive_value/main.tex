@@ -117,7 +117,7 @@ sitting on a kink --- the companion's symmetric case --- is the unique
 configuration with threshold-free linear response
 (\S\ref{sec:multistate}). The dead zone is the sharp polyhedral form of the
 Radner--Stiglitz nonconcavity of the value of information
-\cite{radnerstiglitz84}: for asymmetric states under a polyhedral
+\cite{radnerstiglitz84,chadeschlee02}: for asymmetric states under a polyhedral
 objective, weakly-correlated feedback is \emph{worthless}, not merely weak,
 and the sign of the correlation matters. (\textbf{C5}) We order the three
 envelopes (mixing, information, bit-budget) below the master
@@ -597,7 +597,7 @@ $\Delta\propto C^2$. The companion's law is the first case --- symmetry
 puts the prior on the decision kink, the unique threshold-free polyhedral
 configuration. The dead zone is the sharp polyhedral form of the
 Radner--Stiglitz nonconcavity of the value of information
-\cite{radnerstiglitz84}, whose smooth setting is our third case (zero
+\cite{radnerstiglitz84,chadeschlee02}, whose smooth setting is our third case (zero
 marginal value at zero information, but not identically zero). And the
 sign-dependence of Theorem~\ref{thm:hinge} means even the \emph{direction}
 of correlation matters away from symmetry: with $\pi=0.2$ and one kink at
@@ -869,11 +869,16 @@ payoffs--beliefs duality; the hinge and dead-zone analysis of
 \S\ref{sec:multistate} is the exact delayed-binary specialization of that
 convex-analytic programme; the comparison-of-experiments order behind
 Lemma~\ref{lem:blackwell} is Blackwell's \cite{blackwell53}; and the
-Radner--Stiglitz nonconcavity \cite{radnerstiglitz84} anticipates the dead
+Radner--Stiglitz nonconcavity \cite{radnerstiglitz84,chadeschlee02} anticipates the dead
 zone in smooth form. The information envelope itself is assembled from
-textbook inequalities --- kindred moves appear wherever bounded value must
-be controlled by divergence, e.g.\ the information-ratio regret analyses of
-Russo and Van Roy \cite{russo16}. What we have not found
+textbook inequalities, and its closest classical relatives are the
+Fano-type families bounding Bayes \emph{error} by information; kindred
+moves appear wherever bounded value must be controlled by divergence,
+e.g.\ the information-ratio regret analyses of
+Russo and Van Roy \cite{russo16}. A targeted search (2026-07-22) found the
+adjacent families but not the bounded-objective envelope
+\eqref{eq:mi} stated as such; we accordingly claim assembly and
+anchoring, not the inequality. What we have not found
 elsewhere is the assembly this paper is about: the envelope \emph{anchored
 to an exact law} (sharp to $O(r^3)$, with the $O(r^2)$ correction observed
 on real data), its ordering against mixing envelopes with both separations
@@ -895,7 +900,8 @@ already argued \emph{within} the field: age-of-incorrect-information
 replaces the clock with an error-aware penalty \cite{maatouk20}, explicit
 AoI-vs-VoI scheduling comparisons exist for networked control
 \cite{ayan19}, and value-of-information metrics for feedback control have
-been quantified directly \cite{soleymani22}. Our claim is accordingly not
+been quantified directly, including an explicit derivation of the
+value--age relation \cite{soleymani22,valueage24}. Our claim is accordingly not
 that age lacks decision semantics --- that point is established --- but
 sharper: for exogenous one-step bounded-reward decisions the exact semantic
 object is the posterior Bayes envelope, which admits a universal
@@ -1029,6 +1035,15 @@ R.~Radner, J.~E.~Stiglitz. A nonconcavity in the value of information. In
 M.~Boyer, R.~Kihlstrom (eds.), \emph{Bayesian Models in Economic Theory},
 North-Holland, 33--52, 1984.
 
+\bibitem{chadeschlee02}
+H.~Chade, E.~E.~Schlee. Another look at the Radner--Stiglitz nonconcavity
+in the value of information.
+\emph{J.~Economic Theory} 107(2):421--452, 2002.
+
+\bibitem{valueage24}
+T.~Soleymani, J.~S.~Baras, K.~H.~Johansson. Relation between value and
+age of information in feedback control. arXiv:2403.11926, 2024.
+
 \bibitem{maatouk20}
 A.~Maatouk, S.~Kriouile, M.~Assaad, A.~Ephremides. The age of incorrect
 information: a new performance metric for status updates.
@@ -1040,7 +1055,7 @@ Age-of-information vs.\ value-of-information scheduling for cellular
 networked control systems. In \emph{Proc.\ ACM/IEEE ICCPS}, 2019.
 
 \bibitem{soleymani22}
-T.~Soleymani, J.~S.~Baras, K.~H.~Johansson. Value of information in
+T.~Soleymani, J.~S.~Baras, S.~Hirche. Value of information in
 feedback control: quantification.
 \emph{IEEE Trans.\ Automatic Control} 67(7):3730--3737, 2022.
 
