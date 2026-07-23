@@ -15,12 +15,12 @@
 \usepackage{xcolor}
 
 \title{\textbf{The Value of Delayed Information:\\
-Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
+Predictive-Information Envelopes for Age-Limited Decisions}\\[4pt]
 \large Envelopes, exact laws, and witnesses for age-limited decisions}
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.7 (battery v5: both tails + dependence-aware certificates; lit-check verdicts in text)}
+\date{Working draft --- v0.8 (review round 4: consolidated on battery v5; sign-branch thresholds; certification language scoped)}
 
 \begin{document}
 \maketitle
@@ -56,9 +56,9 @@ decision-relevant distinction; and (vi) give an exactness
 theory for binary state in which the local decision geometry at the prior
 sets the correlation exponent: for finite action sets the value of a
 delayed sample is exactly a sum of \emph{hinges} in the lag covariance with
-sign-dependent dead zones; for smooth objectives it is exactly quadratic
-(squared error: $\Delta=C^2/\pi(1-\pi)$); the companion's linear law is the
-prior-on-kink boundary case. A nine-series battery (acoustics,
+sign-dependent dead zones; for twice-smooth objectives the weak-correlation response is quadratic
+to leading order, and for squared error exactly $C^2/[\pi(1-\pi)]$; the
+companion's linear law is the prior-on-kink polyhedral case. A nine-series battery (acoustics,
 bioacoustics, space weather, seismology, plus synthetic controls) finds no
 detectable history excess (equivalence-bounded within a registered margin)
 on the series where lag-1-matched surrogates predict none, observes the
@@ -110,11 +110,11 @@ fact is that \emph{the local geometry of the value function at the prior
 sets the correlation exponent}. For finite action sets (polyhedral value
 functions) the value of a delayed sample is exactly a sum of
 \emph{hinges} in the lag-$D$ covariance, with sign-dependent dead-zone
-thresholds --- linear response beyond, identically zero within; for smooth
-objectives (e.g.\ squared-error prediction, where exactly
-$\Delta=C(D)^2/\pi(1-\pi)$) the response is \emph{quadratic}; and a prior
-sitting on a kink --- the companion's symmetric case --- is the unique
-configuration with threshold-free linear response
+thresholds --- linear response beyond, identically zero within; for twice-smooth
+objectives the weak-correlation response is quadratic to leading order
+(exactly $C(D)^2/\pi(1-\pi)$ for squared error); and a prior sitting on
+a kink --- the companion's symmetric case --- is the polyhedral
+configuration yielding threshold-free linear response
 (\S\ref{sec:multistate}). The dead zone is the sharp polyhedral form of the
 Radner--Stiglitz nonconcavity of the value of information
 \cite{radnerstiglitz84,chadeschlee02}: for asymmetric states under a polyhedral
@@ -404,8 +404,9 @@ p_t \;=\; \begin{cases} c_{t+m} & t\equiv\Theta \pmod K\\
 a sensor that occasionally publishes a \emph{forecast} $m$ steps ahead. The
 objective depends only on the current payoff bit:
 $R(w,x)=\Omega\,\mathbf 1[w=c]$.
-\emph{Mixing (lower bound).} The window $[t-m,\,t-D]$ has length $K$, hence
-contains exactly one preview slot $s\equiv\Theta$; that preview is in the
+\emph{Mixing (lower bound).} The window $[t-m,\,t-D-1]$ contains $K$
+consecutive integers, hence exactly one preview slot
+$s\equiv\Theta$; that preview is in the
 delayed past and reveals $c_{s+m}$ with $s+m\in[t,\,t+K]$, a
 present-or-future payoff bit. The event $B=\{c_{s+m}=1\}\in\mathcal F_{\ge t}$
 then has conditional probability in $\{0,1\}$ against marginal $\tfrac12$,
@@ -496,9 +497,10 @@ a^-_k&=\begin{cases}(p^*_k-\pi)(1-\pi), & p^*_k\ge\pi,\\
 \]
 $\Delta$ is piecewise-linear and nondecreasing in $|C|$ \emph{on each
 covariance-sign branch}, identically zero on the branch dead zone; unless
-$\pi=\tfrac12$ or the kink set is symmetric about $\pi$, the two branches
-differ --- positive and negative correlation of the same magnitude can have
-different value, one of them zero.
+$\pi=\tfrac12$ or the value function has the corresponding reflection
+symmetry about $\pi$ (kink locations \emph{and} slope jumps), the two
+branches generally differ --- positive and negative correlation of the
+same magnitude can have different value, one of them zero.
 \end{theorem}
 
 \begin{proof}
@@ -594,8 +596,8 @@ $\Rightarrow$ linear response $\Delta\propto|C|$; \emph{prior interior to a
 flat piece} $\Rightarrow$ dead zone, $\Delta=0$ until a threshold;
 \emph{smooth curvature} $\Rightarrow$ quadratic response
 $\Delta\propto C^2$. The companion's law is the first case --- symmetry
-puts the prior on the decision kink, the unique threshold-free polyhedral
-configuration. The dead zone is the sharp polyhedral form of the
+puts the prior on the decision kink, the polyhedral configuration
+yielding threshold-free linear response. The dead zone is the sharp polyhedral form of the
 Radner--Stiglitz nonconcavity of the value of information
 \cite{radnerstiglitz84,chadeschlee02}, whose smooth setting is our third case (zero
 marginal value at zero information, but not identically zero). And the
@@ -611,9 +613,9 @@ For the symmetric chain ($\pi=\tfrac12$) with the $0/1$ prediction
 objective ($K{=}1$, $p^*=\tfrac12$, $\Delta s=2$):
 $C^*=0$ and $|C(D)|=\tfrac14 |r(D)|$, so
 $\Delta(D)=2\cdot\tfrac14 |r(D)|=\tfrac12 |r(D)|$ --- the exact law of
-\cite{infocom}. Symmetry places the prior \emph{on} the kink, which is the
-unique configuration with no dead zone; the linear-in-$r$ law is the
-degenerate hinge.
+\cite{infocom}. Symmetry places the prior \emph{on} the kink --- the polyhedral
+configuration with no dead zone; the linear-in-$r$ law is the degenerate
+hinge.
 \end{corollary}
 
 \begin{remark}[The dead zone is a prediction, not a curiosity]
@@ -622,9 +624,13 @@ For $\pi\neq p^*$ the hinge says weakly-correlated delayed feedback is
 $C^*$: below threshold, both posteriors fall on one side of the decision
 kink and the optimal action never changes. Operationally: a rare-event
 admission controller ($\pi$ small, $p^*$ moderate) gains \emph{nothing}
-from telemetry until its sensing age satisfies
-$|C(D)|>(p^*-\pi)\pi$ --- an exact, testable cutoff for when to stop paying
-for freshness at all. None of the envelopes of \S\ref{sec:comparison} see
+from telemetry until the covariance clears the \emph{branch} threshold:
+$C(D)>(p^*-\pi)\pi$ for positive correlation, but
+$-C(D)>(p^*-\pi)(1-\pi)$ for negative --- for rare events
+($\pi$ small) the negative-branch threshold is larger by the factor
+$(1-\pi)/\pi$, so anticorrelated telemetry must be far stronger before
+it is worth anything --- an exact, testable, sign-dependent cutoff for
+when to stop paying for freshness at all. None of the envelopes of \S\ref{sec:comparison} see
 this: the dead zone is a fact about geometry (posteriors vs.\ kink), which
 is precisely what scalar information summaries discard
 (Proposition~\ref{prop:noneq}).
@@ -637,9 +643,9 @@ objectives: the objective decomposes over layer indicators
 $x^u_t=\mathbf 1[a_t\ge u]$ and the total advantage is the exact sum
 $\Delta(D)=\sum_u\pi_u r_u(D)$ --- each layer a binary experiment, each
 governed by its hinge (there with symmetric thresholds, so zero dead zones).
-The boundary of exactness is now visible from both sides: exact laws hold
-precisely when the posterior family is effectively one-dimensional (a
-scalar belief per layer, moved along a line by the observation); the
+Effective one-dimensionality of the posterior family (a scalar belief
+per layer, moved along a line by the observation) is a principal
+tractable regime in which scalar closed forms arise; the
 two-bit construction of Proposition~\ref{prop:noneq} is the minimal
 experiment whose posterior geometry is genuinely two-dimensional, and there
 the value ceases to be a function of any scalar summary of dependence ---
@@ -719,27 +725,20 @@ $\varepsilon_{\mathrm{over}}=q_{0.95}(E)$, giving
 $L=\hat g-\varepsilon_{\mathrm{over}}$; an upper (equivalence) bound needs
 the \emph{under}-estimation tail,
 $\varepsilon_{\mathrm{under}}=-q_{0.05}(E)$, giving
-$U=\hat g+\varepsilon_{\mathrm{under}}$; the two coincide only under a
-symmetry condition. The present run recorded the single upper-tail
-quantile $\varepsilon_{\mathrm{dom}}=\varepsilon_{\mathrm{over}}$ and uses
-it on both sides --- exact for every lower certificate, an approximation
-for the equivalence labels, which therefore carry it as a stated
-limitation. Both are \emph{model-calibrated} (not distribution-free)
-bounds. The registered upgrade path has since been executed (battery v5):
-(a) \emph{both tails resolved} --- $arepsilon_{\mathrm{under}}$ proves
-near zero or negative on most series (the error distribution sits above
-zero), so the v4 equivalence labels were conservative, and under the
-two-tail bound $U_2$ two further series (VAD, whale codas) become
-class-equivalent while protons remains just above the margin
-($U_2=.032$); (b) a \emph{dependence-aware} moving-block bootstrap on
-held-out paired loss differences --- the registered $k{=}6$ policy against
-the pooled-\emph{exact} single-sample policy (in-sample fit favouring the
-single-sample arm, hence conservative for the certificate), blocks
-resampled within runs at the selected lag $D^*$. Because $D^*$ is an
-argmax over the lag grid, the i.i.d.\ null's paired interval calibrates
-the \emph{selection} bias the bootstrap does not cover (its 95th
-percentile $pprox0.02$ at the selected lag); certificates are claimed
-only where the paired lower bound clears that floor. Validity checks pass:
+$U_2=\hat g+\varepsilon_{\mathrm{under}}$; the two coincide only under a
+symmetry condition, so both are computed and reported separately. Both
+are \emph{model-calibrated} (not distribution-free) bounds. Complementing
+them, the analysis reports a \emph{dependence-aware} moving-block
+bootstrap on held-out paired loss differences --- the registered $k{=}6$
+policy against the pooled-\emph{exact} single-sample policy (in-sample
+fit favouring the single-sample arm, hence conservative for the
+incremental value), blocks resampled within runs at the selected lag
+$D^*$. Because $D^*$ is an argmax over the lag grid that the bootstrap
+treats as fixed, the i.i.d.\ null's paired interval calibrates the
+\emph{selection} bias not covered (its upper end $\approx0.02$); paired
+lower bounds are claimed only above that floor, and repeating the lag
+selection inside each bootstrap replicate is the registered refinement
+for the camera-ready analysis. Validity checks pass:
 the Markov reference's interval straddles zero (no phantom conditional
 information) and azimuth's is slightly negative (the overfitting cost of
 the richer class).
@@ -774,106 +773,107 @@ $I(X_t;\text{window})\ge2[(\widehat\Delta_{\mathrm{hist}}
 
 \subsection{Results}
 
-Table~\ref{tab:battery} reports the corrected battery (v4): per domain, the
-class proportion $\hat\pi$; the maximum history gain over the exact
-single-sample Bayes value $\widehat V_1$; the exact Monte Carlo $p$
-($M{=}299$; floor $1/300$, written $<.004$); the matched-dependence noise
-bound $\varepsilon_{\mathrm{dom}}$; the equivalence bound
-$U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ (margin $0.03$); the
-maximum excess of the history policy over the single-lag envelope, with
-certification only when it clears $\varepsilon_{\mathrm{dom}}$; and the
-certified window-information lower bound
-$2[(\widehat\Delta_{\mathrm{hist}}-\varepsilon_{\mathrm{dom}})^+]^2$
-where applicable.
+Table~\ref{tab:battery} reports the final analysis (battery v5;
+\texttt{battery\_v5.json}, \texttt{battery\_v5b.json}; the v3/v4
+development runs and their protocol corrections are preserved in the
+repository record). Per domain: the class proportion $\hat\pi$; the
+maximum history-class gain over the exact single-sample Bayes value
+$\widehat V_1$; the parametric-bootstrap $p$ under the fitted Markov null
+($M{=}299$, floor $1/300$, written $<.004$); the two calibration tails
+$\varepsilon_{\mathrm{over}}=q_{0.95}(E)$ and
+$\varepsilon_{\mathrm{under}}=-q_{0.05}(E)$; the two-tail equivalence
+bound $U_2=\text{gain}_{\max}+\varepsilon_{\mathrm{under}}$
+(margin $0.03$); and the dependence-aware paired interval --- a
+moving-block bootstrap (blocks within runs, $B{=}2000$) of the per-position
+loss difference between the registered $k{=}6$ policy and the
+pooled-\emph{exact} single-sample policy at the selected lag $D^*$, the
+exact-arm fit favouring the single-sample side so the interval is
+conservative for the incremental value.
 
-\begin{table}[h]\centering\small
-\begin{tabular}{lrrrrrrl}
+\begin{table}[h]\centering\footnotesize
+\begin{tabular}{lrrrrrrcl}
 \toprule
-Domain & $\hat\pi$ & gain$_{\max}$ & $p$ & $\varepsilon_{\mathrm{dom}}$ &
-$U$ & $I^{\mathrm{cond}}_{\mathrm{LB}}$ & verdict \\
+Domain & $\hat\pi$ & gain & $p$ & $\varepsilon_{\mathrm{ov}}$ &
+$\varepsilon_{\mathrm{un}}$ & $U_2$ & paired 95\% CI & verdict \\
 \midrule
-Two-state Markov (ref) & $.470$ & $+.000$ & $.78$ & $.006$ & $.007$ & $0$ & equivalent$^{*}$ \\
-i.i.d.\ null (control) & $.497$ & $+.012$ & $.023$ & $.011$ & $.023$ & $.000$ & below floor \\
-LOCATA azimuth         & $.494$ & $+.008$ & $.063$ & $.009$ & $.016$ & $0$ & equivalent$^{*}$ \\
-LOCATA VAD             & $.636$ & $-.000$ & $.82$  & $.052$ & $.052$ & $0$ & none detected$^{\dagger}$ \\
-Sperm-whale codas      & $.483$ & $+.046$ & $1.0$  & $.117$ & $.164$ & $0$ & none detected$^{\dagger}$ \\
-GOES protons           & $.489$ & $+.029$ & $.11$  & $.033$ & $.063$ & $0$ & none detected$^{\dagger}$ \\
-GOES X-ray flux        & $.421$ & $+.028$ & $<.004$ & $.008$ & $.036$ & $.001$ & detected, below floor \\
-GOES magnetometer      & $.456$ & $+.033$ & $<.004$ & $.010$ & $.043$ & $.001$ & history adds (at floor) \\
-Seismic ANMO           & $.508$ & $+.158$ & $<.004$ & $.014$ & $.171$ & $\mathbf{.041}$ & history adds (certified) \\
+Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $[-.003,+.014]$ & equivalent \\
+i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $[+.005,+.020]$ & selection floor \\
+LOCATA azimuth & $.494$ & $+.008$ & $.063$ & $.009$ & $.020$ & $.027$ & $[-.003,-.000]$ & equivalent \\
+LOCATA VAD & $.636$ & $-.000$ & $.82$ & $.052$ & $.000$ & $.000$ & $[.000,.000]$ & equivalent \\
+Sperm-whale codas & $.483$ & $+.046$ & $1.0$ & $.117$ & $-.063$ & $-.016$ & $[-.055,-.018]$ & equivalent \\
+GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $[+.002,+.051]$ & not established \\
+GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $[+.011,+.037]$ & detected, below floor \\
+GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $[+.022,+.048]$ & detected (exploratory) \\
+Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{[+.146,+.168]}$ & history adds \\
 \bottomrule
 \end{tabular}
-\caption{Battery v4 (corrected protocol; \texttt{battery\_v4.json}).
-$I^{\mathrm{cond}}_{\mathrm{LB}}=2[(\hat g-\varepsilon_{\mathrm{dom}})^+]^2$
-nats: the model-calibrated conditional-information certificate of
-Theorem~\ref{thm:incr} --- the scientifically meaningful quantity; bold
-where material. Verdicts are statements about the \emph{registered
-six-lag lookup class}: $^{*}$``equivalent'' $=$ $U<0.03$ under the
-symmetric-tail approximation stated in the protocol;
-$^{\dagger}$``none detected'' $=$ test does not fire but $U\ge 0.03$, so
-class equivalence is \emph{not} established (noise-limited). Pooled pair
-counts range from $2.0$k (protons) to $21$k (azimuth) per lag.}
+\caption{Battery v5 (final analysis). Verdicts are statements about the
+\emph{registered six-lag lookup class}: ``equivalent'' $=$ $U_2<0.03$
+under both-tail calibration; ``not established'' $=$ no detection but
+$U_2\ge0.03$; ``detected (exploratory)'' $=$ statistically detected at
+the practical floor with a paired bound at the selection floor. The
+i.i.d.\ null's \emph{positive} paired interval is the empirical
+lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
+paired bounds, since $D^*$ is an argmax the bootstrap treats as fixed).
+Bold: the one interval that dwarfs every calibration concern.}
 \label{tab:battery}
 \end{table}
 
 Four readings, in increasing order of consequence.
 
-\textbf{The corrections bite exactly where the review predicted.} Under the
-chance baseline (v3), four series appeared to carry history value beyond
-the single sample (gains $0.100$--$0.367$, all ``$p=.00$''). Under the
-majority baseline and exact $\widehat V_1$: LOCATA VAD's gain
-\emph{vanishes} ($+0.100\to-0.000$, $p=.82$; $\hat\pi=.636$ --- the entire
-effect was the majority-class head start), GOES X-ray shrinks
-$0.185\to0.028$ (below the practical floor; $\hat\pi=.421$), magnetometer
-$0.147\to0.033$ (at the floor), and only seismic survives at strength
-($0.367\to0.158$). Imbalance, not history, carried most of the apparent
-excess --- and the sub-unity envelope ratios of v3 disappear with it (all
-balanced-domain tightness ratios now sit at $1.11$--$1.35$, on the Pinsker
-side of unity, exactly as population theory requires).
+\textbf{The protocol corrections changed the conclusions, honestly.}
+Under the original chance baseline, four series appeared to carry history
+value beyond the single sample (gains $0.100$--$0.367$). Under the
+majority baseline and exact $\widehat V_1$: VAD's gain vanished entirely
+($+0.100\to-0.000$; $\hat\pi=.636$ --- the whole effect was the
+majority-class head start), X-ray shrank $0.185\to0.028$, magnetometer
+$0.147\to0.033$, and only seismic survived at strength
+($0.367\to0.158$). The two-tail calibration then \emph{strengthened}
+the equivalence side: $\varepsilon_{\mathrm{under}}$ is near zero or
+negative on most series, so VAD and the whale codas join the
+class-equivalent block. Sub-unity envelope ratios disappeared with the
+imbalance correction (balanced-domain tightness ratios $1.11$--$1.35$, on
+the Pinsker side of unity as population theory requires).
 
-\textbf{Only seismic exhibits a clearly material history gain.} X-ray and
-magnetometer show smaller statistically detected gains at or below the
-registered practical threshold; on the remaining series \emph{no
+\textbf{Only seismic exhibits a clearly material history gain.} X-ray
+and magnetometer show smaller statistically detected gains at or below
+the registered practical threshold; on the remaining series \emph{no
 additional value was detected by the registered six-lag lookup policy},
-with class equivalence established only where the model-calibrated upper
-bound falls below the margin (Markov reference, azimuth). Where noise is
-wide (short whale exchanges, sparse protons), the verdict stays at ``none
-detected,'' honestly labelled --- and none of these negative findings
+with class equivalence established where $U_2<0.03$ and honestly withheld
+where it is not (protons, $U_2=.032$). None of these negative findings
 asserts unrestricted single-sample sufficiency: a richer policy class
 could in principle extract value the lookup class does not
-(\S protocol, scope of the estimand).
+(\S~protocol, scope of the estimand).
 
 \textbf{An empirical dead zone.} The imbalanced GOES series exhibit
 Theorem~\ref{thm:hinge}'s geometry at the plug-in level: X-ray
-($\hat\pi=.421$, kink at $\tfrac12$, threshold $C^*\approx0.033$) has
-$\widehat V_1$ exactly zero across its moderate-covariance lags --- the
-majority policy is unbeatable by any single delayed sample --- while its
-plug-in information remains positive: \emph{information without value},
-the phenomenon of Proposition~\ref{prop:noneq}, on a physical series. (The
-envelope-to-value ratio is undefined where $\widehat V_1=0$ and is not
-reported there; population uncertainty for the dead-zone boundary itself
-is future work, so we label this an \emph{empirical} dead zone.)
+($\hat\pi=.421$, kink at $\tfrac12$, positive-branch threshold
+$C^*\approx0.033$) has $\widehat V_1$ exactly zero across its
+moderate-covariance lags --- the majority policy is unbeatable by any
+single delayed sample --- while its plug-in information remains positive:
+\emph{information without value}, the phenomenon of
+Proposition~\ref{prop:noneq}, on a physical series. (Population
+uncertainty for the dead-zone boundary itself is future work; we label
+this an \emph{empirical} dead zone.)
 
-\textbf{The conditional certificate stands --- once at strength.} By
-Theorem~\ref{thm:incr}, seismic's history gain converts into a certificate of
-\emph{conditional} predictive information by two independent calibration
-routes that agree to within 3\%: model-calibrated,
-$2(0.158-0.014)^2\approx0.041$ nats; and dependence-aware
-(moving-block bootstrap, conservative exact-arm pairing, one-sided 95\%),
-$2(0.1456)^2\approx0.042$ nats --- history knows what the last sample
-does not, which is what ``aftershock clustering'' means in information
-units --- alongside the total-information witness
-$I(X_t;\text{window})\ge0.176$ nats. Magnetometer's paired bound
-($0.022$) clears the selection floor marginally; no other series does. The
-seismic history value also exceeds the \emph{single-lag} envelope
-($+0.148$ vs.\ $\varepsilon=.014$); under Theorem~\ref{thm:incr} this is
-not a violation of anything but the expected signature of higher-order
-dependence, and it co-occurs with the certified conditional information
-exactly as the theory requires. Magnetometer shows a small detected gain
-at the practical floor (conditional certificate $\approx0.001$ nats ---
-reported, not emphasized). The instrument reads in both directions:
-equivalence or bounded excess on most series; certified conditional
-history information on the series where it is found.
+\textbf{The conditional lower bound stands --- once at strength.} By
+Theorem~\ref{thm:incr}, seismic's history gain converts into a lower
+bound on conditional predictive information. The \emph{primary} result
+is the dependence-aware one: the moving-block interval
+$[+.146,+.168]$ gives $I(X_t;\text{history}\mid X_{t-D})\ge
+2(0.146)^2\approx0.043$ nats, with the stated caveat that $D^*$ was
+selected before bootstrapping (the i.i.d.-calibrated selection floor,
+$0.02$, is dwarfed sevenfold). The fitted-Markov surrogate route
+corroborates with $2(0.158-0.014)^2\approx0.041$ nats --- two
+complementary calibration routes, agreeing to within a few percent ---
+alongside the total-information witness
+$I(X_t;\text{window})\ge0.176$ nats. History knows what the last
+sample does not; that is what ``aftershock clustering'' means in
+information units. Magnetometer's paired bound ($+.022$) sits at the
+selection floor and is reported as exploratory. The instrument reads in
+both directions: class equivalence or bounded excess on most series; a
+dependence-aware conditional-information lower bound exactly where the
+history structure is found.
 
 \section{Related work}\label{sec:related}
 
@@ -887,16 +887,16 @@ payoffs--beliefs duality; the hinge and dead-zone analysis of
 \S\ref{sec:multistate} is the exact delayed-binary specialization of that
 convex-analytic programme; the comparison-of-experiments order behind
 Lemma~\ref{lem:blackwell} is Blackwell's \cite{blackwell53}; and the
-Radner--Stiglitz nonconcavity \cite{radnerstiglitz84,chadeschlee02} anticipates the dead
-zone in smooth form. The information envelope itself is assembled from
+Radner--Stiglitz nonconcavity \cite{radnerstiglitz84,chadeschlee02}
+anticipates the zero-marginal-value onset in smooth settings; the exact
+dead zone is its polyhedral counterpart. The information envelope itself is assembled from
 textbook inequalities, and its closest classical relatives are the
 Fano-type families bounding Bayes \emph{error} by information; kindred
 moves appear wherever bounded value must be controlled by divergence,
 e.g.\ the information-ratio regret analyses of
-Russo and Van Roy \cite{russo16}. A targeted search (2026-07-22) found the
-adjacent families but not the bounded-objective envelope
-\eqref{eq:mi} stated as such; we accordingly claim assembly and
-anchoring, not the inequality. What we have not found
+Russo and Van Roy \cite{russo16}. To our knowledge the bounded-objective envelope \eqref{eq:mi} has not
+been stated as such; we accordingly claim assembly and anchoring, not
+the inequality. What we have not found
 elsewhere is the assembly this paper is about: the envelope \emph{anchored
 to an exact law} (sharp to $O(r^3)$, with the $O(r^2)$ correction observed
 on real data), its ordering against mixing envelopes with both separations
@@ -950,8 +950,9 @@ locates that law inside a unified theory of exogenous one-step
 bounded-reward decisions under delay: value of delayed
 information is the Bayes envelope; the envelope is bounded by predictive
 information (universally), by mixing (given a model), and by the telemetry
-bit rate (given nothing); it is exactly a hinge in covariance for binary
-state, exactly a layered sum for monotone multi-state objectives, and
+bit rate (given nothing); for binary state it is a sign-dependent sum of hinges under polyhedral
+objectives (smooth curvature giving quadratic weak-correlation response
+instead), exactly a layered sum for monotone multi-state objectives, and
 exactly nothing --- inside the dead zone --- for asymmetric weakly-coupled
 sensing. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the nine-series

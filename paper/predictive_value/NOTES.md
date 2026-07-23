@@ -156,3 +156,27 @@ single-sample policy, moving-block bootstrap within runs at D*.
 Paper v0.7: protocol upgraded ("executed" replaces "upgrade path"),
 results reading 4 dual-certificate, artifacts archived
 (battery_v5*.json/py).
+
+## Review round 4 (2026-07-23 ~01:00) — submission-ready bar; v0.8
+
+1. Remark dead-zone: BOTH branch thresholds (negative branch larger by
+   (1−π)/π for rare events — consequential, now stated).
+2. "symmetric kink set" → reflection symmetry of the value function
+   (locations AND slope jumps).
+3. Abstract/intro: "quadratic to leading order" (exactly only for squared
+   error). 4. Conclusion: sign-dependent hinges under polyhedral +
+   smooth-quadratic. 5. "unique" → "the polyhedral configuration
+   yielding threshold-free linear response". 6. Boundary-of-exactness:
+   "principal tractable regime", not "precisely". 7. Preview window
+   off-by-one: [t−m, t−D−1].
+- Certification language: block-bootstrap = PRIMARY (seismic
+  I_cond ≥ 2(.146)² ≈ .043 nats, selection caveat stated, floor dwarfed
+  7x); surrogate route = corroborating model-based calibration (.041);
+  "two complementary" not "independent"; magnetometer = exploratory.
+- CONSOLIDATED ON v5: Table 2 rebuilt (π̂, gain, p, ε_over, ε_under, U₂,
+  paired CI, verdict); upgrade-path narrative removed from protocol;
+  v3/v4 history → repository record. Control-char corruption fixed
+  (\v → VT, \a → BEL — the arepsilon/pprox artifacts). Title: "Age-Limited
+  Decisions". Selection-inside-bootstrap = registered camera-ready
+  refinement.
+Reviewer: "after those changes, genuinely submission-ready."
