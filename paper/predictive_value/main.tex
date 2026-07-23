@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.6 (review round 3: policy-class scoping, two-tail calibration, conditional-certificate column, ref repairs)}
+\date{Working draft --- v0.7 (battery v5: both tails + dependence-aware certificates; lit-check verdicts in text)}
 
 \begin{document}
 \maketitle
@@ -725,9 +725,24 @@ quantile $\varepsilon_{\mathrm{dom}}=\varepsilon_{\mathrm{over}}$ and uses
 it on both sides --- exact for every lower certificate, an approximation
 for the equivalence labels, which therefore carry it as a stated
 limitation. Both are \emph{model-calibrated} (not distribution-free)
-bounds; a dependence-aware alternative (moving-block bootstrap on held-out
-paired loss differences, with both tails resolved) is the registered
-upgrade path for a submission build.
+bounds. The registered upgrade path has since been executed (battery v5):
+(a) \emph{both tails resolved} --- $arepsilon_{\mathrm{under}}$ proves
+near zero or negative on most series (the error distribution sits above
+zero), so the v4 equivalence labels were conservative, and under the
+two-tail bound $U_2$ two further series (VAD, whale codas) become
+class-equivalent while protons remains just above the margin
+($U_2=.032$); (b) a \emph{dependence-aware} moving-block bootstrap on
+held-out paired loss differences --- the registered $k{=}6$ policy against
+the pooled-\emph{exact} single-sample policy (in-sample fit favouring the
+single-sample arm, hence conservative for the certificate), blocks
+resampled within runs at the selected lag $D^*$. Because $D^*$ is an
+argmax over the lag grid, the i.i.d.\ null's paired interval calibrates
+the \emph{selection} bias the bootstrap does not cover (its 95th
+percentile $pprox0.02$ at the selected lag); certificates are claimed
+only where the paired lower bound clears that floor. Validity checks pass:
+the Markov reference's interval straddles zero (no phantom conditional
+information) and azimuth's is slightly negative (the overfitting cost of
+the richer class).
 \emph{Non-rejection is not exactness}: where the test does not fire, we
 report the model-calibrated upper bound
 $U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ and claim ``no
@@ -840,13 +855,16 @@ reported there; population uncertainty for the dead-zone boundary itself
 is future work, so we label this an \emph{empirical} dead zone.)
 
 \textbf{The conditional certificate stands --- once at strength.} By
-Theorem~\ref{thm:incr}, seismic's history gain over the exact single-sample
-value converts into a model-calibrated certificate of \emph{conditional}
-predictive information:
-$I(X_t;\text{history}\mid X_{t-D})\ge 2(0.158-0.014)^2\approx
-0.041$ nats --- history knows what the last sample does not, which is what
-``aftershock clustering'' means in information units --- alongside the
-total-information witness $I(X_t;\text{window})\ge0.176$ nats. The
+Theorem~\ref{thm:incr}, seismic's history gain converts into a certificate of
+\emph{conditional} predictive information by two independent calibration
+routes that agree to within 3\%: model-calibrated,
+$2(0.158-0.014)^2\approx0.041$ nats; and dependence-aware
+(moving-block bootstrap, conservative exact-arm pairing, one-sided 95\%),
+$2(0.1456)^2\approx0.042$ nats --- history knows what the last sample
+does not, which is what ``aftershock clustering'' means in information
+units --- alongside the total-information witness
+$I(X_t;\text{window})\ge0.176$ nats. Magnetometer's paired bound
+($0.022$) clears the selection floor marginally; no other series does. The
 seismic history value also exceeds the \emph{single-lag} envelope
 ($+0.148$ vs.\ $\varepsilon=.014$); under Theorem~\ref{thm:incr} this is
 not a violation of anything but the expected signature of higher-order

@@ -135,3 +135,24 @@ both tails resolved, lit-check verdicts (2:17am cron), drop version line.
    added to the AoI-critics paragraph.
 4. AoI x MI at sensing lag: nothing found bounding decision value by MI
    at the lag — the niche looks open.
+
+## Battery v5 + v5b (2026-07-23 ~00:30) — the upgrade path EXECUTED
+
+v5 (M=299, both tails): eps_under ~ 0 or negative on most series -> v4
+equivalence labels were conservative; under two-tail U2, VAD and whale
+become class-EQUIVALENT; protons stays just above margin (.032).
+v5b (valid conservative pairing): k=6 CV policy vs pooled-EXACT
+single-sample policy, moving-block bootstrap within runs at D*.
+- VALIDITY CATCH: the naive k6-vs-k1(CV) pairing OVERSTATES incremental
+  value (k1-CV underperforms exact V1) — Markov ref exposed it with a
+  phantom certificate; v5b's exact-arm pairing removes it (ref CI
+  straddles 0 ✓, azimuth slightly negative ✓).
+- SELECTION-BIAS FLOOR: iid null's paired CI [+.005,+.020] positive —
+  D* is an argmax; bootstrap doesn't cover lag selection (reviewer's
+  caveat, empirically visible). Certificates claimed only above the
+  ~0.02 floor: seismic (0.1456 >>) and magnetometer (0.022, marginal).
+- HEADLINE: seismic I_cond >= 0.0424 nats dependence-aware vs 0.041
+  model-calibrated — two independent routes agree to 3%.
+Paper v0.7: protocol upgraded ("executed" replaces "upgrade path"),
+results reading 4 dual-certificate, artifacts archived
+(battery_v5*.json/py).

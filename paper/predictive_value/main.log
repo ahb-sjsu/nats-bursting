@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  22 JUL 2026 22:42
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  22 JUL 2026 23:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -420,26 +420,45 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
 [1
 
 {C:/Users/abptl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}] [2]
-[3] [4] [5] [6] [7] [8] [9]
+[3] [4] [5] [6] [7] [8]
 
-LaTeX Warning: `h' float specifier changed to `ht'.
+! LaTeX Error: Unicode character  (U+000B)
+               not set up for use with LaTeX.
 
-[10] [11] [12] [13] [14] (main.aux)
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.729 (a) \emph{both tails resolved} --- $
+                                           arepsilon_{\mathrm{under}}$ proves
+You may provide a definition with
+\DeclareUnicodeCharacter 
+
+
+! LaTeX Error: Unicode character ^^G (U+0007)
+               not set up for use with LaTeX.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.741 percentile $^^G
+                     pprox0.02$ at the selected lag); certificates are claimed
+You may provide a definition with
+\DeclareUnicodeCharacter 
+
+[9] [10] [11] [12] [13] [14] [15] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
-
-
-LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
-
 Package rerunfilecheck Info: File `main.out' has not changed.
 (rerunfilecheck)             Checksum: 03B7BB9A2B7139C4D9E31F2594FF1DB6;2423.
  ) 
 Here is how much of TeX's memory you used:
- 10616 strings out of 467870
- 160543 string characters out of 5418355
- 597052 words of memory out of 5000000
+ 10617 strings out of 467870
+ 160550 string characters out of 5418355
+ 597031 words of memory out of 5000000
  39303 multiletter control sequences out of 15000+600000
  643033 words of font info for 97 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -472,9 +491,9 @@ fonts/cm/cmti12.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/p
 ublic/amsfonts/cm/cmtt10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/font
 s/type1/public/amsfonts/cm/cmtt12.pfb><C:/Users/abptl/AppData/Local/Programs/Mi
 KTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on main.pdf (14 pages, 405765 bytes).
+Output written on main.pdf (15 pages, 409425 bytes).
 PDF statistics:
- 406 PDF objects out of 1000 (max. 8388607)
- 73 named destinations out of 1000 (max. 500000)
+ 410 PDF objects out of 1000 (max. 8388607)
+ 74 named destinations out of 1000 (max. 500000)
  105 words of extra memory for PDF output out of 10000 (max. 10000000)
 
