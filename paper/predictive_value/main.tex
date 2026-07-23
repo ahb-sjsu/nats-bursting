@@ -35,11 +35,12 @@ symmetric two-state Markov capacity ($\Delta(D)=\tfrac12 r(D)$, the
 autocorrelation at the sensing lag) with a $\beta$-mixing converse. This paper
 supplies the general theory. We (i) isolate the exact object --- the
 \emph{Bayes envelope} $\Delta_Y = \E[\psi(\mu_Y)]-\psi(\bar\mu)$, the expected
-excess value of posterior over prior beliefs; (ii) prove the universal
-\emph{predictive-information envelope}
-$0\le\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Y)}$ for any bounded objective with
-oscillation $\Omega$, by Pinsker's inequality applied to the posterior
-process, together with its \emph{incremental} refinement --- the value of
+excess value of posterior over prior beliefs; (ii) restate, in
+value-of-information form, the \emph{predictive-information envelope}
+$0\le\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Y)}$ for bounded objectives with
+oscillation $\Omega$ --- an inequality known in the minimum-excess-risk
+literature, whose decision-value reading and operational inversion are
+the contribution here --- together with its \emph{incremental} refinement --- the value of
 a richer delayed observation over a coarser one is bounded by
 $\Omega\sqrt{\tfrac12 I(X;H\mid Z)}$, so incremental decision value
 certifies \emph{conditional} predictive information; (iii) derive the
@@ -91,9 +92,10 @@ predictive information matters only through the Bayes envelope.}\end{center}
 
 Concretely: (\textbf{C1}) we isolate the exact object --- the Bayes envelope
 $\Delta_Y=\E[\psi(\mu_Y)]-\psi(\bar\mu)$, classical in decision theory
-\cite{howard1966,raiffa61,delaragossner} --- and prove the universal
+\cite{howard1966,raiffa61,delaragossner} --- and restate in that frame the
 \emph{predictive-information envelope}
-$\Delta_Y\le\Omega\sqrt{I(X;Y)/2}$ (Theorem~\ref{thm:mi}), with the
+$\Delta_Y\le\Omega\sqrt{I(X;Y)/2}$ (Theorem~\ref{thm:mi}; known as a
+minimum-excess-risk inequality, attribution in \S\ref{sec:mi}), with the
 \emph{bit-budget corollary}: $b$ bits of telemetry per decision cap feedback
 value at $\Omega\sqrt{(b\ln2)/2}$, so compression can preserve but never
 create feedback value. (\textbf{C2}) We show the envelope is \emph{sharp
@@ -279,6 +281,19 @@ questions a delayed sensor can ask: \emph{how much is the sample worth?}
 worth?} (Theorem~\ref{thm:incr}) --- and the second is bounded by
 information the single sample does \emph{not} carry, never by the
 single-sample information itself.
+
+\paragraph{Attribution.} Neither inequality is new. In the
+minimum-excess-risk literature the unconditional form appears with a
+weaker constant in \cite{makhdoumi14} and in the present form in
+\cite{gyorfi23} (Cor.~1 and Rem.~(ii); Rem.~(iii) notes the Pinsker
+proof) and \cite{xu20} (Thm.~1, with the oscillation constant); the
+conditional/incremental form is \cite{hafezkolahi21} (Lem.~1) and
+\cite{xuraginsky22} (Cors.~2--3), and the Lipschitz--Pinsker--Jensen
+engine is \cite{russo16} (Fact~9 and Prop.~4). What this paper claims is
+the value-of-delayed-information reading, the corollaries in that reading
+(bit budget, Blackwell garbling), the operational inversion the battery
+executes (\S\ref{sec:battery}), and the exactness theory that anchors
+the envelopes (\S\ref{sec:multistate}).
 
 \begin{proposition}[Leading-order tightness in the canonical case]
 \label{prop:tight}
@@ -609,11 +624,19 @@ exchanging the weights. The affine case is immediate.
 \end{proof}
 
 \begin{remark}[The trichotomy, as leading cases]\label{rem:trichotomy}
-Theorem~\ref{thm:contact} subsumes the named regimes --- $q=1$ (kink):
-linear response; locally affine: dead zone; $q=2$ with
-$c_\pm=\tfrac12\psi''(\pi)>0$: quadratic --- and admits fractional contact
-orders $q\in(1,2)$, realizable by valid suprema of affine rewards, with
-correspondingly fractional correlation exponents. Each case fixes how weak
+The three named regimes --- dead zone, linear at a kink, quadratic under
+smooth curvature --- are precisely De~Lara and Gossner's small-information
+trichotomy (\cite{delaragossner}, Prop.~10), and their exact zero-value
+characterization (their Prop.~2, the confidence-set condition) is the
+posterior-space form of our dead zone. Theorem~\ref{thm:contact} adds
+what their bounds deliberately do not: \emph{exact leading coefficients}
+--- their two-sided constants ``depend on the global behavior of the
+value function, and hence cannot be inferred from local properties only,''
+whereas in the delayed-binary geometry the coefficient
+$C^q[c_+\pi^{1-q}+c_-(1-\pi)^{1-q}]$ is explicit --- together with
+general fractional contact orders $q\in(1,2)$, realizable by valid
+suprema of affine rewards, and the lag-covariance parametrization with
+its sign asymmetry. Each case fixes how weak
 dependence buys value: \emph{prior on a kink}
 $\Rightarrow$ linear response $\Delta\propto|C|$; \emph{prior interior to a
 flat piece} $\Rightarrow$ dead zone, $\Delta=0$ until a threshold;
@@ -961,23 +984,33 @@ history structure is found.
 \emph{Value of information.} The Bayes envelope is the classical object of
 statistical decision theory \cite{howard1966,raiffa61}, and its convex
 geometry is charted territory: De Lara and Gossner \cite{delaragossner}
-study the value function as a support function, characterize when
-information has positive value, and give local estimates near
-uninformative experiments. Our Lipschitz lemma instantiates their
-payoffs--beliefs duality; the hinge and dead-zone analysis of
-\S\ref{sec:multistate} is the exact delayed-binary specialization of that
-convex-analytic programme; the comparison-of-experiments order behind
+study the value function as a support function, characterize
+\emph{exactly} when information has zero value (their Prop.~2), and prove
+the small-information trichotomy our Theorem~\ref{thm:contact}
+generalizes (their Prop.~10; see Remark~\ref{rem:trichotomy} for the
+precise delta). Our Lipschitz lemma instantiates their payoffs--beliefs
+duality; the sum-over-kinks skeleton of Theorem~\ref{thm:hinge} descends
+from the mixture-of-primitives representations of statistical information
+for binary experiments \cite{schervish89,reidwilliamson11}, and what is
+new there is the exact lag-covariance parametrization with explicit
+sign-asymmetric thresholds --- a form we have not found in that
+literature, nor in the nonconcavity strand
+\cite{radnerstiglitz84,chadeschlee02,delaragilotte07,whitmeyer25}; the comparison-of-experiments order behind
 Lemma~\ref{lem:blackwell} is Blackwell's \cite{blackwell53}; and the
 Radner--Stiglitz nonconcavity \cite{radnerstiglitz84,chadeschlee02}
 anticipates the zero-marginal-value onset in smooth settings; the exact
-dead zone is its polyhedral counterpart. The information envelope itself is assembled from
-textbook inequalities, and its closest classical relatives are the
-Fano-type families bounding Bayes \emph{error} by information; kindred
-moves appear wherever bounded value must be controlled by divergence,
-e.g.\ the information-ratio regret analyses of
-Russo and Van Roy \cite{russo16}. To our knowledge the bounded-objective envelope \eqref{eq:mi} has not
-been stated as such; we accordingly claim assembly and anchoring, not
-the inequality. What we have not found
+dead zone is its polyhedral counterpart. \emph{Minimum excess risk.} The envelope inequalities of
+\S\ref{sec:mi} are published results of the minimum-excess-risk
+literature: the unconditional bound in \cite{makhdoumi14,gyorfi23,xu20},
+the conditional form in \cite{hafezkolahi21,xuraginsky22}, the proof
+engine in \cite{russo16}; Fano-type families bounding Bayes \emph{error}
+by information are the classical ancestors. That literature also
+contains the exact logarithmic anchor (MER under log loss \emph{equals}
+conditional information; \cite{xuraginsky22}, Lem.~1), which joins the
+Kelly--Barron--Cover bracket below. What we have not found there, or in
+the economics of information, is the value-of-delayed-observation
+framing, the inversion into certified conditional-information witnesses,
+or the exact covariance-parametrized laws of \S\ref{sec:multistate}. What we have not found
 elsewhere is the assembly this paper is about: the envelope \emph{anchored
 to an exact law} (sharp to $O(r^3)$, with the $O(r^2)$ correction observed
 on real data), its ordering against mixing envelopes with both separations
@@ -1122,6 +1155,28 @@ A.~Nayyar, A.~Mahajan, D.~Teneketzis. Decentralized stochastic control with
 partial history sharing: a common information approach.
 \emph{IEEE Trans.\ Automatic Control} 58(7):1644--1658, 2013.
 
+\bibitem{makhdoumi14}
+A.~Makhdoumi, S.~Salamatian, N.~Fawaz, M.~M\'edard. From the information
+bottleneck to the privacy funnel. In \emph{Proc.\ IEEE Information
+Theory Workshop}, 501--505, 2014.
+
+\bibitem{gyorfi23}
+L.~Gy\"orfi, T.~Linder, H.~Walk. Lossless transformations and excess
+risk bounds in statistical inference. \emph{Entropy} 25(10):1394, 2023.
+
+\bibitem{xu20}
+A.~Xu. Continuity of generalized entropy and statistical learning.
+arXiv:2012.15829, 2020.
+
+\bibitem{xuraginsky22}
+A.~Xu, M.~Raginsky. Minimum excess risk in Bayesian learning.
+\emph{IEEE Trans.\ Information Theory} 68(12), 2022.
+
+\bibitem{hafezkolahi21}
+H.~Hafez-Kolahi, B.~Moniri, S.~Kasaei, M.~Soleymani~Baghshah.
+Rate-distortion analysis of minimum excess risk in Bayesian learning.
+In \emph{Proc.\ ICML}, 2021.
+
 \bibitem{russo16}
 D.~Russo, B.~Van~Roy. An information-theoretic analysis of Thompson
 sampling. \emph{J.\ Machine Learning Research} 17(68):1--30, 2016.
@@ -1143,6 +1198,23 @@ in the value of information.
 \bibitem{valueage24}
 T.~Soleymani, J.~S.~Baras, K.~H.~Johansson. Relation between value and
 age of information in feedback control. arXiv:2403.11926, 2024.
+
+\bibitem{delaragilotte07}
+M.~De~Lara, L.~Gilotte. A tight sufficient condition for
+Radner--Stiglitz nonconcavity in the value of information.
+\emph{J.~Economic Theory} 137(1):696--708, 2007.
+
+\bibitem{schervish89}
+M.~J.~Schervish. A general method for comparing probability assessors.
+\emph{Annals of Statistics} 17(4):1856--1879, 1989.
+
+\bibitem{reidwilliamson11}
+M.~D.~Reid, R.~C.~Williamson. Information, divergence and risk for binary
+experiments. \emph{J.~Machine Learning Research} 12:731--817, 2011.
+
+\bibitem{whitmeyer25}
+M.~Whitmeyer. A concavity in the value of information.
+\emph{Games and Economic Behavior} 154:200--207, 2025.
 
 \bibitem{maatouk20}
 A.~Maatouk, S.~Kriouile, M.~Assaad, A.~Ephremides. The age of incorrect
