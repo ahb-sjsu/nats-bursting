@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Decisions}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.9 (selection-aware bootstrap executed: seismic certificate survives at 0.042 nats, three routes agree)}
+\date{Working draft --- v1.0 (submission candidate: max-statistic target stated correctly; selection-aware column in Table 2)}
 
 \begin{document}
 \maketitle
@@ -62,7 +62,8 @@ companion's linear law is the prior-on-kink polyhedral case. A nine-series batte
 bioacoustics, space weather, seismology, plus synthetic controls)
 establishes registered-class equivalence on four series, leaves one
 noise-limited, finds two smaller detected gains at or below the practical
-floor, and finds one clearly material history gain; it illustrates the
+floor, finds one clearly material history gain, and uses the ninth ---
+the i.i.d.\ null --- as the selection-bias control; it illustrates the
 predicted $O(r^2)$ tightness correction on real binary pair
 distributions, and inverts the incremental theorem into model-calibrated,
 dependence-aware lower bounds on conditional history information where
@@ -154,11 +155,14 @@ $\mathcal X$, with marginal $\bar\mu$. A controller observes a delayed
 quantity $Y$ (a delayed sample $X_{t-D}$, a delayed history, or any
 $\sigma(\mathcal F_{\le t-D})$-measurable statistic), chooses an action $w$,
 and receives a bounded one-step reward $R(w,x)$ with oscillation
-$\Omega=\max_{w,x}R-\min_{w,x}R$. Define the value of a belief
+$\Omega=\sup_{w,x}R-\inf_{w,x}R$. Define the value of a belief
 $\mu\in\Delta(\mathcal X)$:
 \[
-\psi(\mu)\;=\;\max_{w}\sum_{x}R(w,x)\,\mu(x),
+\psi(\mu)\;=\;\sup_{w}\sum_{x}R(w,x)\,\mu(x),
 \]
+(we assume throughout that the supremum is attained by a measurable
+policy --- automatic for finite action sets, and a standing assumption
+for continuous ones)
 a pointwise maximum of linear functionals, hence convex; and the posterior
 $\mu_Y=\mathbb P(X\in\cdot\mid Y)$, with $\E[\mu_Y]=\bar\mu$ by the tower
 property. The optimal $Y$-measurable controller attains
@@ -769,9 +773,9 @@ whose empirical check is a consistency diagnostic. \emph{History}
 so the single-lag envelope does not bound it --- a history value above
 $\sqrt{\widehat I_1/2}$ is not a violation but exactly what genuine
 higher-order dependence should produce. The history gain over
-$\widehat V_1$ is the empirical increment $\Delta_W-\Delta_Z$, and its
-model-calibrated lower bound certifies \emph{conditional} predictive
-information:
+$\widehat V_1$ is a registered-policy gain that \emph{lower-bounds} the
+Bayes increment $\Delta_W-\Delta_Z$, and its model-calibrated lower
+bound therefore also bounds \emph{conditional} predictive information:
 \[
 I(X_t;\,\text{history}\mid X_{t-D})\;\ge\;
 2\,\bigl[(\text{gain}_{\max}-\varepsilon_{\mathrm{over}})^{+}\bigr]^{2},
@@ -807,27 +811,32 @@ conservative for the incremental value.
 \begin{tabular}{lrrrrrrcl}
 \toprule
 Domain & $\hat\pi$ & gain & $p$ & $\varepsilon_{\mathrm{ov}}$ &
-$\varepsilon_{\mathrm{un}}$ & $U_2$ & paired boot.@ (fixed $D^*$) & verdict \\
+$\varepsilon_{\mathrm{un}}$ & $U_2$ & $L^{\mathrm{blk}}_{D^*}\,/\,L^{\mathrm{blk}}_{\max}$ & verdict \\
 \midrule
-Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $[-.003,+.014]$ & equivalent \\
-i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $[+.005,+.020]$ & selection floor \\
-LOCATA azimuth & $.494$ & $+.008$ & $.063$ & $.009$ & $.020$ & $.027$ & $[-.003,-.000]$ & equivalent \\
-LOCATA VAD & $.636$ & $-.000$ & $.82$ & $.052$ & $.000$ & $.000$ & $[.000,.000]$ & equivalent \\
-Sperm-whale codas & $.483$ & $+.046$ & $1.0$ & $.117$ & $-.063$ & $-.016$ & $[-.055,-.018]$ & equivalent \\
-GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $[+.002,+.051]$ & not established \\
-GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $[+.011,+.037]$ & detected, below floor \\
-GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $[+.022,+.048]$ & detected (exploratory) \\
-Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{[+.146,+.168]}$ & history adds \\
+Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $-.003\,/\,+.000$ & equivalent \\
+i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $+.005\,/\,+.008$ & selection control \\
+LOCATA azimuth & $.494$ & $+.008$ & $.063$ & $.009$ & $.020$ & $.027$ & $-.003\,/\,-.001$ & equivalent \\
+LOCATA VAD & $.636$ & $-.000$ & $.82$ & $.052$ & $.000$ & $.000$ & $.000\,/\,.000$ & equivalent \\
+Sperm-whale codas & $.483$ & $+.046$ & $1.0$ & $.117$ & $-.063$ & $-.016$ & $-.055\,/\,+.040$ & equivalent$^{\ddagger}$ \\
+GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $+.002\,/\,+.020$ & not established \\
+GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $+.011\,/\,+.018$ & detected, below floor \\
+GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $+.022\,/\,+.026$ & detected (exploratory) \\
+Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{+.146\,/\,+.145}$ & history adds \\
 \bottomrule
 \end{tabular}
 \caption{Battery v5 (final analysis). Verdicts are statements about the
 \emph{registered six-lag lookup class}: ``equivalent'' $=$ $U_2<0.03$
 under both-tail calibration; ``not established'' $=$ no detection but
 $U_2\ge0.03$; ``detected (exploratory)'' $=$ statistically detected at
-the practical floor with a paired bound at the selection floor. VAD's degenerate $[.000,.000]$ interval is genuine: at its $D^*{=}1$
-the $k{=}6$ policy and the exact single-sample policy reduce to the same
-majority rule on every fold, so the paired difference is identically
-zero. The i.i.d.\ null's \emph{positive} paired interval is the
+the practical floor with a paired bound at the selection floor. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
+one-sided 95\% moving-block lower bounds at the pre-selected lag and
+with lag selection repeated inside each replicate (the latter bounds the
+\emph{maximal} gain over the grid). VAD's degenerate $.000$ entries are
+genuine: at its $D^*{=}1$ the $k{=}6$ policy and the exact single-sample
+policy reduce to the same majority rule on every fold.
+$^{\ddagger}$Whale's positive $L^{\mathrm{blk}}_{\max}$ against a
+negative fixed-$D^*$ bound is the winner's curse on a short noisy series;
+the detection test ($p=1.0$) gates it out. The i.i.d.\ null's \emph{positive} paired interval is the
 empirical lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
 paired bounds, since $D^*$ is an argmax the bootstrap treats as fixed).
 Bold: the one interval that dwarfs every calibration concern.}
@@ -876,15 +885,21 @@ this an \emph{empirical} dead zone.)
 \textbf{The conditional lower bound stands --- once at strength.} By
 Theorem~\ref{thm:incr}, seismic's history gain converts into a lower
 bound on conditional predictive information. The \emph{primary} result is now fully
-dependence- \emph{and} selection-aware: with the lag selection repeated
-inside every block-bootstrap replicate, the one-sided bound is
-$+0.1453$, giving
-$I(X_t;\text{history}\mid X_{t-D^*})\ge 2(0.1453)^2\approx0.042$
-nats --- a certificate in the defensible sense. Two further routes
+dependence- \emph{and} selection-aware, with the correctly-stated
+target: inference on the per-replicate maximum bounds the
+\emph{maximal} gain over the registered lag grid, so the certificate
+reads
+$\max_{D\in\mathcal D} I(X_t;\text{history}_D\mid X_{t-D})
+\ge 2(0.1453)^2\approx0.042$ nats --- \emph{there exists a registered
+lag at which the conditional predictive information is at least
+$0.042$ nats}. (A claim at the specific $D^*$ would need a simultaneous
+band or sample splitting; the fixed-$D^*$ interval below is the
+conditional-on-$D^*$ statement.) Two further routes
 corroborate to within a few percent: the fixed-$D^*$ moving-block
 interval ($[+.146,+.168]$, $\approx0.042$) and the fitted-Markov
-surrogate calibration ($2(0.158-0.014)^2\approx0.041$) --- alongside
-the total-information witness $I(X_t;\text{window})\ge0.176$ nats. History knows what the last
+surrogate calibration ($2(0.158-0.014)^2\approx0.041$) --- alongside the \emph{approximate} total-information witness
+$I(X_t;\text{window})\gtrsim0.18$ nats (exploratory: its estimator
+reuses the gain-error calibration, as noted in the protocol). History knows what the last
 sample does not; that is what ``aftershock clustering'' means in
 information units. Magnetometer's selection-aware bound ($+.026$, certificate
 $\approx0.001$ nats) is small and reported as exploratory. The instrument reads in

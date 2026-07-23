@@ -204,3 +204,21 @@ selection-aware as earned); paired-CI column relabelled "at fixed D*";
 VAD [0,0] explained (identical policies at D*=1); MI bias O(1/N);
 Table 1 float [!ht]; conclusion wording. Title: Age-Limited Decisions.
 Reviewer bottom line round 5: "With those changes, ready to submit."
+
+## Review round 6 (final polish) — v1.0 SUBMISSION CANDIDATE
+
+- Max-statistic target stated correctly: the selection-aware bound
+  licenses max_D I(X;H_D|X_{t-D}) >= 0.042 nats ("there exists a
+  registered lag..."), NOT the claim at the specific D* (which would
+  need a simultaneous band / selective inference / sample splitting —
+  stated in-text; the fixed-D* interval is the conditional-on-D*
+  statement).
+- Table 2: L^blk_{D*} / L^blk_max column replaces the fixed-D* CI;
+  whale's ‡ row displays the winner's curse (−.055 fixed vs +.040 max,
+  gated by p=1.0); iid relabelled "selection control".
+- Estimand sentence: registered-policy gain LOWER-BOUNDS the Bayes
+  increment (not "is"). Total-information witness labelled approximate/
+  exploratory in results. Abstract accounts for all nine series (iid =
+  selection-bias control). Sec 2: sup/inf + measurable-selection
+  standing assumption.
+v1.0 = ready to submit modulo venue formatting.
