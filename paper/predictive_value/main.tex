@@ -20,7 +20,7 @@ Predictive-Information Envelopes for Age-Limited Control}\\[4pt]
 \author{Andrew H. Bond,~\emph{Senior Member, IEEE}\\
 Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
-\date{Working draft --- v0.4 (battery v4 results integrated: dead zone observed, VAD reversal, one certified witness)}
+\date{Working draft --- v0.5 (review round 2: incremental-information theorem, contact-order law, statistical renaming)}
 
 \begin{document}
 \maketitle
@@ -38,7 +38,11 @@ excess value of posterior over prior beliefs; (ii) prove the universal
 \emph{predictive-information envelope}
 $0\le\Delta_Y\le\Omega\sqrt{\tfrac12 I(X;Y)}$ for any bounded objective with
 oscillation $\Omega$, by Pinsker's inequality applied to the posterior
-process; (iii) derive the \emph{bit-budget corollary}: a telemetry path
+process, together with its \emph{incremental} refinement --- the value of
+a richer delayed observation over a coarser one is bounded by
+$\Omega\sqrt{\tfrac12 I(X;H\mid Z)}$, so incremental decision value
+certifies \emph{conditional} predictive information; (iii) derive the
+\emph{bit-budget corollary}: a telemetry path
 delivering $b$ bits per decision caps feedback value at
 $\Omega\sqrt{(b\ln 2)/2}$ regardless of what is encoded --- compression can
 preserve but never create feedback value; (iv) show the envelope is
@@ -98,7 +102,9 @@ equality $\Delta=f(I)$ exists for bounded objectives
 geometry. This sharpens against the classical exception --- for
 \emph{logarithmic} (unbounded) utility, Kelly and Barron--Cover
 \cite{kelly56,barroncover88} show the value of side information \emph{equals}
-$I$; boundedness is exactly what breaks equality down to an envelope.
+$I$. For general bounded objectives, mutual information provides a
+universal envelope but does not determine value; logarithmic utility is a
+distinguished objective for which equality is possible.
 (\textbf{C4}) We give an exactness theory for binary state whose organizing
 fact is that \emph{the local geometry of the value function at the prior
 sets the correlation exponent}. For finite action sets (polyhedral value
@@ -122,9 +128,11 @@ vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A nine-series
 battery across four physical domains bounds any undetected history excess
 within a registered equivalence margin where surrogates predict none,
 observes the envelope's tightness, and --- read backwards --- uses the
-theorem as a certified witness of history information on non-Markov
-series, always through a one-sided lower confidence bound:
-$I(X_t;\text{history})\ge 2[(\widehat\Delta-\varepsilon)^{+}]^2$
+incremental theorem as a certified witness of \emph{conditional} history
+information on non-Markov series, always through a one-sided
+model-calibrated lower bound:
+$I(X_t;\text{history}\mid X_{t-D})\ge
+2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}).
 
 The scope is stated precisely: this is a unified theory for
@@ -224,6 +232,45 @@ experiments order \cite{blackwell53} specialized to garbled delayed
 sensing. Together: compression can preserve feedback value; no encoding of
 the delayed signal can create it.
 \end{proof}
+
+The same tower-property mechanism yields the theorem that governs
+\emph{richer} observations --- the form \S\ref{sec:battery} actually needs:
+
+\begin{theorem}[Incremental-information envelope]\label{thm:incr}
+Let $Z$ be any delayed observable and $W=(Z,H)$ a refinement (e.g.\
+$Z=X_{t-D}$ a single delayed sample, $H$ the rest of the delayed history
+window). Then
+\[
+0\;\le\;\Delta_W-\Delta_Z\;\le\;\Omega\,
+\sqrt{\tfrac12\,I(X;H\mid Z)} .
+\]
+Equivalently, read backwards:
+\emph{incremental decision value certifies conditional predictive
+information},
+\[
+I(X;H\mid Z)\;\ge\;2\Bigl(\frac{\Delta_W-\Delta_Z}{\Omega}\Bigr)^{\!2}.
+\]
+\end{theorem}
+
+\begin{proof}
+$\mu_Z=\E[\mu_W\mid Z]$ by the tower property, so
+$\Delta_W-\Delta_Z=\E[\psi(\mu_W)-\psi(\mu_Z)]\ge0$ by Jensen
+(Lemma~\ref{lem:blackwell}), and pointwise
+$\psi(\mu_W)-\psi(\mu_Z)\le\Omega\|\mu_W-\mu_Z\|_{\TV}$
+(Lemma~\ref{lem:lip}). Pinsker and Jensen then give
+$\E\|\mu_W-\mu_Z\|_{\TV}
+\le\sqrt{\tfrac12\,\E\,\KL(\mu_W\|\mu_Z)}
+=\sqrt{\tfrac12\,I(X;H\mid Z)}$,
+the last equality being the definition of conditional mutual information as
+the expected KL divergence of the refined posterior from the coarse one.
+\end{proof}
+
+Theorem~\ref{thm:mi} is the case $Z=\varnothing$. The pair separates two
+questions a delayed sensor can ask: \emph{how much is the sample worth?}
+(Theorem~\ref{thm:mi} at $Y=Z$) and \emph{how much more is the history
+worth?} (Theorem~\ref{thm:incr}) --- and the second is bounded by
+information the single sample does \emph{not} carry, never by the
+single-sample information itself.
 
 \begin{proposition}[Leading-order tightness in the canonical case]
 \label{prop:tight}
@@ -384,11 +431,13 @@ as tight, and (i) shows mixing can beat information. Three properties are the
 information envelope's own: it is \emph{estimable} --- the plug-in
 $\hat I(X_t;X_{t-D})$ in \S\ref{sec:battery} needs only pair counts, while
 the $\beta$-coefficient's supremum over the future $\sigma$-field is not
-estimable without a process model; it \emph{composes with channels} --- data
-processing gives Corollary~\ref{cor:bits}, and no analogous statement exists
-for $\beta$ (mixing has no channel semantics); and it \emph{adds across
-sensors} via the chain rule, giving budget statements for multi-sensor
-telemetry. In short: mixing is the sharper analysis tool when a model is in
+estimable without a process model; it \emph{carries rate semantics} ---
+total-variation dependence coefficients also contract under channels, but
+only information obeys the entropy bound $I(X;Y)\le H(Y)$ that turns a bit
+budget into Corollary~\ref{cor:bits}; and it obeys an \emph{exact
+conditional chain rule}, giving additive multi-sensor budget decompositions
+via conditional mutual information (Theorem~\ref{thm:incr}) that $\beta$
+does not. In short: mixing is the sharper analysis tool when a model is in
 hand; information is the operational one when only data or a bit budget is.
 \end{remark}
 
@@ -419,8 +468,11 @@ the first three on real processes.}
 \label{sec:multistate}
 
 When does the Bayes envelope admit a closed form --- an exact \emph{law}
-rather than an envelope? For binary state the answer is: always, and the
-form is a hinge.
+rather than an envelope? For binary state with a finite action set, the
+exact law is a sum of hinges; for general convex value functions, the
+\emph{local contact order} of the value function at the prior determines
+the weak-correlation exponent (Theorem~
+ef{thm:contact}).
 
 \begin{theorem}[The hinge law, polyhedral case]\label{thm:hinge}
 Let $X_t\in\{0,1\}$ be stationary with $\pi=\mathbb P(X_t{=}1)\in(0,1)$, let
@@ -484,7 +536,10 @@ $\psi(p)=-p(1-p)$ is smooth and strictly convex, and, exactly,
 \Delta(D)\;=\;\operatorname{Var}(p_Y)\;=\;\frac{C(D)^2}{\pi(1-\pi)}:
 \]
 quadratic in the covariance, no hinge, no dead zone, for every $\pi$. More
-generally, whenever $\psi$ is twice continuously differentiable near $\pi$,
+generally, whenever $\psi$ is twice continuously differentiable near $\pi$
+with $\psi''(\pi)>0$ (if the curvature vanishes the response is of higher
+order; Theorem~
+ef{thm:contact}),
 \[
 \Delta(D)\;=\;\tfrac12\,\psi''(\pi)\operatorname{Var}(p_Y)+o(C^2)
 \;=\;\frac{\psi''(\pi)}{2\pi(1-\pi)}\,C(D)^2+o\bigl(C(D)^2\bigr).
@@ -500,10 +555,43 @@ $\operatorname{Var}(p_Y)=\pi(C/\pi)^2+(1-\pi)\bigl(C/(1-\pi)\bigr)^2
 expansion of $\psi$ at $\pi$ against the mean-$\pi$ posterior spread.
 \end{proof}
 
-\begin{remark}[The trichotomy: local decision geometry sets the
-correlation exponent]\label{rem:trichotomy}
-The cases exhaust the local behaviours of a convex $\psi$ at the prior, and
-each fixes how weak dependence buys value: \emph{prior on a kink}
+Both regimes --- and every intermediate one --- are cases of a single
+statement:
+
+\begin{theorem}[Local response is set by the contact order]\label{thm:contact}
+Suppose that near $\pi$,
+\[
+\psi(\pi+h)\;=\;\psi(\pi)+ah+c_+\,h_+^{\,q}+c_-\,(-h)_+^{\,q}+o(|h|^q)
+\]
+for some $q\ge1$ and $c_+,c_-\ge0$ not both zero. Then, as $C\downarrow0$,
+\[
+\Delta(C)\;=\;C^{\,q}\Bigl[c_+\,\pi^{1-q}+c_-\,(1-\pi)^{1-q}\Bigr]+o(C^{\,q}),
+\]
+and on the negative branch ($C\uparrow0$) the same with $|C|^q$ and the
+weights $\pi\leftrightarrow(1-\pi)$ interchanged. If instead $\psi$ is
+affine on a neighbourhood of $\pi$, then $\Delta(C)=0$ for all $|C|$ small
+enough that both posteriors remain in that neighbourhood --- the exact dead
+zone.
+\end{theorem}
+
+\begin{proof}
+The posteriors are $p_1=\pi+C/\pi$ (w.p.\ $\pi$) and $p_0=\pi-C/(1-\pi)$
+(w.p.\ $1-\pi$); their mean is $\pi$, so the affine part of the expansion
+cancels in $\Delta=\E[\psi(p_Y)]-\psi(\pi)$. For $C>0$ the $h_+^q$ term
+contributes $\pi\,c_+(C/\pi)^q=c_+C^q\pi^{1-q}$ through $p_1$ and the
+$(-h)_+^q$ term contributes $(1-\pi)\,c_-(C/(1-\pi))^q=c_-C^q(1-\pi)^{1-q}$
+through $p_0$; both posterior deviations are $\Theta(C)$, so the $o(|h|^q)$
+remainder is $o(C^q)$. For $C<0$ the posteriors trade sides of $\pi$,
+exchanging the weights. The affine case is immediate.
+\end{proof}
+
+\begin{remark}[The trichotomy, as leading cases]\label{rem:trichotomy}
+Theorem~\ref{thm:contact} subsumes the named regimes --- $q=1$ (kink):
+linear response; locally affine: dead zone; $q=2$ with
+$c_\pm=\tfrac12\psi''(\pi)>0$: quadratic --- and admits fractional contact
+orders $q\in(1,2)$, realizable by valid suprema of affine rewards, with
+correspondingly fractional correlation exponents. Each case fixes how weak
+dependence buys value: \emph{prior on a kink}
 $\Rightarrow$ linear response $\Delta\propto|C|$; \emph{prior interior to a
 flat piece} $\Rightarrow$ dead zone, $\Delta=0$ until a threshold;
 \emph{smooth curvature} $\Rightarrow$ quadratic response
@@ -600,38 +688,52 @@ $\tfrac12$ overstates value whenever $\hat\pi\neq\tfrac12$. The
 \emph{history gain} is the difference (ii)$-$(i).
 
 \textbf{Surrogate calibration.} The null for ``history adds nothing beyond
-the law'' is a population of $60$ Markov surrogates per domain, each matched
+the law'' is a population of Markov surrogates per domain, each matched
 to the real series' lag-1 transition probabilities and evaluated by the
-identical pipeline, with $M=299$ surrogates. Significance uses the exact
-Monte Carlo form $p=(1+\#\{T_j\ge T_{\mathrm{obs}}\})/(M+1)$ (smallest
-reportable value $1/300\approx0.0033$; entries at that floor are written
-$p<.004$, never $.00$), together with the companion study's practical floor
-of $0.03$ on the effect. Because each surrogate is Markov, its \emph{true}
-history gain is zero and its own exact $\widehat V_1$ is computable from
-its lag table, so the $M$ surrogate gain estimates form a genuine sample of
-the pipeline's \emph{estimation error under matched dependence}; its
-$95$th percentile $\varepsilon_{\mathrm{dom}}$ calibrates every one-sided
-bound below. \emph{Non-rejection is not exactness}: where the test does
-not fire, we report the one-sided upper confidence bound
+identical pipeline, with $M=299$ surrogates. We name the procedure
+precisely: because the surrogates are generated from \emph{estimated}
+lag-1 transition probabilities, this is a \emph{parametric-bootstrap test
+under a fitted Markov null} --- not an exact randomization test for the
+broad null ``history adds nothing'' --- with
+$p=(1+\#\{T_j\ge T_{\mathrm{obs}}\})/(M+1)$ (smallest reportable value
+$1/300\approx0.0033$, written $p<.004$, never $.00$), together with the
+companion study's practical floor of $0.03$ on the effect. Because each
+surrogate is Markov, its true history gain is zero and its own exact
+$\widehat V_1$ is computable from its lag table, so the $M$ surrogate gain
+estimates sample the pipeline's estimation error \emph{under the fitted
+Markov model}; the $95$th percentile $\varepsilon_{\mathrm{dom}}$ is
+therefore a \emph{model-calibrated} (not distribution-free) bound, and
+every one-sided interval below inherits that qualification --- a
+dependence-aware alternative (moving-block bootstrap on held-out paired
+loss differences) is the registered upgrade path for a submission build.
+\emph{Non-rejection is not exactness}: where the test does not fire, we
+report the model-calibrated upper bound
 $U=\text{gain}_{\max}+\varepsilon_{\mathrm{dom}}$ and claim ``no
 detectable excess (equivalent within the margin)'' only when $U<0.03$.
 
-\textbf{The envelope measurement.} For each domain and lag, the plug-in
-mutual information $\widehat I(X_t;X_{t-D})$ from pooled pair counts
-($2{\times}2$; plug-in bias $\le 3/(2N)$ nats, negligible at the pooled
-sample sizes reported) and the envelope $\sqrt{\widehat I/2}$ of
-Theorem~\ref{thm:mi}. Two registered uses. \emph{Forward} (envelope
-check): $\widehat\Delta_{\mathrm{hist}}(D)\le\sqrt{\widehat I(D)/2}
-+\varepsilon_{\mathrm{dom}}$ --- an apparent violation smaller than the
-matched-dependence noise is estimator noise, not physics. \emph{Backward}
-(certified witness): a policy value is converted into an information lower
-bound only through its one-sided \emph{lower} confidence bound,
+\textbf{The two information measurements.} For each domain and lag, the
+plug-in $\widehat I(X_t;X_{t-D})$ from pooled pair counts ($2{\times}2$;
+plug-in bias $\le 3/(2N)$ nats, negligible at the pooled sample sizes
+reported) and the envelope $\sqrt{\widehat I/2}$. Their registered uses
+follow the two theorems, matched to the observable each governs.
+\emph{Single sample} (Theorem~\ref{thm:mi} at $Y=X_{t-D}$): the exact
+$\widehat V_1$ must respect $\sqrt{\widehat I/2}$, a population identity
+whose empirical check is a consistency diagnostic. \emph{History}
+(Theorem~\ref{thm:incr}): the history policy observes the \emph{window},
+so the single-lag envelope does not bound it --- a history value above
+$\sqrt{\widehat I_1/2}$ is not a violation but exactly what genuine
+higher-order dependence should produce. The history gain over
+$\widehat V_1$ is the empirical increment $\Delta_W-\Delta_Z$, and its
+model-calibrated lower bound certifies \emph{conditional} predictive
+information:
 \[
-I(X_t;\text{window})\;\ge\;2\,\bigl[(\widehat\Delta_{\mathrm{hist}}
--\varepsilon_{\mathrm{dom}})^{+}\bigr]^{2},
+I(X_t;\,\text{history}\mid X_{t-D})\;\ge\;
+2\,\bigl[(\text{gain}_{\max}-\varepsilon_{\mathrm{dom}})^{+}\bigr]^{2},
 \]
 never through the raw point estimate, whose positive noise would inflate
-the certificate.
+the certificate. The total-information witness
+$I(X_t;\text{window})\ge2[(\widehat\Delta_{\mathrm{hist}}
+-\varepsilon_{\mathrm{dom}})^{+}]^{2}$ is retained separately.
 
 \subsection{Results}
 
@@ -663,13 +765,15 @@ GOES X-ray flux        & $.421$ & $+.028$ & $<.004$ & $.008$ & $.036$ & $-.008$ 
 GOES magnetometer      & $.456$ & $+.033$ & $<.004$ & $.010$ & $.043$ & $-.004$ & history adds (at floor) \\
 Seismic ANMO           & $.508$ & $+.158$ & $<.004$ & $.014$ & $.171$ & $\mathbf{+.148}$ & history adds (certified) \\
 \bottomrule
-\\end{tabular}
+\end{tabular}
 \caption{Battery v4 (corrected protocol; \texttt{battery\_v4.json}).
 ``Equivalent'' $=$ $U<0.03$; $^{\dagger}$``no excess detected'' $=$ test
 does not fire but $U\ge 0.03$, so equivalence is \emph{not} established
 (noise-limited) --- a distinction the uncorrected protocol could not
-express. Bold: the only envelope excess that clears the matched-dependence
-noise bound. Pooled pair counts range from $2.0$k (protons) to $21$k
+express. Bold: the only single-lag-envelope excess clearing the
+model-calibrated noise bound --- per Theorem~
+ef{thm:incr} a signature of
+higher-order dependence, not a violation. Pooled pair counts range from $2.0$k (protons) to $21$k
 (azimuth) per lag.}
 \label{tab:battery}
 \end{table}
@@ -689,36 +793,42 @@ excess --- and the sub-unity envelope ratios of v3 disappear with it (all
 balanced-domain tightness ratios now sit at $1.11$--$1.35$, on the Pinsker
 side of unity, exactly as population theory requires).
 
-\textbf{Single-sample sufficiency is the rule.} On eight of nine series the
-delayed single sample, evaluated exactly (majority baseline, dead zones
-included), captures all detectable feedback value at the battery's
-resolution --- with the equivalence bound $U<0.03$ certified for the
-balanced, well-sampled series (Markov reference, azimuth) and the weaker
-``no excess detected'' verdict, honestly labelled, where noise is wide
-(short whale exchanges, sparse protons).
+\textbf{Only seismic exhibits a clearly material history gain.} X-ray and
+magnetometer show smaller statistically detected gains at or below the
+registered practical threshold; the remaining series show no detected
+excess, with equivalence established only where the model-calibrated upper
+bound falls below the margin (Markov reference, azimuth). Where noise is
+wide (short whale exchanges, sparse protons), the verdict stays at ``no
+excess detected,'' honestly labelled.
 
-\textbf{The dead zone is observed.} The imbalanced GOES series realize
-Theorem~\ref{thm:hinge} in the wild: X-ray ($\hat\pi=.421$, kink at
-$\tfrac12$, threshold $C^*\approx0.033$) has $\widehat V_1$ \emph{exactly
-zero} across its moderate-covariance lags --- the majority policy is
-unbeatable by any single delayed sample --- while its plug-in information
-remains positive; its envelope-to-value ratio diverges ($\gg10^6$) not as
-an artifact but as the theorem's geometry: \emph{information without value},
-Proposition~\ref{prop:noneq} measured on a physical process. Freshness
-metrics, and information metrics alike, cannot see this; the Bayes envelope
-does.
+\textbf{An empirical dead zone.} The imbalanced GOES series exhibit
+Theorem~\ref{thm:hinge}'s geometry at the plug-in level: X-ray
+($\hat\pi=.421$, kink at $\tfrac12$, threshold $C^*\approx0.033$) has
+$\widehat V_1$ exactly zero across its moderate-covariance lags --- the
+majority policy is unbeatable by any single delayed sample --- while its
+plug-in information remains positive: \emph{information without value},
+the phenomenon of Proposition~\ref{prop:noneq}, on a physical series. (The
+envelope-to-value ratio is undefined where $\widehat V_1=0$ and is not
+reported there; population uncertainty for the dead-zone boundary itself
+is future work, so we label this an \emph{empirical} dead zone.)
 
-\textbf{The certified witness stands --- once.} Seismic regime is the one
-series where the history policy's excess over the single-lag envelope
-clears the matched-dependence noise bound ($+0.148$ vs.\
-$\varepsilon=.014$), and its confidence-certified window-information bound
-is $I(X_t;\text{window})\ge 0.176$ nats --- aftershock clustering carrying
-an order of magnitude more predictive information than the last sample
-alone ($\widehat I_1\approx0.002$ at the certifying lag). Magnetometer
-shows a small certified gain at the practical floor. The instrument reads
-in both directions, and under the corrected statistics its two directions
-are: equivalence, most places; certified history information, exactly where
-the physics says it should be.
+\textbf{The conditional certificate stands --- once at strength.} By
+Theorem~\ref{thm:incr}, seismic's history gain over the exact single-sample
+value converts into a model-calibrated certificate of \emph{conditional}
+predictive information:
+$I(X_t;\text{history}\mid X_{t-D})\ge 2(0.158-0.014)^2\approx
+0.041$ nats --- history knows what the last sample does not, which is what
+``aftershock clustering'' means in information units --- alongside the
+total-information witness $I(X_t;\text{window})\ge0.176$ nats. The
+seismic history value also exceeds the \emph{single-lag} envelope
+($+0.148$ vs.\ $\varepsilon=.014$); under Theorem~\ref{thm:incr} this is
+not a violation of anything but the expected signature of higher-order
+dependence, and it co-occurs with the certified conditional information
+exactly as the theory requires. Magnetometer shows a small detected gain
+at the practical floor (conditional certificate $\approx0.001$ nats ---
+reported, not emphasized). The instrument reads in both directions:
+equivalence or bounded excess on most series; certified conditional
+history information on the series where it is found.
 
 \section{Related work}\label{sec:related}
 

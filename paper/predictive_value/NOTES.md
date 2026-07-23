@@ -69,3 +69,23 @@ Radner–Stiglitz, Blackwell; positioning sharpened per review. Language:
 "no detectable excess", scope = exogenous one-step bounded-reward.
 **Lit-check cron (2:17am) also verifies: soleymani22/ayan19 citation details,
 hinge vs Chade–Schlee, Thm 2 folklore status.**
+
+## Review round 2 (2026-07-22) — 7.5/10, path to 8.5; v0.5 lands the repairs
+
+MAJOR (correct): the single-lag envelope was misapplied to the k=6 history
+policy. Repair = **Theorem (incremental-information envelope)**:
+0 ≤ Δ_W − Δ_Z ≤ Ω√(I(X;H|Z)/2) — "incremental decision value certifies
+conditional predictive information." The battery's gain column IS Δ_W−Δ_Z;
+seismic conditional certificate 2(0.158−0.014)² ≈ 0.041 nats (plus total
+0.176). Env-excess column reinterpreted as higher-order-dependence
+signature, not violation.
+
+Also landed: **contact-order theorem** (ψ(π+h) = ψ+ah+c±|h|^q ⇒
+Δ = C^q[c₊π^{1−q}+c₋(1−π)^{1−q}]; subsumes hinge/dead-zone/quadratic +
+fractional q); §6 opener fixed; ψ''>0 caveat; mixing-contracts-too fix
+(distinctives = H(Y) bound, chain rule, additive budgets); boundedness
+sentence softened; stats renamed (parametric bootstrap under fitted Markov
+null; ε = model-calibrated, moving-block bootstrap as upgrade path);
+results recalibrated ("only seismic clearly material"; "empirical dead
+zone"; dropped ≫10⁶ and "exactly where physics says"); endtabular leak +
+M=60/299 inconsistency fixed. 14pp clean.
