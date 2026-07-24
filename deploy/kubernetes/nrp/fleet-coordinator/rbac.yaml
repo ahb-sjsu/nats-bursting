@@ -1,0 +1,58 @@
+# RBAC for the tqp fleet wave coordinator (in-cluster campaign driver).
+#
+# Additive: does not touch the existing nats-bursting SA/Role (which the Go
+# controller uses) or nrp-telemetry-reader. Same minimum-verb philosophy:
+# jobs CRUD + pods get/list/watch + pods/log, all namespaced - NRP grants
+# tenants no ClusterRole. PVC verbs are included only for the idempotent
+# PVC pre-phase (create-if-absent; never deletes - fleet PVCs are retained).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tqp-fleet-coordinator
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: fleet-coordinator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tqp-fleet-coordinator
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: fleet-coordinator
+rules:
+  # Wave engine: apply, inspect, watch, and re-apply campaign Jobs
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list", "watch", "delete"]
+  # Find the score job's pod for the log tail
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # Read the score job's log tail (replaces the driver's kubectl logs)
+  - apiGroups: [""]
+    resources: ["pods/log"]
+    verbs: ["get"]
+  # PVC pre-phase only: create-if-absent, never delete
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tqp-fleet-coordinator
+  namespace: ssu-atlas-ai
+  labels:
+    app.kubernetes.io/name: nats-bursting
+    app.kubernetes.io/component: fleet-coordinator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: tqp-fleet-coordinator
+subjects:
+  - kind: ServiceAccount
+    name: tqp-fleet-coordinator
+    namespace: ssu-atlas-ai
