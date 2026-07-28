@@ -209,7 +209,16 @@ def main() -> None:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--outdir", default="out")
     ap.add_argument("--figdir", default=r"..\..\paper\figures")
+    ap.add_argument("--replot", default=None, metavar="RESULTS_JSON",
+                    help="regenerate the figure from a saved tau_sweep_results.json "
+                         "(no simulation)")
     a = ap.parse_args()
+    if a.replot:
+        with open(a.replot) as f:
+            saved = json.load(f)
+        a.D = saved["D"]
+        _figure(saved["sweep"], saved["collapse"], a)
+        return
     os.makedirs(a.outdir, exist_ok=True)
 
     ps = [0.005, 0.01, 0.02, 0.035, 0.05, 0.075, 0.1, 0.15, 0.2, 0.3, 0.4]
@@ -288,7 +297,7 @@ def _figure(sweep, collapse, args) -> None:
     xs = np.linspace(0.02, 6, 200)
     ax2.plot(xs, 0.5 * np.exp(-xs), "k--", lw=1.6, label=r"$\frac{1}{2} e^{-D/\tau_c}$")
     ax2.set_xlabel(r"sensing age / coherence  $D/\tau_c$")
-    ax2.set_ylabel(r"$\Delta$ (threshold)")
+    ax2.set_ylabel(r"$\Delta$")
     ax2.set_title("scaling collapse across $D$")
     ax2.legend(fontsize=7)
     ax2.grid(alpha=0.3)
