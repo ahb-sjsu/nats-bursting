@@ -16,7 +16,12 @@ controllers on that process and checks:
   (2) practical AIMD approaches it when tau_c >> D and degrades when tau_c <~ D;
   (3) a regime-adaptive controller (estimate r_hat online, switch AIMD<->static)
       tracks the upper envelope -- never worse than static, near-optimal throughout;
-  (4) sweeping D, all curves collapse onto 1/2 * e^{-D/tau_c} vs D/tau_c.
+  (4) sweeping D, all curves collapse onto 1/2 * e^{-D/tau_c} vs D/tau_c;
+  (5) a DeepRM-style policy-gradient agent (REINFORCE over the age-D observation
+      HISTORY -- strictly more information than the memoryless threshold) trains
+      up to the line but never above it: the law binds learned controllers too.
+      [Mao et al., HotNets'16 (DeepRM); SIGCOMM'19 (Decima); ICLR'19 input-driven
+      variance reduction -- the per-state baseline used here.]
 
 This is a MODEL-level validation of the controllers (no cluster). The real-cluster
 counterpart sweeps `contention.py --profile markov --p-flip ...` against run.py and
@@ -110,6 +115,58 @@ def run_adaptive(a: np.ndarray, D: int, gamma: float = 0.15) -> np.ndarray:
     return w
 
 
+def run_rl(a: np.ndarray, D: int, p: float, hist: int = 4, passes: int = 2,
+           lr: float = 0.1, seed: int = 1) -> np.ndarray:
+    """DeepRM-style learned admission: tabular-softmax REINFORCE (policy gradient).
+
+    State  : the last ``hist`` age-D capacity readings, bit-packed -- strictly
+             MORE causal information than the memoryless threshold policy uses,
+             so beating 1/2 r(D) is *possible for the agent to attempt*.
+    Actions: window w in {W_MIN, W_MIN+1/2, ..., K} (the AIMD half-step grid).
+    Reward : min(w, a_t) - 1[w > a_t]. Its expectation equals the advantage-
+             over-static objective exactly (the static frontier is g = 1 + rho),
+             so the agent trains on the very quantity Thm 1 bounds.
+    Because admission does not move the neighbour's capacity (a_t is exogenous),
+    the problem is a contextual bandit and per-step REINFORCE with a per-state
+    running-mean baseline (input-driven variance reduction, Mao et al. ICLR'19)
+    converges to the per-state optimal action. Training is generous to RL: a
+    FRESH trace of the true chain (unlimited env samples), then the policy is
+    frozen (greedy) and evaluated on the sweep trace like every other controller.
+    """
+    rng = np.random.default_rng(seed)
+    train = markov_capacity(len(a), p, rng)
+    acts = np.arange(W_MIN, K + 1e-9, 0.5)
+    n_s, n_a = 1 << hist, len(acts)
+    theta = np.zeros((n_s, n_a))
+    base = np.zeros(n_s)
+    cnt = np.zeros(n_s)
+
+    def states(tr: np.ndarray) -> np.ndarray:
+        hi = (tr == A_HI).astype(np.int64)
+        o = np.zeros(len(tr), dtype=np.int64)   # age-D obs; cold start reads lo
+        o[D:] = hi[: len(tr) - D]
+        s = np.zeros(len(tr), dtype=np.int64)
+        for k in range(hist):                   # bit k = obs k epochs ago
+            s[k:] |= o[: len(tr) - k] << k
+        return s
+
+    s_tr = states(train)
+    for _ in range(passes):
+        for t in range(len(train)):
+            s = s_tr[t]
+            z = np.exp(theta[s] - theta[s].max())
+            pi = z / z.sum()
+            i = rng.choice(n_a, p=pi)
+            w = acts[i]
+            r = min(w, train[t]) - (1.0 if w > train[t] + 1e-9 else 0.0)
+            cnt[s] += 1
+            base[s] += (r - base[s]) / cnt[s]   # per-state baseline
+            grad = -pi
+            grad[i] += 1.0
+            theta[s] += lr * (r - base[s]) * grad
+    return acts[np.argmax(theta[states(a)], axis=1)]
+
+
 def advantage(w: np.ndarray, a: np.ndarray) -> float:
     """Goodput gain over the best static at the controller's own over-admission."""
     rho, g = metrics(w, a)
@@ -132,7 +189,8 @@ def sweep_p(D: int, ps, T: int, seed: int) -> list[dict]:
         row = {"p": p, "tau_c": tau_c_of(p), "D": D, "predicted": predicted(D, p)}
         for name, w in (("threshold", run_threshold(a, D)),
                         ("aimd", run_aimd(a, D)),
-                        ("adaptive", run_adaptive(a, D))):
+                        ("adaptive", run_adaptive(a, D)),
+                        ("rl", run_rl(a, D, p, seed=seed + 1 + int(1e4 * p)))):
             rho, g = metrics(w, a)
             row[name] = {"rho": round(rho, 4), "goodput": round(g, 4),
                          "advantage": round(advantage(w, a), 4)}
@@ -162,6 +220,7 @@ def main() -> None:
     for D in (2, 4, 8):
         collapse[D] = [{"tau_c": tau_c_of(p), "D_over_tau": D / tau_c_of(p),
                         "advantage": r["threshold"]["advantage"],
+                        "advantage_rl": r["rl"]["advantage"],
                         "predicted": r["predicted"]}
                        for p, r in zip(ps, sweep_p(D, ps, a.T, a.seed + D))]
 
@@ -172,16 +231,20 @@ def main() -> None:
     # ---- console summary -------------------------------------------------
     print(f"\n  feedback-advantage validation  (D={a.D}, T={a.T})")
     print(f"  {'tau_c':>7} {'r_emp':>6} {'pred':>6} | "
-          f"{'thresh':>7} {'aimd':>7} {'adapt':>7}   (advantage over static)")
+          f"{'thresh':>7} {'aimd':>7} {'adapt':>7} {'rl':>7}   (advantage over static)")
     for r in main_sweep:
         tc = r["tau_c"]
         print(f"  {tc:7.1f} {r['r_emp']:6.3f} {r['predicted']:6.3f} | "
               f"{r['threshold']['advantage']:7.3f} {r['aimd']['advantage']:7.3f} "
-              f"{r['adaptive']['advantage']:7.3f}")
+              f"{r['adaptive']['advantage']:7.3f} {r['rl']['advantage']:7.3f}")
     # headline gap between the theory and the optimal controller
     gap = max(abs(r["threshold"]["advantage"] - r["predicted"]) for r in main_sweep)
     print(f"\n  max |threshold_advantage - 1/2 r(D)| = {gap:.4f}  "
           f"(theory match; smaller is better)")
+    # the learned-controller check: RL may reach the line, must not exceed it
+    excess = max(r["rl"]["advantage"] - r["predicted"] for r in main_sweep)
+    print(f"  max (rl_advantage - 1/2 r(D))        = {excess:+.4f}  "
+          f"(law binds RL iff <= Monte-Carlo noise)")
 
     _figure(main_sweep, collapse, a)
 
@@ -205,6 +268,8 @@ def _figure(sweep, collapse, args) -> None:
              label="AIMD (practical)")
     ax1.plot(tc, [r["adaptive"]["advantage"] for r in sweep], "^-", ms=4,
              label="regime-adaptive")
+    ax1.plot(tc, [r["rl"]["advantage"] for r in sweep], "d-", ms=4,
+             label="policy-gradient RL (DeepRM-style)")
     ax1.axhline(0, color="0.6", lw=0.8)
     ax1.set_xscale("log")
     ax1.set_xlabel(r"capacity coherence time $\tau_c$ (epochs)")
@@ -213,9 +278,13 @@ def _figure(sweep, collapse, args) -> None:
     ax1.legend(fontsize=7, loc="upper left")
     ax1.grid(alpha=0.3)
 
+    rl_labeled = False
     for D, rows in collapse.items():
         x = [r["D_over_tau"] for r in rows]
         ax2.plot(x, [r["advantage"] for r in rows], "o", ms=4, label=f"$D={D}$")
+        ax2.plot(x, [r["advantage_rl"] for r in rows], "x", ms=4, color="0.35",
+                 label=("policy-gradient RL" if not rl_labeled else "_nolegend_"))
+        rl_labeled = True
     xs = np.linspace(0.02, 6, 200)
     ax2.plot(xs, 0.5 * np.exp(-xs), "k--", lw=1.6, label=r"$\frac{1}{2} e^{-D/\tau_c}$")
     ax2.set_xlabel(r"sensing age / coherence  $D/\tau_c$")

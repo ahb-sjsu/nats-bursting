@@ -30,6 +30,14 @@ in [`E8_PREREG.md`](E8_PREREG.md) and [`E9_PREREG.md`](E9_PREREG.md).
   delay D). naive is impolite in both (ρ = 0.64–0.85, steals ~38%). 4 seeds,
   randomized-interleaved, **27 trials, 0 contaminated**. Figures:
   `../../paper/figures/pareto_contended_{square,poisson}.pdf`, `e9_competitor_harm.pdf`.
+- **Controller-level law validation with a learned baseline (`tau_sweep.py`, model-level,
+  run 2026-07-28 on Atlas, jed venv):** the delayed-threshold (Bayes-optimal) policy sits on
+  ½·r(D) with max gap **0.013**; a **DeepRM-style policy-gradient agent** (tabular-softmax
+  REINFORCE, per-state baseline à la input-driven variance reduction, state = last 4 age-D
+  readings — strictly more information than the threshold) **converges to the Bayes-optimal
+  policy**: advantage within 0.003 of threshold at every sweep point, max excess over the law
+  **+0.013 = the optimal policy's own MC deviation**. The law binds learned controllers.
+  Artifacts: `out/tau_sweep_results.json`, `../../paper/figures/tau_sweep.{pdf,png}`.
 - **Task-framework comparison (positioning):** same warm-pool workload (MiniLM embedding
   on one GV100) vs. Ray, Dask, and a raw `ProcessPoolExecutor`. Driven by its native Go
   client (`nats.go`), nats-bursting's warm pool does **0.9 ms** dispatch p50 and **9.4k

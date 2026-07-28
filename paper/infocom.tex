@@ -52,7 +52,8 @@ static once $D$ exceeds the neighbour's coherence time $\tau_c$), a matching
 achievability, and a \emph{regime-adaptive} controller that estimates $\tau_c$
 online and switches between closed- and open-loop admission to track the limit
 uniformly. We validate the law in simulation---the optimal policy sits on
-$\tfrac12 r(D)$ to within $0.013$, practical AIMD degrades below static exactly when
+$\tfrac12 r(D)$ to within $0.013$, a DeepRM-style policy-gradient learner trains
+onto the limit but never above it, practical AIMD degrades below static exactly when
 $\tau_c\!\lesssim\!D$, and the regime-adaptive controller never falls below
 static (a live GPU run confirms its online $r(D)$ estimate lands on the curve and
 the switch's politeness dividend grows as feedback fails)---and on a workstation
@@ -106,12 +107,13 @@ admission, provably tracking the limit uniformly in $\tau_c$
 (Thm.~\ref{thm:adapt}) with a deterministic hard-cap safety guarantee
 (Prop.~\ref{prop:safety}).
 \item A \textbf{realization} (\S\ref{sec:fabric}) in which the controller runs
-in-cluster and senses/actuates across a single-port WAN leaf link that fixes the
-sensing age $D$; the fabric's own design and characterization are the subject of a
-companion systems paper~\cite{companion} and are out of scope here.
+in-cluster, sensing and actuating across a single-port WAN leaf link that fixes
+the sensing age $D$ (the fabric itself is a companion paper's
+subject~\cite{companion}).
 \item An \textbf{evaluation} (\S\ref{sec:eval}) that validates the law in
-simulation (optimal policy on $\tfrac12 r(D)$ within $0.013$; adaptive control
-never below static) and, on a workstation testbed under \emph{real GPU contention}
+simulation (optimal policy on $\tfrac12 r(D)$ within $0.013$; a learned
+policy-gradient controller capped by it; adaptive control never below static)
+and, on a workstation testbed under \emph{real GPU contention}
 (full submission path verified end-to-end on NRP Nautilus), shows feedback admission
 is the polite-efficient knee that spares the competing tenant---while the
 pre-registered memoryless regime where it breaks even is exactly the
@@ -184,10 +186,9 @@ the CUDA cold-start of a freshly admitted pod together set the sensing age $D$ o
 compressed by random-rotation quantization \cite{turboquantpro,turboquant}; this aids
 bandwidth on the hop, but the sensing age $D$ is dominated by CUDA cold-start, not
 transport (\S\ref{sec:eval}), so compression does not reduce $D$. The fabric's own
-design---leaf-federation tradeoffs, JetStream durability, single-port traversal---and
-the transport and node-level thermal subsystems are a systems contribution developed
-and characterized in a companion paper~\cite{companion}; here the fabric is simply the
-medium that makes capacity sensing possible, and stale.
+design---leaf federation, JetStream durability, single-port traversal, transport and
+thermal subsystems---is characterized in the companion paper~\cite{companion}; here
+it is simply the medium that makes capacity sensing possible, and stale.
 
 \section{Implementation}
 \label{sec:impl}
@@ -214,9 +215,9 @@ container images, and the transport/right-sizing packages
 Compute \cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray}, and Dask \cite{dask}
 provide elastic task execution and provider-driven scaling, but treat the host as
 owned capacity to fill; none model a fair-use politeness budget or admission under
-age-limited sensing. They are complementary substrates---a head-to-head
-dispatch/throughput comparison against them, and the fabric that carries our control
-plane, is reported in the companion systems paper~\cite{companion}. \textbf{Messaging.}
+age-limited sensing. They are complementary substrates; a head-to-head comparison,
+and the fabric that carries our control plane, are in the companion systems
+paper~\cite{companion}. \textbf{Messaging.}
 The control plane rides NATS \cite{nats} leaf federation rather than a bespoke RPC
 layer.
 \textbf{Congestion and scavenger control.} Our controller is AIMD in the lineage of
@@ -228,7 +229,14 @@ delay signals; we differ in two ways. First, the objective is \emph{two-sided}
 (stay under a pod cap \emph{and} above a utilization floor), which admits an
 over-admission metric rather than pure loss. Second, and more fundamentally, we do
 not merely propose a back-off rule: we prove a \emph{limit} on what any such rule
-can achieve. \textbf{Age of information.} That limit is an information-freshness
+can achieve. \textbf{Learned resource control.} Deep-RL schedulers---DeepRM
+\cite{deeprm} and Decima \cite{decima}, with variance reduction for exogenous input
+processes \cite{inputdriven}---learn scheduling policies from cluster feedback and
+are natural candidates for polite admission. Our result is orthogonal and
+\emph{binding}: Thm.~\ref{thm:limit} caps the advantage of any causal policy,
+learned or hand-designed, and \S\ref{sec:eval-law} tests exactly this---a
+policy-gradient agent of that family trained on the delayed observation history.
+\textbf{Age of information.} That limit is an information-freshness
 statement---the value of feedback is set by the age $D$ of the capacity estimate
 relative to the neighbour's coherence time---placing polite bursting in the
 age-of-information line of work \cite{aoi} but on the \emph{control} rather than the
@@ -240,25 +248,24 @@ to a measured detection delay.
 
 \section{Conclusion}
 \label{sec:concl}
-Being a good guest on a shared cluster is a control problem, and how well it can be
-solved is fixed by how stale the guest's view of the cluster is. \sysname{} makes
-that precise: an age-of-information formulation, a feedback-usefulness limit
-$\Delta(D)=\tfrac12 r(D)$ that says closed-loop admission is worth exactly the
-autocorrelation of capacity at the sensing lag, and a regime-adaptive controller
-that measures its own predictability and tracks the limit. The limit is validated
-at the controller level (the optimal policy sits on $\tfrac12 r(D)$ to within
-$0.013$; AIMD falls below static precisely when $\tau_c\!\lesssim\!D$) and on a
-workstation testbed under real GPU contention (the full submission path verified
-end-to-end on NRP Nautilus): under structured contention feedback admission is the
-polite-efficient knee---$1.41\times$ static's goodput at a quarter of naive's
-over-admission while sparing the competing tenant a greedy policy harms---and up to
-$3.2\times$ under a self-imposed budget. The one regime where feedback breaks even,
-under memoryless contention that outpaces detection, is not a disappointment but the
-theory's own prediction ($r(D)\!\to\!0$, Cor.~\ref{cor:imp})---and the regime the
-adaptive controller detects and sidesteps. Open problems remain: a production multi-tenant trace (ours is
-manufactured contention at $C{=}2$), extending the exact limit beyond the binary
-layer to general capacity processes via the $\beta$-mixing lower bound, and
-predictive controllers that estimate $r(D)$ rather than only its regime.
+Being a good guest on a shared cluster is a control problem whose difficulty is
+fixed by how stale the guest's view of the cluster is. \sysname{} makes
+that precise: an age-of-information formulation, a limit
+$\Delta(D)=\tfrac12 r(D)$ saying closed-loop admission is worth exactly the
+capacity autocorrelation at the sensing lag, and a regime-adaptive controller
+that measures its own predictability and tracks the limit. The law holds at the
+controller level---the optimal policy on $\tfrac12 r(D)$ to within $0.013$, a
+learned policy-gradient agent never above it, AIMD below static precisely when
+$\tau_c\!\lesssim\!D$---and on a workstation testbed under real GPU contention
+(submission path verified end-to-end on NRP Nautilus): feedback admission is the
+polite-efficient knee under structured contention---$1.41\times$ static's goodput
+at a quarter of naive's over-admission, sparing the competing tenant---and up to
+$3.2\times$ under a self-imposed budget; its break-even under memoryless contention
+is the theory's own $r(D)\!\to\!0$ prediction (Cor.~\ref{cor:imp}), the regime the
+adaptive controller detects and sidesteps. Open problems: a production
+multi-tenant trace (ours is manufactured contention at $C{=}2$), the exact limit
+for general capacity processes beyond the $\beta$-mixing bound, and controllers
+that estimate $r(D)$ itself rather than its regime.
 
 \appendices
 \input{infocom_appendix}
