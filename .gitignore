@@ -29,3 +29,11 @@ nrp-config
 # generated Overleaf bundle (rebuild with paper/make_overleaf.sh)
 paper/overleaf_infocom/
 paper/overleaf_infocom.zip
+
+# LaTeX build artifacts (they break Overleaf uploads; see paper/make_overleaf.sh)
+paper/*.aux
+paper/*.log
+paper/*.out
+paper/*.fls
+paper/*.fdb_latexmk
+paper/*.blg
