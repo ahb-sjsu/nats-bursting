@@ -25,3 +25,7 @@ nrp-config
 # Local scratch scripts + credential workspace (one-time migration helpers,
 # paramiko wrappers with plaintext passwords, etc.)
 /_scratch/
+
+# generated Overleaf bundle (rebuild with paper/make_overleaf.sh)
+paper/overleaf_infocom/
+paper/overleaf_infocom.zip
