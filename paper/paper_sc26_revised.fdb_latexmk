@@ -1,14 +1,14 @@
 # Fdb version 4
-["bibtex paper"] 1783144479.70381 "paper.aux" "paper.bbl" "paper" 1783144485.62673 0
-  "./paper.bib" 1782886628.79441 4686 b290a2c67464bff656e00fc7bd1e5f39 ""
+["bibtex paper_sc26_revised"] 1783917021.89013 "paper_sc26_revised.aux" "paper_sc26_revised.bbl" "paper_sc26_revised" 1783917026.99387 0
+  "./paper.bib" 1783725116.84361 5005 adfb6e9da8eff95e209b924cda471967 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/bibtex/bst/ieeetran/IEEEtran.bst" 1440622569 57748 7c8250ecf02814ce6ddc0cdbb63df1dd ""
-  "paper.aux" 1783144482.51388 10094 1d9bcd816d5b23afae530361c1f70684 "pdflatex"
+  "paper_sc26_revised.aux" 1783917024.19822 9248 b9d8b57ad43aea4a3c83b89317763874 "pdflatex"
   (generated)
-  "paper.bbl"
-  "paper.blg"
+  "paper_sc26_revised.bbl"
+  "paper_sc26_revised.blg"
   (rewritten before read)
-["pdflatex"] 1783144480.5861 "paper.tex" "paper.pdf" "paper" 1783144485.6318 0
-  "C:/Users/abptl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1782567080.77447 187843 6299bb1c1c3692ad471f2e0dfc73f577 ""
+["pdflatex"] 1783917022.6478 "paper_sc26_revised.tex" "paper_sc26_revised.pdf" "paper_sc26_revised" 1783917026.99738 0
+  "C:/Users/abptl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map" 1783779852.5003 187843 6299bb1c1c3692ad471f2e0dfc73f577 ""
   "C:/Users/abptl/AppData/Local/MiKTeX/miktex/data/le/pdftex/pdflatex.fmt" 1771613309.01672 13333528 95b7a1fef102f4a60045fb8c628e8496 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc" 1458473887 4993 1194fb36dfcb11d9ae9802f2b00b60a3 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/tfm/adobe/courier/pcrb8r.tfm" 1136765053 1292 3059476c50a24578715759f22652f3d0 ""
@@ -53,6 +53,7 @@
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1247596667 32726 0a1aea6fcd6468ee2cf64d891f5c43c8 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb" 1247596666 33993 9b89b85fd2d9df0482bd47194d1d3bf3 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1247596667 32569 5e5ddc8df908dea60932f3c484a54c0d ""
+  "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb" 1247596667 32587 1788b0c1c5b39540c96f5e42ccd6dae8 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb" 1247596666 32716 08e384dc442464e7285e891af9f45947 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb" 1247596667 32626 4f5c1b83753b1dd3a97d1b399a005b4b ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy9.pfb" 1247596666 32442 c975af247b6702f7ca0c299af3616b80 ""
@@ -169,17 +170,14 @@
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/tex/latex/url/url.sty" 1388490452 12796 8edb7d69a20b857904dd0ea757c14ec9 ""
   "C:/Users/abptl/AppData/Local/Programs/MiKTeX/tex/latex/xcolor/xcolor.sty" 1729265222 55384 b454dec21c2d9f45ec0b793f0995b992 ""
   "figures/embed_scaling.png" 1783142979.08519 29274 40407ac478accdc811f2e3741254a230 ""
-  "figures/fig_tier1_compression.pdf" 1782331971.87702 18401 c8af85f4839f0571426b75bbf6e066df ""
-  "figures/fig_tier2_crossover.pdf" 1782331971.0696 16737 bb6186140bbeeeb89be5016467a93f07 ""
-  "figures/fig_tier3_scaling.pdf" 1782331971.43781 16362 a70ad975b981f374d0e6f282d9eb8288 ""
-  "figures/pareto_contended_poisson.png" 1782896838.80446 25867 a3589f64472bd5bd90e685b308158edc ""
-  "figures/pareto_contended_square.png" 1782896838.9816 24935 92105b3049462f8675ca36922c23c889 ""
-  "figures/pareto_gpu.png" 1782854896.66739 38611 5bb37a08c880088278eba510257dc321 ""
-  "paper.aux" 1783144482.51388 10094 1d9bcd816d5b23afae530361c1f70684 "pdflatex"
-  "paper.bbl" 1783144480.35328 3930 cac5ae40e20c4730edea0466c98151c5 "bibtex paper"
-  "paper.tex" 1783144415.60165 46863 3d7a099441e676e477dacadeda6275e3 ""
+  "figures/fig_tier1_compression.pdf" 1783728702.16656 16795 0dc2d6cd26a9cc533427955e213a70af ""
+  "figures/fig_tier2_crossover.pdf" 1783728701.73193 16151 297eb5342dd85e4e00d57c1159e9497b ""
+  "figures/fig_tier3_scaling.pdf" 1783728701.94274 16261 de0d3637ea8a00da8446924f7aff2830 ""
+  "paper_sc26_revised.aux" 1783917024.19822 9248 b9d8b57ad43aea4a3c83b89317763874 "pdflatex"
+  "paper_sc26_revised.bbl" 1783917022.43592 4202 46e7d19d442d07cc787fec215114cfa7 "bibtex paper_sc26_revised"
+  "paper_sc26_revised.tex" 1783916971.16341 47028 39f11b86b17dee04319028b3bf0957dc ""
   (generated)
-  "paper.aux"
-  "paper.log"
-  "paper.pdf"
+  "paper_sc26_revised.aux"
+  "paper_sc26_revised.log"
+  "paper_sc26_revised.pdf"
   (rewritten before read)

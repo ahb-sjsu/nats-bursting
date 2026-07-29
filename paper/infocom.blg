@@ -1,58 +1,58 @@
 This is BibTeX, Version 0.99e
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
-The top-level auxiliary file: paper.aux
+The top-level auxiliary file: infocom.aux
 Reallocating 'name_of_file' (item size: 1) to 9 items.
 The style file: IEEEtran.bst
-Reallocating 'name_of_file' (item size: 1) to 6 items.
+Reallocating 'name_of_file' (item size: 1) to 8 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
 Reallocating 'wiz_functions' (item size: 4) to 6000 items.
 Reallocating 'singl_function' (item size: 4) to 100 items.
-Database file #1: paper.bib
+Database file #1: infocom.bib
 -- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
 -- http://www.michaelshell.org/tex/ieeetran/bibtex/
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
-You've used 14 entries,
+You've used 32 entries,
             4087 wiz_defined-function locations,
-            889 strings with 9964 characters,
-and the built_in function-call counts, 7509 in all, are:
-= -- 543
-> -- 209
-< -- 20
-+ -- 105
-- -- 47
-* -- 337
-:= -- 1194
-add.period$ -- 28
-call.type$ -- 14
-change.case$ -- 18
-chr.to.int$ -- 42
-cite$ -- 14
-duplicate$ -- 606
-empty$ -- 705
-format.name$ -- 55
-if$ -- 1718
+            988 strings with 12794 characters,
+and the built_in function-call counts, 20523 in all, are:
+= -- 1602
+> -- 499
+< -- 135
++ -- 262
+- -- 95
+* -- 939
+:= -- 3147
+add.period$ -- 64
+call.type$ -- 32
+change.case$ -- 36
+chr.to.int$ -- 300
+cite$ -- 32
+duplicate$ -- 1550
+empty$ -- 1778
+format.name$ -- 115
+if$ -- 4769
 int.to.chr$ -- 0
-int.to.str$ -- 14
-missing$ -- 131
-newline$ -- 65
-num.names$ -- 13
-pop$ -- 352
+int.to.str$ -- 32
+missing$ -- 295
+newline$ -- 119
+num.names$ -- 31
+pop$ -- 724
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 573
+skip$ -- 1601
 stack$ -- 0
-substring$ -- 120
-swap$ -- 382
-text.length$ -- 6
+substring$ -- 724
+swap$ -- 1139
+text.length$ -- 35
 text.prefix$ -- 0
 top$ -- 5
-type$ -- 14
+type$ -- 32
 warning$ -- 0
-while$ -- 21
-width$ -- 16
-write$ -- 139
+while$ -- 84
+width$ -- 34
+write$ -- 310

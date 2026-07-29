@@ -29,6 +29,41 @@ quantity. Sec.~\ref{sec:eval} puts it near $2.5$\,s, dominated by CUDA start-up
 rather than by the $27$\,ms poll. A controller can only act on a $D$-old picture
 of a cluster the neighbours are still changing.
 
+A natural objection is that $D$ is an engineering choice rather than a limit.
+Distributed schedulers routinely defeat stale probes by launching more work than
+they need and binding to whichever reservation is ready first, discarding the
+rest~\cite{sparrow}, or by holding a resident probe that reports at low latency.
+Under a one-sided constraint both work. Under the two-sided constraint of
+\eqref{eq:polite} neither is legal, and that is what makes $D$ a floor rather
+than a parameter.
+
+\begin{proposition}[The sensing age is irreducible for a compliant guest]
+\label{prop:irreducible}
+Let $\tau_{\mathrm{start}}$ be the time from launching a unit of work until its
+productivity is observable. Any policy that satisfies both the cap
+$w_t\le K$ and the utilization floor has sensing age $D\ge\tau_{\mathrm{start}}$
+for the signal that reports whether an admission was productive.
+\end{proposition}
+\begin{proof}
+Reducing that age below $\tau_{\mathrm{start}}$ requires one of three things.
+Observing the outcome of work not yet launched is impossible. Launching $m>1$
+speculative replicas and keeping the first to become productive consumes $m$ slots
+against the cap and leaves $m-1$ admissions that perform no useful work, so it
+violates the floor whenever $m$ exceeds the useful window. Holding a resident
+probe that is idle also violates the floor, and a resident probe doing real work
+consumes a cap slot while still reporting its own start-up at
+$\tau_{\mathrm{start}}$. Every route is therefore either infeasible or
+non-compliant.
+\end{proof}
+
+Proposition~\ref{prop:irreducible} is what separates this setting from
+load balancing on stale state, where the classical prescription is to sample few
+and avoid acting greedily on old readings~\cite{mitzenmacher,goel}. Those results
+hold under a one-sided constraint, where a guest that does nothing is compliant.
+Here a guest that holds a slot and does nothing is not, so the techniques that
+would shrink $D$ are the ones the policy forbids. Everything that follows
+therefore treats $D$ as given and asks what is achievable at that age.
+
 \noindent\textbf{The contended unit.}
 Politeness is decided at the margin, so we fix attention on the single contended
 resource unit whose availability fluctuates with the neighbour. Let
@@ -181,20 +216,38 @@ statement precise and extends the impossibility to arbitrary non-binary and
 non-Markov capacity processes.
 \end{corollary}
 
-\noindent\textbf{Provenance and scope.}
-The ingredients of \eqref{eq:adv} are classical and we claim none of them. The
-value of information is nonnegative and convex in the prior~\cite{howard1966}, it
-is bounded by payoff oscillation times the total-variation movement of
-beliefs~\cite{delaragossner}, that movement at sensing age $D$ is the
-$\beta$-mixing coefficient~\cite{bradley2005}, and for the symmetric two-state
-chain the mixing facts and threshold optimality are
-standard~\cite{lpw,myopicaccess}. What \eqref{eq:adv} contributes is their
-assembly under age-limited exogenous sensing, giving an exact identity with
-threshold achievability, a mixing converse in App.~\ref{app:beta}, and
-confirmation on real cluster contention in \S\ref{sec:eval}. The exogenous
-structure matters. Unlike the driven-plant setting of networked control, the
-admission action here does not affect capacity, and that is what collapses the
-value of feedback onto a single predictability coefficient.
+\noindent\textbf{Provenance, stated plainly.}
+Equation \eqref{eq:adv} is elementary and we would rather derive it twice than
+appear to have hidden how short it is. For a symmetric binary hypothesis the Bayes
+error is $\tfrac12(1-\|\cdot\|_{\mathrm{TV}})$, so the largest advantage any test
+holds over blind guessing is exactly half the total variation between the two
+conditionals~\cite{tsybakov}. For a two-state chain that total variation is
+$|\lambda_2|^{D}$, which is $r(D)$. Compose the two and \eqref{eq:adv} follows in
+two lines. Each ingredient is old. Value of information is nonnegative and convex
+in the prior~\cite{howard1966} and is bounded by payoff oscillation times the
+movement of beliefs~\cite{delaragossner}. That movement at age $D$ is the
+$\beta$-mixing coefficient~\cite{bradley2005}, and the mixing facts for a
+two-state chain are standard~\cite{lpw}. Threshold optimality for positively
+correlated two-state availability is Ahmad et al.~\cite{myopicaccess}, and
+threshold optimality \emph{under state-information lag} is Kim~\cite{kim1985}.
+Measuring the value of information as degradation from the perfect-information
+gain is Brooks and Leondes~\cite{brooks1972}. Reducing a delay-$D$ decision
+problem to an undelayed one by state augmentation is Katsikopoulos and
+Engelbrecht~\cite{katsikopoulos}.
+
+So the optimal policy is not ours and neither is the formula. Three things are.
+First, the statement is a \emph{converse over every causal controller} at
+\emph{matched over-admission}, not the value of one policy. The matched-constraint
+normalization is what makes ``advantage over the best fixed budget'' well posed at
+all, and it is the actual technical content of Thm.~\ref{thm:limit}. Second,
+App.~\ref{app:beta} lifts the converse off the binary Markov case to any
+stationary capacity process. Third, and most important for a systems venue,
+Prop.~\ref{prop:irreducible} shows $D$ cannot be engineered away by a compliant
+guest, which is what makes an age-indexed limit the right object here rather than
+a modelling convenience. The exogenous structure also matters. Unlike the
+driven-plant setting of networked control, the admission action does not affect
+capacity, and that is what collapses the value of feedback onto a single
+predictability coefficient.
 
 \begin{corollary}[The two contention profiles are two points on \eqref{eq:adv}]
 \label{cor:exp}
@@ -315,30 +368,69 @@ Thm.~\ref{thm:limit}, and $D$ enters both here and in \eqref{eq:adv}, which is t
 hinge between the systems measurement and the theory.
 \end{proof}
 
-\begin{theorem}[Near-optimality of Algorithm~\ref{alg:adaptive}]\label{thm:adapt}
-Let capacity be a symmetric two-state process with spectral gap
-$\gamma=2\min(p,1-p)$. The empirical correlation is consistent, with
-$\Pr[|\hat r_n-r(D)|>t]\le 2e^{-c_0\gamma n t^2/D^2}$, where the $D^2$ comes from
-the $2D$-Lipschitz map $p\mapsto(1-2p)^D$ so the constant carries explicit $D$ and
-$\gamma$ dependence. Hence on any class with $\gamma\ge\gamma_0>0$,
-Algorithm~\ref{alg:adaptive} attains $\Delta(D)$ with regret
-$O(D/\sqrt{\gamma_0 N})$ over horizon $N$ (App.~\ref{app:regret}), and $O(1/N)$
-for any fixed process. The restriction $\gamma\ge\gamma_0$ is needed, since as
-$\tau_c\!\to\!\infty$ we have $\gamma\!\to\!0$ while sensing becomes trivial, so a
-$\gamma$-free uniform rate is neither attainable nor useful. The two separations
-are the endpoints of Cor.~\ref{cor:imp}. Fixed AIMD's excess over-admission stays
-bounded below as $\tau_c/D\!\to\!0$, and a fixed budget forfeits a constant of
-goodput as $\tau_c/D\!\to\!\infty$.
+Learning which branch to take has a sharp rate, and it is not the rate a generic
+chain concentration bound suggests. For the symmetric two-state chain the flip
+indicators $\mathbf 1[a_t\neq a_{t-1}]$ are \emph{exactly} independent
+Bernoulli$(p)$ variables, since the flip probability is $p$ from either state and
+after every history. Estimating $p$ therefore carries no mixing penalty, and the
+relevant variance is $p(1-p)$ rather than the $1/\gamma$ proxy that a
+reversible-chain Hoeffding bound inserts. Since $\gamma=2\min(p,1-p)$, that true
+variance is about $\gamma/2$, so the spectral gap belongs in the numerator. We
+therefore use the Bernstein form of \cite{paulin2015}, which is stated in the
+asymptotic variance and is tight here.
+
+Write $p_\theta$ for the solution of $(1-2p)^D=\theta$, let
+$s_\theta\triangleq 2D\,\theta^{(D-1)/D}$ be the sensitivity
+$|\mathrm{d}r/\mathrm{d}p|$ at that point, and let
+$\sigma_\theta^2\triangleq p_\theta(1-p_\theta)$. Let $L>0$ be the local slope in
+$r$ of the difference between the two branches' values at $\theta$, which is
+positive because Prop.~\ref{prop:bound} and Cor.~\ref{cor:imp} cross transversally
+there.
+
+\begin{theorem}[Matching learning rate]\label{thm:adapt}
+On the local family of symmetric two-state capacity processes at $p_\theta$, the
+minimax \emph{average per-epoch} shortfall against $\Delta(D)$ of any causal
+branch-selection rule over horizon $N$ is
+\begin{equation}\label{eq:rate}
+\Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
+=\Theta\!\left(L\,\theta\sqrt{\frac{D\log(1/\theta)}{N}}\right),
+\end{equation}
+and Algorithm~\ref{alg:adaptive} attains it. Over switch levels,
+\begin{equation}\label{eq:sup}
+\sup_{\theta\in(0,1)}\Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
+=\Theta\!\left(L\sqrt{\frac{D}{N}}\right),
+\end{equation}
+attained at $\theta=e^{-1/2}$. For a fixed process with $r(D)\neq\theta$ the
+shortfall is $O(1/N)$.
 \end{theorem}
 \begin{proof}[Proof sketch]
-The concentration bound gives a correct branch decision after
-$n=O(\log(1/\delta)/(r{-}\theta)^2)$ probes with probability $1-\delta$.
-Conditioned on the correct branch, Cor.~\ref{cor:imp} bounds the fixed-budget
-branch and Prop.~\ref{prop:bound} bounds the tracking branch, and averaging over
-the $O(1)$ misclassified prefix yields the regret. At small $\tau_c$ fixed AIMD
-sits near $\rho=\tfrac14$ while the optimum tends to $0$, and at large $\tau_c$ a
-fixed budget forfeits $\Delta$ tending to $\tfrac12$.
+For the upper bound, Bernstein for the independent flip indicators
+\cite{paulin2015} gives $|\hat p_n-p|=O(\sigma_\theta/\sqrt n)$ with high
+probability, and the delta method through the $s_\theta$-Lipschitz map
+$p\mapsto(1-2p)^D$ gives $|\hat r_n-r(D)|=O(s_\theta\sigma_\theta/\sqrt n)$. A
+wrong branch costs $L$ times the correlation shortfall, and averaging over the
+misclassified prefix gives \eqref{eq:rate}. For the lower bound, take two
+processes whose flip probabilities differ by $\delta$. Their per-sample
+Kullback-Leibler divergence is $\delta^2/(2\sigma_\theta^2)$, so no rule separates
+them over $N$ samples unless $\delta\gtrsim\sigma_\theta/\sqrt N$, which through
+the same map means correlations closer than $s_\theta\sigma_\theta/\sqrt N$ are
+indistinguishable. Le Cam's two-point argument \cite{tsybakov} then forces average
+shortfall $\Omega(L s_\theta\sigma_\theta/\sqrt N)$, and both processes sit inside
+any class with a strictly smaller spectral gap, because their flip probabilities
+differ by $O(N^{-1/2})$. For \eqref{eq:sup}, substituting $u=1-2p$ gives
+$s_\theta\sigma_\theta=D\,u^{D-1}\sqrt{1-u^2}$, maximized at $u^2=(D-1)/D$ where
+$\sqrt{1-u^2}=1/\sqrt D$ and $u^{D-1}\to e^{-1/2}$, so the product is
+$e^{-1/2}\sqrt D$ and $\theta=u^D\to e^{-1/2}$.
 \end{proof}
+
+Two readings are worth stating. The spectral gap cancels, so no restriction to a
+class bounded away from zero is needed, and a rate written as
+$1/\sqrt{\gamma_0 N}$ would have the dependence inverted. And staleness costs only
+$\sqrt D$ in learning, which is far milder than its effect on the ceiling, where
+\eqref{eq:adv} decays exponentially in $D$. The hardest place to sit is
+$r(D)=e^{-1/2}$, neither clearly trackable nor clearly untrackable, which is
+exactly where a fixed controller has no good default and
+Algorithm~\ref{alg:adaptive} earns its state.
 
 Proposition~\ref{prop:layercake} lifts admission past a single unit.
 Algorithm~\ref{alg:layered} runs one binary decision per contended layer and adds

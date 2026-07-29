@@ -76,32 +76,48 @@ conditional-to-marginal total-variation distance is $|\tfrac12-q(D)|$ from eithe
 state, so $\beta(D)=\tfrac12-q(D)=\tfrac12 r(D)$.
 \end{proof}
 
-\section{Regret of the Adaptive Controller}
+\section{The Learning Rate of Algorithm~\ref{alg:adaptive}}
 \label{app:regret}
-We sketch the near-optimality asserted in Thm.~\ref{thm:adapt}.
-Algorithm~\ref{alg:adaptive} estimates
-$\hat p_n=\tfrac1n\sum_{i=1}^{n}\mathbf 1[\hat a_i\neq\hat a_{i-1}]$, forms
-$\hat r_n=(1-2\hat p_n)^{D}$, and runs the closed-loop branch when
-$\hat r_n>\theta$. The flip indicators are a bounded functional of the reversible
-two-state chain, whose absolute spectral gap is
-$\gamma=1-|1-2p|=2\min(p,1-p)$, so the Hoeffding inequality for reversible chains
-\cite{paulin2015,lezaud1998} gives
-$\Pr(|\hat p_n-p|\ge t)\le 2e^{-c_0\gamma n t^{2}}$ for a universal $c_0>0$. Since
-$p\mapsto(1-2p)^{D}$ is $2D$-Lipschitz on $[0,\tfrac12]$, we have
-$|\hat r_n-r(D)|\le 2D|\hat p_n-p|$. With a threshold margin
-$|r(D)-\theta|\ge\Delta\theta$ the branch is therefore wrong with probability at
-most $2\exp(-c_0\gamma n(\Delta\theta)^{2}/4D^{2})$.
+We give both directions of Thm.~\ref{thm:adapt}. Observations are delayed but
+clean, so $\hat a_i=a_{i-D}$, and Algorithm~\ref{alg:adaptive} forms
+$\hat p_n=\tfrac1n\sum_{i\le n}\mathbf 1[\hat a_i\neq\hat a_{i-1}]$ and
+$\hat r_n=(1-2\hat p_n)^{D}$.
 
-\begin{theorem}[Regret]\label{thm:regret}
-Set $\theta$ at the indifference level, where the two branches' values are
-$L$-Lipschitz in $r(D)$ and coincide. On any process class with spectral gap
-$\gamma\ge\gamma_0>0$, the regret of Algorithm~\ref{alg:adaptive} over horizon $N$
-is $O(D/\sqrt{\gamma_0 N})$, and $O(1/N)$ for any fixed process with
-$r(D)\neq\theta$.
-\end{theorem}
-\begin{proof}[Proof sketch]
-A wrong branch costs at most $L\Delta\theta$. Averaging the wrong-branch bound
-gives $\mathrm{Regret}_N\le L\min(\Delta\theta,\,8D^{2}/(c_0\gamma N\Delta\theta))$,
-optimized at $\Delta\theta^\star=\sqrt{8D^{2}/(c_0\gamma N)}$ to
-$O(D/\sqrt{\gamma N})$, and $O(1/N)$ for fixed $\Delta\theta$.
-\end{proof}
+Since $\Pr[a_t\neq a_{t-1}\mid a_0,\dots,a_{t-1}]=p$ for every history, $n\hat p_n$
+is exactly Binomial$(n,p)$, with variance $p(1-p)/n$ and per-sample Fisher
+information $1/(p(1-p))$. A generic reversible-chain Hoeffding bound would replace
+that variance by a range proxy of order $1/\gamma$, overstating the sample
+requirement by order $1/\gamma^{2}$ and inverting the sign of the $\gamma$
+dependence, so we use the Bernstein form of \cite{paulin2015}, which is stated in
+the asymptotic variance and is exact here.
+
+\noindent\textbf{Upper bound.}
+Bernstein gives $|\hat p_n-p|=O(\sigma_\theta\sqrt{\log(1/\delta)/n})$ with
+probability $1-\delta$. The map $p\mapsto(1-2p)^{D}$ has derivative $s_\theta$ at
+$p_\theta$, so $|\hat r_n-r(D)|=O(s_\theta\sigma_\theta\sqrt{\log(1/\delta)/n})$.
+A wrong branch costs at most $L$ times the shortfall in $r$, and summing while $n$
+grows, then dividing by the horizon, gives $O(L s_\theta\sigma_\theta/\sqrt N)$.
+
+\noindent\textbf{Lower bound.}
+Take two processes with flip probabilities $p_\theta\pm\delta/2$. Independence of
+the flip indicators makes the Kullback-Leibler divergence between $n$-sample laws
+$n\delta^{2}/(2\sigma^{2}_\theta)+O(n\delta^{3})$, so no test separates them with
+constant probability unless $n\gtrsim\sigma^{2}_\theta/\delta^{2}$. Their
+correlations differ by $s_\theta\delta$ and the loss is locally \emph{linear} in
+$r-\theta$ at the indifference level, so a rule that cannot distinguish them pays
+$\Omega(L s_\theta\delta)$ on one. Le Cam's two-point
+argument~\cite{tsybakov} with $\delta=\sigma_\theta/\sqrt N$ matches the upper
+bound. Local linearity pins the exponent at $N^{-1/2}$, where a loss quadratic in
+$r-\theta$ would give $N^{-1}$. The two flip probabilities differ by
+$O(N^{-1/2})$, so their spectral gaps agree to that order and the pair certifies
+the rate without invoking a class boundary. That matters because $\theta$ is fixed
+by the objective, so on the hard manifold $r(D)=\theta$ the quantities $D$,
+$\gamma_\theta=1-\theta^{1/D}$ and $s_\theta$ are mutually determined. Treating
+them as free is what yields a spurious $1/\sqrt{\gamma_0 N}$ rate.
+
+\noindent\textbf{Worst switch level.}
+With $u=1-2p$ and $\theta=u^{D}$ we have
+$s_\theta\sigma_\theta=D\,u^{D-1}\sqrt{1-u^{2}}$. Setting the derivative of
+$(D-1)\log u+\tfrac12\log(1-u^{2})$ to zero gives $u^{2}=(D-1)/D$, so
+$\sqrt{1-u^{2}}=1/\sqrt D$ and $u^{D-1}\to e^{-1/2}$. The product is
+$e^{-1/2}\sqrt D$ at $\theta\to e^{-1/2}$, which is \eqref{eq:sup}.

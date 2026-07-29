@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  3 JUL 2026 22:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  12 JUL 2026 21:30
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./paper.tex
-(paper.tex
+**./paper_sc26_revised.tex
+(paper_sc26_revised.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/ieeetran\IEEEtran.cls
@@ -644,23 +644,23 @@ Package: relsize 2013/03/29 ver 4.1
 tex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count333
-) (paper.aux)
-\openout1 = `paper.aux'.
+) (paper_sc26_revised.aux)
+\openout1 = `paper_sc26_revised.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 23.
+LaTeX Font Info:    ... okay on input line 23.
 
 -- Lines per column: 56 (exact).
 
@@ -689,18 +689,18 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 26
+LaTeX Font Info:    Trying to load font information for T1+pcr on input line 33
 .
  (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1pcr.fd
 File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
 )
-Underfull \hbox (badness 10000) in paragraph at lines 76--79
+Underfull \hbox (badness 10000) in paragraph at lines 90--93
 []\T1/ptm/b/n/10 Transport op-ti-miza-tion \T1/ptm/m/n/10 (turboquant-pro, ŸIV[
 ])---
  []
 
 
-Underfull \hbox (badness 1430) in paragraph at lines 76--79
+Underfull \hbox (badness 1430) in paragraph at lines 90--93
 \T1/ptm/m/n/10 compressing bus pay-loads so re-mote burst-ing stays
  []
 
@@ -709,93 +709,93 @@ ptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 2253) in paragraph at lines 144--154
+Underfull \hbox (badness 2253) in paragraph at lines 167--177
 []\T1/ptm/m/n/10 The Go con-troller is event-driven. Its \T1/pcr/m/n/10 natsbri
 dge
  []
 
 
-Underfull \hbox (badness 6078) in paragraph at lines 144--154
+Underfull \hbox (badness 6078) in paragraph at lines 167--177
 \T1/ptm/m/n/10 sub-scribes to \T1/pcr/m/n/10 burst.submit\T1/ptm/m/n/10 , and o
 n each re-quest
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/ptm/m/n/10 the \T1/pcr/m/n/10 submitter \T1/ptm/m/n/10 ren-ders a \T1/pcr/m
 /n/10 JobDescriptor
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/ptm/m/n/10 into a real \T1/pcr/m/n/10 batchv1.Job \T1/ptm/m/n/10 via client
 -go---
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/ptm/m/n/10 CPU/memory/\T1/pcr/m/n/10 nvidia.com/gpu\T1/ptm/m/n/10 /ephemera
 l-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/ptm/m/n/10 storage re-quests and lim-its, a managed-by la-bel,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/pcr/m/n/10 RestartPolicyNever\T1/ptm/m/n/10 , and foreground-propagation
  []
 
 
-Underfull \hbox (badness 6842) in paragraph at lines 144--154
+Underfull \hbox (badness 6842) in paragraph at lines 167--177
 \T1/ptm/m/n/10 is three sub-ject fam-i-lies: \T1/pcr/m/n/10 burst.submit \T1/pt
 m/m/n/10 (re-quests),
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/pcr/m/n/10 burst.status.<job> \T1/ptm/m/n/10 (a \T1/pcr/m/n/10 submitted\T1
 /ptm/m/n/10 /\T1/pcr/m/n/10 error \T1/ptm/m/n/10 state
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
+Underfull \hbox (badness 10000) in paragraph at lines 167--177
 \T1/ptm/m/n/10 ma-chine), and \T1/pcr/m/n/10 burst.result.<job> \T1/ptm/m/n/10 
 (re-served for
  []
 
 LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <10> not available
-(Font)              Font shape `T1/pcr/m/sl' tried instead on input line 197.
+(Font)              Font shape `T1/pcr/m/sl' tried instead on input line 222.
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 257--267
+Underfull \hbox (badness 10000) in paragraph at lines 282--292
 []\T1/pcr/m/n/10 probe_batch_size \T1/ptm/m/n/10 binary-searches the largest
  []
 
 
-Underfull \hbox (badness 2073) in paragraph at lines 257--267
+Underfull \hbox (badness 2073) in paragraph at lines 282--292
 \T1/ptm/m/n/10 train-ing mem-ory in-clud-ing op-ti-mizer moments---a de-tail
  []
 
 
-Underfull \hbox (badness 1383) in paragraph at lines 257--267
+Underfull \hbox (badness 1383) in paragraph at lines 282--292
 \T1/ptm/m/n/10 optimizer-state fac-tor. OOM is caught and dis-tin-guished
  []
 
 
-Underfull \hbox (badness 1412) in paragraph at lines 269--269
+Underfull \hbox (badness 1412) in paragraph at lines 294--294
 []\T1/ptm/b/n/10 Algorithm 2: \T1/ptm/m/n/10 OOM-safe batch right-sizing (in-fe
 r
  []
 
 [3]
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
+Underfull \hbox (badness 10000) in paragraph at lines 342--350
 []\T1/ptm/m/n/10 On dim-1024 vec-tors the codec gives ra-tios of
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
+Underfull \hbox (badness 10000) in paragraph at lines 342--350
 \OT1/cmr/m/n/10 7\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 9\OML/cmm/m/it/10 =\OT1/cmr/
 m/n/10 10\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 4\OML/cmm/m/it/10 =\OT1/cmr/m/n/10 1
 5\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5\OMS/cmsy/m/n/10 ^^B$ \T1/ptm/m/n/10 at $\O
@@ -804,7 +804,7 @@ n/10 2$\T1/ptm/m/n/10 -bit with re-con-struc-tion
  []
 
 
-Underfull \hbox (badness 4316) in paragraph at lines 317--325
+Underfull \hbox (badness 4316) in paragraph at lines 342--350
 \T1/ptm/m/n/10 co-sine $\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 995\
 OML/cmm/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 978\OML/cmm
 /m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 94$ \T1/ptm/m/n/10
@@ -812,278 +812,245 @@ OML/cmm/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 978\OML/cmm
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
+Underfull \hbox (badness 10000) in paragraph at lines 342--350
 \T1/pcr/m/n/10 bge-small-en-v1.5 \T1/ptm/m/n/10 em-bed-dings (20news-groups,
  []
 
 
-Underfull \hbox (badness 7759) in paragraph at lines 317--325
+Underfull \hbox (badness 7759) in paragraph at lines 342--350
 \OML/cmm/m/it/10 n[]\OT1/cmr/m/n/10 3000$\T1/ptm/m/n/10 , na-tive dim 384) give
 s \T1/ptm/m/it/10 iden-ti-cal \T1/ptm/m/n/10 ra-tio and
  []
 
 
-Underfull \hbox (badness 3364) in paragraph at lines 317--325
+Underfull \hbox (badness 3364) in paragraph at lines 342--350
 \T1/ptm/m/n/10 co-sine within 0.001 at matched dimension---confirming
  []
 
-<figures/fig_tier1_compression.pdf, id=32, 361.35pt x 231.26399pt>
+<figures/fig_tier1_compression.pdf, id=34, 361.35pt x 231.26399pt>
 File: figures/fig_tier1_compression.pdf Graphic file (type pdf)
 <use figures/fig_tier1_compression.pdf>
 Package pdftex.def Info: figures/fig_tier1_compression.pdf  used on input line 
-327.
+352.
 (pdftex.def)             Requested size: 252.0pt x 161.28026pt.
-<figures/fig_tier2_crossover.pdf, id=33, 361.35pt x 231.26399pt>
+<figures/fig_tier2_crossover.pdf, id=35, 361.35pt x 231.26399pt>
 File: figures/fig_tier2_crossover.pdf Graphic file (type pdf)
 <use figures/fig_tier2_crossover.pdf>
-Package pdftex.def Info: figures/fig_tier2_crossover.pdf  used on input line 36
-0.
-(pdftex.def)             Requested size: 252.0pt x 161.28026pt.
-<figures/fig_tier3_scaling.pdf, id=34, 361.35pt x 231.26399pt>
-File: figures/fig_tier3_scaling.pdf Graphic file (type pdf)
-<use figures/fig_tier3_scaling.pdf>
-Package pdftex.def Info: figures/fig_tier3_scaling.pdf  used on input line 388.
-
+Package pdftex.def Info: figures/fig_tier2_crossover.pdf  used on input line 38
+5.
 (pdftex.def)             Requested size: 252.0pt x 161.28026pt.
 [4 <./figures/fig_tier1_compression.pdf>]
-<figures/pareto_gpu.png, id=91, 252.945pt x 187.54065pt>
-File: figures/pareto_gpu.png Graphic file (type png)
-<use figures/pareto_gpu.png>
-Package pdftex.def Info: figures/pareto_gpu.png  used on input line 420.
-(pdftex.def)             Requested size: 211.67908pt x 156.94641pt.
-<figures/pareto_contended_square.png, id=93, 245.718pt x 187.902pt>
-File: figures/pareto_contended_square.png Graphic file (type png)
-<use figures/pareto_contended_square.png>
-Package pdftex.def Info: figures/pareto_contended_square.png  used on input lin
-e 475.
-(pdftex.def)             Requested size: 123.48138pt x 94.42671pt.
-<figures/pareto_contended_poisson.png, id=94, 245.718pt x 187.902pt>
-File: figures/pareto_contended_poisson.png Graphic file (type png)
-<use figures/pareto_contended_poisson.png>
-Package pdftex.def Info: figures/pareto_contended_poisson.png  used on input li
-ne 476.
-(pdftex.def)             Requested size: 123.48138pt x 94.42671pt.
+<figures/fig_tier3_scaling.pdf, id=86, 361.35pt x 231.26399pt>
+File: figures/fig_tier3_scaling.pdf Graphic file (type pdf)
+<use figures/fig_tier3_scaling.pdf>
+Package pdftex.def Info: figures/fig_tier3_scaling.pdf  used on input line 420.
 
-Underfull \hbox (badness 7777) in paragraph at lines 483--494
+(pdftex.def)             Requested size: 252.0pt x 161.28026pt.
+
+Underfull \hbox (badness 7777) in paragraph at lines 445--461
 []\T1/ptm/m/n/10 To place the fab-ric among gen-eral task en-gines,
  []
 
 
-Underfull \hbox (badness 4634) in paragraph at lines 483--494
+Underfull \hbox (badness 4634) in paragraph at lines 445--461
 \T1/ptm/m/n/10 we ran the \T1/ptm/m/it/10 same \T1/ptm/m/n/10 warm-pool workloa
 d---MiniLM em-
  []
 
 
-Underfull \hbox (badness 5519) in paragraph at lines 483--494
+Underfull \hbox (badness 5519) in paragraph at lines 445--461
 \T1/ptm/m/n/10 bed-ding on one GV100---through Ray, Dask, a raw
  []
 
 [5 <./figures/fig_tier2_crossover.pdf> <./figures/fig_tier3_scaling.pdf>]
-<figures/embed_scaling.png, id=198, 245.718pt x 180.675pt>
+<figures/embed_scaling.png, id=187, 245.718pt x 180.675pt>
 File: figures/embed_scaling.png Graphic file (type png)
 <use figures/embed_scaling.png>
-Package pdftex.def Info: figures/embed_scaling.png  used on input line 523.
+Package pdftex.def Info: figures/embed_scaling.png  used on input line 497.
 (pdftex.def)             Requested size: 186.48138pt x 137.12419pt.
 
-[6 <./figures/pareto_gpu.png> <./figures/pareto_contended_square.png> <./figure
-s/pareto_contended_poisson.png>]
-Underfull \hbox (badness 6808) in paragraph at lines 590--596
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6 <./figures/embed_scaling.png>]
+Underfull \hbox (badness 6808) in paragraph at lines 575--581
 \T1/ptm/m/n/10 state-aware peak-memory ac-count-ing, a uni-fied multi-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 598--606
+Underfull \hbox (badness 10000) in paragraph at lines 583--591
 []\T1/ptm/m/n/10 All three projects are open and on PyPI---
  []
 
 
-Underfull \hbox (badness 5802) in paragraph at lines 598--606
-\T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 [12], \T1/pcr/m/n/10 turboquant-pro
- \T1/ptm/m/n/10 [13], and
+Underfull \hbox (badness 5802) in paragraph at lines 583--591
+\T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 [13], \T1/pcr/m/n/10 turboquant-pro
+ \T1/ptm/m/n/10 [14], and
  []
 
 
-Underfull \hbox (badness 7851) in paragraph at lines 598--606
+Underfull \hbox (badness 7851) in paragraph at lines 583--591
 \T1/ptm/m/n/10 vari-ant), \T1/pcr/m/n/10 bench_transport.py \T1/ptm/m/n/10 and 
 the co-existing
  []
 
 
-Underfull \hbox (badness 2875) in paragraph at lines 598--606
+Underfull \hbox (badness 2875) in paragraph at lines 583--591
 \T1/pcr/m/n/10 --i-have-checked-nrp-policy\T1/ptm/m/n/10 . Re-sult files and a
  []
 
 
-Underfull \hbox (badness 4543) in paragraph at lines 598--606
+Underfull \hbox (badness 4543) in paragraph at lines 583--591
 \T1/pcr/m/n/10 make_figures.py \T1/ptm/m/n/10 that re-gen-er-ates ev-ery fig-ur
 e are
  []
 
-[7 <./figures/embed_scaling.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 634--639
+
+Underfull \hbox (badness 10000) in paragraph at lines 619--624
 []\T1/ptm/m/n/10 The ar-ti-fact is the three open-source projects
  []
 
 
-Underfull \hbox (badness 2600) in paragraph at lines 634--639
+Underfull \hbox (badness 2600) in paragraph at lines 619--624
 \T1/ptm/m/n/10 eval-u-ated here---\T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 (
 the burst-ing fab-ric),
  []
 
-
-Underfull \hbox (badness 2717) in paragraph at lines 652--655
-\T1/ptm/m/n/10 pool la-tency/throughput; GPU uti-liza-tion; ad-mis-sion
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
+[7]
+Underfull \hbox (badness 10000) in paragraph at lines 643--646
 []\T1/ptm/b/n/10 Publicly avail-able: \T1/ptm/m/n/10 yes---as PyPI pack-ages
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
+Underfull \hbox (badness 10000) in paragraph at lines 643--646
 \T1/ptm/m/n/10 and at \T1/pcr/m/n/10 github.com/ahb-sjsu \T1/ptm/m/n/10 (repos-
 i-to-ries
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
+Underfull \hbox (badness 10000) in paragraph at lines 643--646
 \T1/pcr/m/n/10 nats-bursting\T1/ptm/m/n/10 , \T1/pcr/m/n/10 turboquant-pro\T1/p
 tm/m/n/10 ,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
+Underfull \hbox (badness 10000) in paragraph at lines 647--650
 []\T1/ptm/b/n/10 Archived DOI: \T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 10.5
 281/zen-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
+Underfull \hbox (badness 10000) in paragraph at lines 647--650
 \T1/ptm/m/n/10 odo.20660069; \T1/pcr/m/n/10 turboquant-pro \T1/ptm/m/n/10 10.52
 81/zen-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
+Underfull \hbox (badness 10000) in paragraph at lines 647--650
 \T1/ptm/m/n/10 odo.20660087; \T1/pcr/m/n/10 batch-probe \T1/ptm/m/n/10 10.5281/
 zen-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
+Underfull \hbox (badness 10000) in paragraph at lines 647--650
 \T1/ptm/m/n/10 odo.21095035 (con-cept DOIs; al-ways re-solve to
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 685--687
+Underfull \hbox (badness 10000) in paragraph at lines 669--671
 []\T1/ptm/m/n/10 Each re-ported re-sult maps to one com-mand;
  []
 
 
-Underfull \hbox (badness 5203) in paragraph at lines 685--687
+Underfull \hbox (badness 5203) in paragraph at lines 669--671
 \T1/pcr/m/n/10 make_figures.py \T1/ptm/m/n/10 re-gen-er-ates the fig-ures from 
 the
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
+Underfull \hbox (badness 10000) in paragraph at lines 672--675
 []\T1/ptm/b/n/10 Tier 1 (Fig. 2[]): \T1/pcr/m/n/10 python
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
+Underfull \hbox (badness 10000) in paragraph at lines 672--675
 \T1/pcr/m/n/10 benchmarks/bench_compression.py $\OMS/cmsy/m/n/10 !$
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
+Underfull \hbox (badness 10000) in paragraph at lines 672--675
 \T1/pcr/m/n/10 results_compression.json \T1/ptm/m/n/10 (real-embedding
  []
 
 
-Underfull \hbox (badness 5563) in paragraph at lines 691--694
+Underfull \hbox (badness 5563) in paragraph at lines 675--678
 []\T1/ptm/b/n/10 Tier 2 (Ta-bles II[], III[], Fig. 3[]): \T1/ptm/m/n/10 start a
  bus
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
+Underfull \hbox (badness 10000) in paragraph at lines 675--678
 \T1/ptm/m/n/10 (\T1/pcr/m/n/10 docker run -p 4222:4222 nats\T1/ptm/m/n/10 ), th
 en
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
+Underfull \hbox (badness 10000) in paragraph at lines 675--678
 \T1/pcr/m/n/10 python benchmarks/bench_transport.py
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
+Underfull \hbox (badness 10000) in paragraph at lines 675--678
 \T1/pcr/m/n/10 [--compress]\T1/ptm/m/n/10 ; the real-hop driver writes
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
+Underfull \hbox (badness 10000) in paragraph at lines 678--683
 []\T1/ptm/b/n/10 Tier 3 (Ta-ble IV[], Fig. 4[]): \T1/pcr/m/n/10 python
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
+Underfull \hbox (badness 10000) in paragraph at lines 678--683
 \T1/pcr/m/n/10 benchmarks/bench_cluster.py
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
+Underfull \hbox (badness 10000) in paragraph at lines 678--683
 \T1/pcr/m/n/10 --mode cold|warm|scale
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
+Underfull \hbox (badness 10000) in paragraph at lines 678--683
 \T1/pcr/m/n/10 --i-have-checked-nrp-policy $\OMS/cmsy/m/n/10 !$
  []
 
 
-Underfull \hbox (badness 3525) in paragraph at lines 697--701
-[]\T1/ptm/b/n/10 Admission (Ta-ble V[], Fig. 5[]): \T1/ptm/m/n/10 the pre-regis
-tered
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 697--701
-\T1/ptm/m/n/10 har-ness in \T1/pcr/m/n/10 benchmarks/infocom/ \T1/ptm/m/n/10 (\
-T1/pcr/m/n/10 run.py\T1/ptm/m/n/10 ,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 701--702
+Underfull \hbox (badness 10000) in paragraph at lines 683--684
 []\T1/ptm/b/n/10 Figures: \T1/pcr/m/n/10 python paper/figures/
  []
 
-[8]
-Underfull \hbox (badness 10000) in paragraph at lines 715--720
+
+Underfull \hbox (badness 10000) in paragraph at lines 696--701
 []\T1/ptm/m/n/10 Tier 3 re-fuses to run with-out
  []
 
 
-Underfull \hbox (badness 2980) in paragraph at lines 715--720
+Underfull \hbox (badness 2980) in paragraph at lines 696--701
 \T1/pcr/m/n/10 --i-have-checked-nrp-policy \T1/ptm/m/n/10 and uses ignored-
  []
 
-(paper.bbl
-Underfull \hbox (badness 10000) in paragraph at lines 84--87
+(paper_sc26_revised.bbl
+Underfull \hbox (badness 10000) in paragraph at lines 90--93
 \T1/ptm/m/n/8 com-pres-sion,'' $https : / / pypi . org / project / turboquant-[
 ]pro$, zen-odo:
  []
 
 
-Underfull \hbox (badness 5908) in paragraph at lines 89--92
+Underfull \hbox (badness 5908) in paragraph at lines 95--98
 \T1/ptm/m/n/8 con-trol,'' $https : / / pypi . org / project / batch-[]probe$, z
 en-odo: 10.5281/zen-
  []
 
-)
+[8])
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1097,20 +1064,20 @@ Before submitting the final camera ready copy, remember to:
 
 [9
 
-] (paper.aux)
+] (paper_sc26_revised.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 15580 strings out of 467870
- 316379 string characters out of 5418355
- 717783 words of memory out of 5000000
- 44182 multiletter control sequences out of 15000+600000
+ 15557 strings out of 467870
+ 315772 string characters out of 5418355
+ 718081 words of memory out of 5000000
+ 44159 multiletter control sequences out of 15000+600000
  746896 words of font info for 163 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,15n,104p,639b,762s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,15n,104p,1046b,762s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmex10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmmi10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/p
@@ -1123,19 +1090,20 @@ ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/abp
 tl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Us
 ers/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.p
 fb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
-/cmsy7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmsy8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmsy9.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/
-type1/urw/courier/ucrb8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/font
-s/type1/urw/courier/ucrr8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fo
-nts/type1/urw/courier/ucrro8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX
-/fonts/type1/urw/times/utmb8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX
-/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
-X/fonts/type1/urw/times/utmr8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
-X/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (9 pages, 439497 bytes).
+/cmsy6.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmsy7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/pu
+blic/amsfonts/cm/cmsy8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/
+type1/public/amsfonts/cm/cmsy9.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
+X/fonts/type1/urw/courier/ucrb8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiK
+TeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/abptl/AppData/Local/Programs/M
+iKTeX/fonts/type1/urw/courier/ucrro8a.pfb><C:/Users/abptl/AppData/Local/Program
+s/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/abptl/AppData/Local/Program
+s/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/abptl/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/abptl/AppData/Local/Progra
+ms/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on paper_sc26_revised.pdf (9 pages, 368739 bytes).
 PDF statistics:
- 299 PDF objects out of 1000 (max. 8388607)
+ 291 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 48 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 33 words of extra memory for PDF output out of 10000 (max. 10000000)
 

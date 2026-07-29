@@ -7,12 +7,12 @@ the controller, which probes real GPU occupancy and admits real CUDA workers whi
 a competing tenant drives capacity. The fabric carrying this control plane is
 characterized in the companion paper~\cite{companion}. Unless noted we report the
 mean and a $t$-based $95\%$ confidence interval over independent repeats. Four
-questions organize the study. \textbf{(Q1)} What is the sensing age $D$ that
-governs Prop.~\ref{prop:bound}. \textbf{(Q2)} Does Algorithm~\ref{alg:adaptive}
-stay polite while beating a fixed budget when it holds a self-imposed budget.
-\textbf{(Q3)} Does that hold under real time-varying contention, and where does it
-fail. \textbf{(Q4)} Does the value $\tfrac12 r(D)$ of Thm.~\ref{thm:limit} hold at
-the controller level, and does it also bind a learned controller.
+questions organize the study, and each one defends a claim the theory makes.
+\textbf{(Q1)} What is the sensing age $D$ that governs Prop.~\ref{prop:bound} and
+Prop.~\ref{prop:irreducible}. \textbf{(Q2)} Does Algorithm~\ref{alg:adaptive} stay
+polite while beating a fixed budget under real time-varying contention, and where
+does it fail. \textbf{(Q3)} Does the value $\tfrac12 r(D)$ of Thm.~\ref{thm:limit}
+hold at the controller level, and does it also bind a learned controller.
 
 \subsection{Sensing age and the violation bound (Q1)}
 \label{sec:eval-detection}
@@ -25,64 +25,15 @@ poll. Which value applies depends on the question. Detecting whether a newly
 admitted pod is productive pays the full start-up cost, while probing pods that
 are already running costs only the poll. One epoch is a single completion-gated
 admission decision whose measured mean duration is about $1.1$\,s, so the
-$2.46$\,s start-up age is $D\approx2$ to $3$ epochs, which we sweep in Q4, and
+$2.46$\,s start-up age is $D\approx2$ to $3$ epochs, which we sweep in Q3, and
 the $27$\,ms poll is below one epoch for running pods. Substituting into
 Prop.~\ref{prop:bound} makes $D$ a first-order term in achievable politeness. A
 guest that admits aggressively with large $\alpha$ pays for it in over-admission
 scaled by this measured start-up delay.
 
-\subsection{Politeness under a self-imposed budget (Q2)}
-\label{sec:eval-e2e}
-We burst $B$ jobs under three policies against a self-imposed politeness budget
-$C$, measuring goodput in tasks per second and the over-budget fraction $\rho$,
-the share of epochs with concurrency above $C$. The policies are \emph{naive},
-which submits up to the hard cap, \emph{static}, a fixed submit rate, and
-\emph{aimd}, the trackable branch of Algorithm~\ref{alg:adaptive}. To isolate the
-policy from the exogenous scheduling and image-pull variance of the shared
-cluster, which produced three pre-registered nulls in situ and is reported as
-such, we run on a controlled node with local-process workers and no scheduler or
-registry jitter. The design was pre-registered with randomized interleaved trial
-order and four repeats per cell, at two scales.
-
-Table~\ref{tab:e8} reports it. Algorithm~\ref{alg:adaptive} holds the budget
-exactly at both scales, with $\rho=0$, while delivering $1.72$ times (GPU) and
-$3.18$ times (CPU) the goodput of a fixed rate at the same politeness. At the GPU
-scale it also matches naive's goodput without exceeding the budget. At the CPU
-scale, where naive over-admits flagrantly at $\rho=0.95$, naive buys about twice
-the goodput and Algorithm~\ref{alg:adaptive} trades that headroom for politeness.
-Both pre-registered hypotheses hold with disjoint intervals at both scales. This
-isolates the admission rule on a controlled node, and the full pod-scheduling path
-is verified separately in \S\ref{sec:impl}. Here the budget is self-imposed, so
-\S\ref{sec:eval-contended} removes that assumption.
-
-\begin{table}[t]
-\centering
-\caption{Goodput against politeness under a self-imposed budget, 4 repeats, mean
-with $95\%$ interval. Algorithm~\ref{alg:adaptive} holds the budget at a fixed
-rate's politeness with $1.7$ to $3.2$ times its goodput.}
-\label{tab:e8}
-\small
-\begin{tabular}{llcc}
-\toprule
-scale & policy & goodput (tasks/s) & over-budget $\rho$ \\
-\midrule
-\multirow{3}{*}{GPU, $C{=}2$}
- & naive  & $0.0538\pm0.0003$ & $0.54\pm0.01$ \\
- & aimd   & $0.0539\pm0.0001$ & $0.00\pm0.00$ \\
- & static & $0.0313\pm0.0000$ & $0.00\pm0.00$ \\
-\midrule
-\multirow{3}{*}{CPU, $C{=}8$}
- & naive  & $0.5779\pm0.0062$ & $0.95\pm0.00$ \\
- & aimd   & $0.2928\pm0.0029$ & $0.00\pm0.00$ \\
- & static & $0.0920\pm0.0002$ & $0.00\pm0.00$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Politeness under real contention (Q3)}
+\subsection{Politeness under real contention (Q2)}
 \label{sec:eval-contended}
-The harder question is politeness when capacity is genuinely scarce. We manufacture
-controlled contention on a two-GPU node with $C{=}2$. A competing tenant occupies
+We manufacture controlled contention on a two-GPU node with $C{=}2$. A competing tenant occupies
 $c(t)\in\{0,1\}$ GPUs on a fixed profile, so the guest's available capacity
 $a(t)=C-c(t)$ is exogenous, time-varying and measured by the prober through a
 per-GPU process census subject to the sensing age of Q1. Two profiles bracket the
@@ -93,8 +44,7 @@ neighbour as the competitor's completed work relative to its undisturbed baselin
 The study was pre-registered with randomized interleaved order and four seeds per
 cell.
 
-Table~\ref{tab:e9} reports a sharper picture than the self-imposed budget did.
-Under structured load Algorithm~\ref{alg:adaptive} is the polite and efficient
+Table~\ref{tab:e9} reports it. Under structured load Algorithm~\ref{alg:adaptive} is the polite and efficient
 knee. It reaches $1.41$ times a fixed rate's goodput, $0.091$ against
 $0.064$\,tasks/s with disjoint intervals, at $\rho=0.15$, which is a quarter of
 naive's $0.64$, and it spares the neighbour, retaining $76\%$ of its throughput
@@ -148,7 +98,7 @@ contention & policy & goodput (tasks/s) & $\rho$ & kept \\
 \end{tabular}
 \end{table}
 
-\subsection{The value of feedback at the controller level (Q4)}
+\subsection{The value of feedback at the controller level (Q3)}
 \label{sec:eval-law}
 The two contention profiles are two points, while Thm.~\ref{thm:limit} predicts
 the whole curve. To test it we simulate the window controllers on the two-state
@@ -224,11 +174,11 @@ a fixed budget's politeness as $p$ grows.}
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
-The evaluation establishes four things. The sensing age is a measured first-order
-term at about $2.5$\,s, dominated by CUDA start-up. Under a self-imposed budget
-Algorithm~\ref{alg:adaptive} delivers $1.7$ to $3.2$ times a fixed rate's goodput
-at $\rho=0$. Under structured contention it is the polite and efficient knee and
-spares the neighbour, while under memoryless contention feedback breaks even, a
+The evaluation establishes three things. The sensing age is a measured
+first-order term at about $2.5$\,s, dominated by CUDA start-up, which is what
+Prop.~\ref{prop:irreducible} needs. Under structured contention
+Algorithm~\ref{alg:adaptive} is the polite and efficient knee and spares the
+neighbour, while under memoryless contention feedback breaks even, a
 pre-registered null we report rather than suppress. And the value
 $\tfrac12 r(D)$ holds at the controller level, with the threshold policy on it to
 within $0.013$, a learned policy-gradient agent capped by it, and

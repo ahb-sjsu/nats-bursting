@@ -1,6 +1,6 @@
 This is BibTeX, Version 0.99e
 Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
-The top-level auxiliary file: paper.aux
+The top-level auxiliary file: paper_sc26_revised.aux
 Reallocating 'name_of_file' (item size: 1) to 9 items.
 The style file: IEEEtran.bst
 Reallocating 'name_of_file' (item size: 1) to 6 items.
@@ -15,44 +15,44 @@ Database file #1: paper.bib
 -- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
 
 Done.
-You've used 14 entries,
+You've used 15 entries,
             4087 wiz_defined-function locations,
-            889 strings with 9964 characters,
-and the built_in function-call counts, 7509 in all, are:
-= -- 543
-> -- 209
+            895 strings with 10231 characters,
+and the built_in function-call counts, 7864 in all, are:
+= -- 572
+> -- 213
 < -- 20
-+ -- 105
-- -- 47
-* -- 337
-:= -- 1194
-add.period$ -- 28
-call.type$ -- 14
-change.case$ -- 18
++ -- 107
+- -- 48
+* -- 347
+:= -- 1259
+add.period$ -- 30
+call.type$ -- 15
+change.case$ -- 19
 chr.to.int$ -- 42
-cite$ -- 14
-duplicate$ -- 606
-empty$ -- 705
-format.name$ -- 55
-if$ -- 1718
+cite$ -- 15
+duplicate$ -- 637
+empty$ -- 742
+format.name$ -- 56
+if$ -- 1798
 int.to.chr$ -- 0
-int.to.str$ -- 14
-missing$ -- 131
-newline$ -- 65
-num.names$ -- 13
-pop$ -- 352
+int.to.str$ -- 15
+missing$ -- 138
+newline$ -- 68
+num.names$ -- 14
+pop$ -- 371
 preamble$ -- 1
 purify$ -- 0
 quote$ -- 2
-skip$ -- 573
+skip$ -- 603
 stack$ -- 0
-substring$ -- 120
-swap$ -- 382
+substring$ -- 121
+swap$ -- 399
 text.length$ -- 6
 text.prefix$ -- 0
 top$ -- 5
-type$ -- 14
+type$ -- 15
 warning$ -- 0
-while$ -- 21
-width$ -- 16
-write$ -- 139
+while$ -- 22
+width$ -- 17
+write$ -- 147

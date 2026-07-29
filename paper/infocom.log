@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  3 JUL 2026 22:54
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  29 JUL 2026 00:23
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./paper.tex
-(paper.tex
+**./infocom.tex
+(infocom.tex
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/ieeetran\IEEEtran.cls
@@ -115,14 +115,7 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 \IEEEPARstartletwidth=\dimen171
 \c@IEEEbiography=\count289
 \@IEEEtranrubishbin=\box54
-)
-** ATTENTION: Overriding command lockouts (line 3).
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/cite\cite.sty
-LaTeX Info: Redefining \cite on input line 302.
-LaTeX Info: Redefining \nocite on input line 332.
-Package: cite 2015/02/27  v 5.5
-)
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+) (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
 Package: amsmath 2025/07/09 v2.17z AMS math features
 \@mathmargin=\skip52
 
@@ -190,12 +183,34 @@ LaTeX Info: Redefining \Relbar on input line 970.
 LaTeX Info: Redefining \[ on input line 2950.
 LaTeX Info: Redefining \] on input line 2951.
 )
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.sty
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+)) (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amscls\amsthm.sty
+Package: amsthm 2020/05/29 v2.20.6
+\thm@style=\toks23
+\thm@bodyfont=\toks24
+\thm@headfont=\toks25
+\thm@notefont=\toks26
+\thm@headpunct=\toks27
+\thm@preskip=\skip55
+\thm@postskip=\skip56
+\thm@headsep=\skip57
+\dth@everypar=\toks28
+)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.sty
 Package: graphicx 2024/12/31 v1.2e Enhanced LaTeX Graphics (DPC,SPQR)
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
 Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
-\KV@toks@=\toks23
+\KV@toks@=\toks29
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.sty
 Package: graphics 2024/08/06 v1.4g Standard LaTeX Graphics (DPC,SPQR)
@@ -237,23 +252,51 @@ Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/multirow\multirow.sty
 Package: multirow 2024/11/12 v2.9 Span multiple rows of a table
-\multirow@colwidth=\skip55
+\multirow@colwidth=\skip58
 \multirow@cntb=\count306
-\multirow@dima=\skip56
+\multirow@dima=\skip59
 \bigstrutjot=\dimen196
 )
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
-\Urlmuskip=\muskip18
-Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/algorithms\algorithm.st
+y
+Package: algorithm 2009/08/24 v0.1 Document Style `algorithm' - floating enviro
+nment
+ (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count307
+\float@exts=\toks30
+\float@box=\box57
+\@float@everytoks=\toks31
+\@floatcapt=\box58
 )
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
-Package: fontenc 2025/07/18 v2.1d Standard LaTeX package
-LaTeX Font Info:    Trying to load font information for T1+ptm on input line 11
-6.
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
+Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
+)
+\@float@every@algorithm=\toks32
+\c@algorithm=\count308
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/algorithmicx\algpseudoc
+ode.sty
+Package: algpseudocode 
 
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1ptm.fd
-File: t1ptm.fd 2001/06/04 font definitions for T1/ptm.
-))
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/algorithmicx\algorithmi
+cx.sty
+Package: algorithmicx 2005/04/27 v1.2 Algorithmicx
+
+Document Style algorithmicx 1.2 - a greatly improved `algorithmic' style
+\c@ALG@line=\count309
+\c@ALG@rem=\count310
+\c@ALG@nested=\count311
+\ALG@tlm=\skip60
+\ALG@thistlm=\skip61
+\c@ALG@Lnr=\count312
+\c@ALG@blocknr=\count313
+\c@ALG@storecount=\count314
+\c@ALG@tmpcounter=\count315
+\ALG@tmplength=\skip62
+)
+Document Style - pseudocode environments for use with the `algorithmicx' style
+)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/pgf/frontendlayer\tikz.
 sty
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/pgf/basiclayer\pgf.sty
@@ -261,13 +304,13 @@ sty
 y
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
 -common.tex
-\pgfutil@everybye=\toks24
+\pgfutil@everybye=\toks33
 \pgfutil@tempdima=\dimen197
 \pgfutil@tempdimb=\dimen198
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfutil
 -latex.def
-\pgfutil@abb=\box57
+\pgfutil@abb=\box59
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfrcs.
 code.tex
@@ -286,12 +329,12 @@ Package: pgfsys 2025-08-29 v3.1.11a (3.1.11a)
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
 .code.tex
-\pgfkeys@pathtoks=\toks25
-\pgfkeys@temptoks=\toks26
+\pgfkeys@pathtoks=\toks34
+\pgfkeys@temptoks=\toks35
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/utilities\pgfkeys
 libraryfiltered.code.tex
-\pgfkeys@tmptoks=\toks27
+\pgfkeys@tmptoks=\toks36
 ))
 \pgf@x=\dimen199
 \pgf@y=\dimen256
@@ -305,14 +348,14 @@ libraryfiltered.code.tex
 \pgf@yd=\dimen264
 \w@pgf@writea=\write3
 \r@pgf@reada=\read2
-\c@pgf@counta=\count307
-\c@pgf@countb=\count308
-\c@pgf@countc=\count309
-\c@pgf@countd=\count310
-\t@pgf@toka=\toks28
-\t@pgf@tokb=\toks29
-\t@pgf@tokc=\toks30
-\pgf@sys@id@count=\count311
+\c@pgf@counta=\count316
+\c@pgf@countb=\count317
+\c@pgf@countc=\count318
+\c@pgf@countd=\count319
+\t@pgf@toka=\toks37
+\t@pgf@tokb=\toks38
+\t@pgf@tokc=\toks39
+\pgf@sys@id@count=\count320
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgf.c
 fg
@@ -331,8 +374,8 @@ File: pgfsys-common-pdf.def 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
 ssoftpath.code.tex
 File: pgfsyssoftpath.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfsyssoftpath@smallbuffer@items=\count312
-\pgfsyssoftpath@bigbuffer@items=\count313
+\pgfsyssoftpath@smallbuffer@items=\count321
+\pgfsyssoftpath@bigbuffer@items=\count322
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/systemlayer\pgfsy
 sprotocol.code.tex
@@ -367,11 +410,11 @@ code.tex)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathparse
 r.code.tex
 \pgfmath@dimen=\dimen265
-\pgfmath@count=\count314
-\pgfmath@box=\box58
-\pgfmath@toks=\toks31
-\pgfmath@stack@operand=\toks32
-\pgfmath@stack@operation=\toks33
+\pgfmath@count=\count323
+\pgfmath@box=\box60
+\pgfmath@toks=\toks40
+\pgfmath@stack@operand=\toks41
+\pgfmath@stack@operation=\toks42
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfunct
 ions.code.tex)
@@ -395,7 +438,7 @@ ions.integerarithmetics.code.tex)
 code.tex)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfmathfloat
 .code.tex
-\c@pgfmathroundto@lastzeros=\count315
+\c@pgfmathroundto@lastzeros=\count324
 ))
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/math\pgfint.code.
 tex)
@@ -432,10 +475,10 @@ File: pgfcorepathusage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 escopes.code.tex
 File: pgfcorescopes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfpic=\box59
-\pgf@hbox=\box60
-\pgf@layerbox@main=\box61
-\pgf@picture@serial@count=\count316
+\pgfpic=\box61
+\pgf@hbox=\box62
+\pgf@layerbox@main=\box63
+\pgf@picture@serial@count=\count325
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 egraphicstate.code.tex
@@ -470,8 +513,8 @@ File: pgfcorearrows.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 eshade.code.tex
 File: pgfcoreshade.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \pgf@max=\dimen289
-\pgf@sys@shading@range@num=\count317
-\pgf@shadingcount=\count318
+\pgf@sys@shading@range@num=\count326
+\pgf@shadingcount=\count327
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 eimage.code.tex
@@ -480,7 +523,7 @@ File: pgfcoreimage.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 eexternal.code.tex
 File: pgfcoreexternal.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfexternal@startupbox=\box62
+\pgfexternal@startupbox=\box64
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/basiclayer\pgfcor
 elayers.code.tex
@@ -501,7 +544,7 @@ File: pgfcorerdf.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
 shapes.code.tex
 File: pgfmoduleshapes.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfnodeparttextbox=\box63
+\pgfnodeparttextbox=\box65
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
 plot.code.tex
@@ -531,8 +574,8 @@ code.tex
 Package: pgffor 2025-08-29 v3.1.11a (3.1.11a)
 \pgffor@iter=\dimen292
 \pgffor@skip=\dimen293
-\pgffor@stack=\toks34
-\pgffor@toks=\toks35
+\pgffor@stack=\toks43
+\pgffor@toks=\toks44
 ))
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
 z\tikz.code.tex
@@ -541,7 +584,7 @@ Package: tikz 2025-08-29 v3.1.11a (3.1.11a)
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/libraries\pgflibr
 aryplothandlers.code.tex
 File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgf@plot@mark@count=\count319
+\pgf@plot@mark@count=\count328
 \pgfplotmarksize=\dimen294
 )
 \tikz@lastx=\dimen295
@@ -552,23 +595,23 @@ File: pgflibraryplothandlers.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 \tikz@lastmovetoy=\dimen300
 \tikzleveldistance=\dimen301
 \tikzsiblingdistance=\dimen302
-\tikz@figbox=\box64
-\tikz@figbox@bg=\box65
-\tikz@tempbox=\box66
-\tikz@tempbox@bg=\box67
-\tikztreelevel=\count320
-\tikznumberofchildren=\count321
-\tikznumberofcurrentchild=\count322
-\tikz@fig@count=\count323
+\tikz@figbox=\box66
+\tikz@figbox@bg=\box67
+\tikz@tempbox=\box68
+\tikz@tempbox@bg=\box69
+\tikztreelevel=\count329
+\tikznumberofchildren=\count330
+\tikznumberofcurrentchild=\count331
+\tikz@fig@count=\count332
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/modules\pgfmodule
 matrix.code.tex
 File: pgfmodulematrix.code.tex 2025-08-29 v3.1.11a (3.1.11a)
-\pgfmatrixcurrentrow=\count324
-\pgfmatrixcurrentcolumn=\count325
-\pgf@matrix@numberofcolumns=\count326
+\pgfmatrixcurrentrow=\count333
+\pgfmatrixcurrentcolumn=\count334
+\pgf@matrix@numberofcolumns=\count335
 )
-\tikz@expandcount=\count327
+\tikz@expandcount=\count336
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pgf/frontendlayer/tik
 z/libraries\tikzlibrarytopaths.code.tex
@@ -586,98 +629,187 @@ File: pgflibraryarrows.meta.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 z/libraries\tikzlibrarypositioning.code.tex
 File: tikzlibrarypositioning.code.tex 2025-08-29 v3.1.11a (3.1.11a)
 )
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/algorithm2e\algorithm2e
-.sty
-Package: algorithm2e 2017/07/18 v5.2 algorithms environments
-\c@AlgoLine=\count328
- (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/base\ifthen.sty
-Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
-)
-\algocf@hangindent=\skip57
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.sty
+Package: hyperref 2025-07-12 v7.01o Hypertext links for LaTeX
 
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/ifoddpage\ifoddpage.sty
-Package: ifoddpage 2022/10/18 v1.2 Conditionals for odd/even page detection
-\c@checkoddpage=\count329
-) (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/tools\xspace.sty
-Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+Package: iftex 2024/12/12 v1.0g TeX engine tests
 )
-(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/relsize\relsize.sty
-Package: relsize 2013/03/29 ver 4.1
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/kvsetkeys\kvsetkeys.sty
+Package: kvsetkeys 2022-10-05 v1.19 Key value parser (HO)
 )
-\skiptotal=\skip58
-\skiplinenumber=\skip59
-\skiprule=\skip60
-\skiphlne=\skip61
-\skiptext=\skip62
-\skiplength=\skip63
-\algomargin=\skip64
-\skipalgocfslide=\skip65
-\algowidth=\dimen307
-\inoutsize=\dimen308
-\inoutindent=\dimen309
-\interspacetitleruled=\dimen310
-\interspacealgoruled=\dimen311
-\interspacetitleboxruled=\dimen312
-\algocf@ruledwidth=\skip66
-\algocf@inoutbox=\box68
-\algocf@inputbox=\box69
-\AlCapSkip=\skip67
-\AlCapHSkip=\skip68
-\algoskipindent=\skip69
-\algocf@nlbox=\box70
-\algocf@hangingbox=\box71
-\algocf@untilbox=\box72
-\algocf@skipuntil=\skip70
-\algocf@capbox=\box73
-\algocf@lcaptionbox=\skip71
-\algoheightruledefault=\skip72
-\algoheightrule=\skip73
-\algotitleheightruledefault=\skip74
-\algotitleheightrule=\skip75
-\c@algocfline=\count330
-\c@algocfproc=\count331
-\c@algocf=\count332
-\algocf@algoframe=\box74
-\algocf@algobox=\box75
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdefine
+keys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
 )
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescape.s
+ty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.sty
+Package: ltxcmds 2023-12-04 v1.26 LaTeX kernel commands for general use (HO)
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexcmds
+.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarerr.s
+ty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+))
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+Package: nameref 2025-06-21 v2.57 Cross-referencing by name of section
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\gettit
+lestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.sty
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+))
+\c@section@level=\count337
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/etoolbox\etoolbox.sty
+Package: etoolbox 2025/10/02 v2.5m e-TeX tools for LaTeX (JAW)
+\etb@tempcnta=\count338
+)
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/stringenc\stringenc.s
+ty
+Package: stringenc 2019/11/29 v1.12 Convert strings between diff. encodings (HO
+)
+)
+\@linkdim=\dimen307
+\Hy@linkcounter=\count339
+\Hy@pagecounter=\count340
+ (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+File: pd1enc.def 2025-07-12 v7.01o Hyperref: PDFDocEncoding definition (HO)
+Now handling font encoding PD1 ...
+... no UTF-8 mapping file for font encoding PD1
+) (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+\Hy@SavedSpaceFactor=\count341
+ (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+File: puenc.def 2025-07-12 v7.01o Hyperref: PDF Unicode definition (HO)
+Now handling font encoding PU ...
+... no UTF-8 mapping file for font encoding PU
+)
+Package hyperref Info: Hyper figures OFF on input line 4195.
+Package hyperref Info: Link nesting OFF on input line 4200.
+Package hyperref Info: Hyper index ON on input line 4203.
+Package hyperref Info: Plain pages OFF on input line 4210.
+Package hyperref Info: Backreferencing OFF on input line 4215.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4462.
+\c@Hy@tempcnt=\count342
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+\Urlmuskip=\muskip18
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4801.
+\XeTeXLinkMargin=\dimen308
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintcalc
+.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count343
+\Field@Width=\dimen309
+\Fld@charsize=\dimen310
+Package hyperref Info: Hyper figures OFF on input line 6078.
+Package hyperref Info: Link nesting OFF on input line 6083.
+Package hyperref Info: Hyper index ON on input line 6086.
+Package hyperref Info: backreferencing OFF on input line 6093.
+Package hyperref Info: Link coloring OFF on input line 6098.
+Package hyperref Info: Link coloring with OCG OFF on input line 6103.
+Package hyperref Info: PDF/A mode OFF on input line 6108.
+\Hy@abspage=\count344
+\c@Item=\count345
+\c@Hfootnote=\count346
+)
+Package hyperref Info: Driver (autodetected): hpdftex.
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+File: hpdftex.def 2025-07-12 v7.01o Hyperref driver for pdfTeX
+\Fld@listcount=\count347
+\c@bookmark@seq@number=\count348
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerunfil
+echeck.sty
+Package: rerunfilecheck 2025-06-21 v1.11 Rerun checks for auxiliary files (HO)
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniquec
+ounter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+84.
+)
+\Hy@SectionHShift=\skip63
+)
+\c@theorem=\count349
+\c@lemma=\count350
+\c@proposition=\count351
+\c@corollary=\count352
+
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-pdf
 tex.def
 File: l3backend-pdftex.def 2025-10-09 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count333
-) (paper.aux)
-\openout1 = `paper.aux'.
+\l__color_backend_stack_int=\count353
+) (infocom.aux)
+\openout1 = `infocom.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 16.
-LaTeX Font Info:    ... okay on input line 16.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 27.
+LaTeX Font Info:    ... okay on input line 27.
 
 -- Lines per column: 56 (exact).
 
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf.mk
 ii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count334
-\scratchdimen=\dimen313
-\scratchbox=\box76
-\nofMPsegments=\count335
-\nofMParguments=\count336
-\everyMPshowfont=\toks36
-\MPscratchCnt=\count337
-\MPscratchDim=\dimen314
-\MPnumerator=\count338
-\makeMPintoPDFobject=\count339
-\everyMPtoPDFconversion=\toks37
+\scratchcounter=\count354
+\scratchdimen=\dimen311
+\scratchbox=\box70
+\nofMPsegments=\count355
+\nofMParguments=\count356
+\everyMPshowfont=\toks45
+\MPscratchCnt=\count357
+\MPscratchDim=\dimen312
+\MPnumerator=\count358
+\makeMPintoPDFobject=\count359
+\everyMPtoPDFconversion=\toks46
 )
 (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopdf-b
 ase.sty
@@ -689,401 +821,108 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-LaTeX Font Info:    Trying to load font information for T1+pcr on input line 26
+Package hyperref Info: Link coloring OFF on input line 27.
+ (infocom.out) (infocom.out)
+\@outlinefile=\write4
+\openout4 = `infocom.out'.
+
+LaTeX Font Info:    Trying to load font information for U+msa on input line 134
 .
- (C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\t1pcr.fd
-File: t1pcr.fd 2001/06/04 font definitions for T1/pcr.
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-Underfull \hbox (badness 10000) in paragraph at lines 76--79
-[]\T1/ptm/b/n/10 Transport op-ti-miza-tion \T1/ptm/m/n/10 (turboquant-pro, ŸIV[
-])---
- []
+LaTeX Font Info:    Trying to load font information for U+msb on input line 134
+.
 
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 1
+57.
 
-Underfull \hbox (badness 1430) in paragraph at lines 76--79
-\T1/ptm/m/n/10 compressing bus pay-loads so re-mote burst-ing stays
- []
-
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+)
 [1{C:/Users/abptl/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}{C:/Users/ab
 ptl/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 2253) in paragraph at lines 144--154
-[]\T1/ptm/m/n/10 The Go con-troller is event-driven. Its \T1/pcr/m/n/10 natsbri
-dge
+(infocom_aoi_model.tex [2]
+Underfull \hbox (badness 2951) in paragraph at lines 123--132
+[][]\OT1/ptm/b/n/10 Theorem 1 \OT1/ptm/m/n/10 (Achiev-able re-gion and the feed
+-back ad-
  []
 
 
-Underfull \hbox (badness 6078) in paragraph at lines 144--154
-\T1/ptm/m/n/10 sub-scribes to \T1/pcr/m/n/10 burst.submit\T1/ptm/m/n/10 , and o
-n each re-quest
+Underfull \hbox (badness 4739) in paragraph at lines 123--132
+\OT1/ptm/m/n/10 van-tage)\OT1/ptm/b/n/10 . []\OT1/ptm/m/it/10 For the sym-met-r
+ic two-state Markov ca-pac-
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/ptm/m/n/10 the \T1/pcr/m/n/10 submitter \T1/ptm/m/n/10 ren-ders a \T1/pcr/m
-/n/10 JobDescriptor
+Underfull \hbox (badness 2384) in paragraph at lines 123--132
+\OT1/ptm/m/it/10 ity of Lemma []1[], un-der age-$\OML/cmm/m/it/10 D$ \OT1/ptm/m
+/it/10 sens-ing the achiev-able
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/ptm/m/n/10 into a real \T1/pcr/m/n/10 batchv1.Job \T1/ptm/m/n/10 via client
--go---
+Underfull \hbox (badness 2443) in paragraph at lines 123--132
+\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 ^^Z; g\OT1/cmr/m/n/10 )$ \OT1/ptm/m/it/10 re-
+gion of [] is the quadri-lat-eral with ver-tices
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/ptm/m/n/10 CPU/memory/\T1/pcr/m/n/10 nvidia.com/gpu\T1/ptm/m/n/10 /ephemera
-l-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/ptm/m/n/10 storage re-quests and lim-its, a managed-by la-bel,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/pcr/m/n/10 RestartPolicyNever\T1/ptm/m/n/10 , and foreground-propagation
- []
-
-
-Underfull \hbox (badness 6842) in paragraph at lines 144--154
-\T1/ptm/m/n/10 is three sub-ject fam-i-lies: \T1/pcr/m/n/10 burst.submit \T1/pt
-m/m/n/10 (re-quests),
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/pcr/m/n/10 burst.status.<job> \T1/ptm/m/n/10 (a \T1/pcr/m/n/10 submitted\T1
-/ptm/m/n/10 /\T1/pcr/m/n/10 error \T1/ptm/m/n/10 state
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 144--154
-\T1/ptm/m/n/10 ma-chine), and \T1/pcr/m/n/10 burst.result.<job> \T1/ptm/m/n/10 
-(re-served for
- []
-
-LaTeX Font Info:    Font shape `T1/pcr/m/it' in size <10> not available
-(Font)              Font shape `T1/pcr/m/sl' tried instead on input line 197.
-[2]
-Underfull \hbox (badness 10000) in paragraph at lines 257--267
-[]\T1/pcr/m/n/10 probe_batch_size \T1/ptm/m/n/10 binary-searches the largest
- []
-
-
-Underfull \hbox (badness 2073) in paragraph at lines 257--267
-\T1/ptm/m/n/10 train-ing mem-ory in-clud-ing op-ti-mizer moments---a de-tail
- []
-
-
-Underfull \hbox (badness 1383) in paragraph at lines 257--267
-\T1/ptm/m/n/10 optimizer-state fac-tor. OOM is caught and dis-tin-guished
- []
-
-
-Underfull \hbox (badness 1412) in paragraph at lines 269--269
-[]\T1/ptm/b/n/10 Algorithm 2: \T1/ptm/m/n/10 OOM-safe batch right-sizing (in-fe
-r
- []
-
-[3]
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
-[]\T1/ptm/m/n/10 On dim-1024 vec-tors the codec gives ra-tios of
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
-\OT1/cmr/m/n/10 7\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 9\OML/cmm/m/it/10 =\OT1/cmr/
-m/n/10 10\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 4\OML/cmm/m/it/10 =\OT1/cmr/m/n/10 1
-5\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 5\OMS/cmsy/m/n/10 ^^B$ \T1/ptm/m/n/10 at $\O
-T1/cmr/m/n/10 4\OML/cmm/m/it/10 =\OT1/cmr/m/n/10 3\OML/cmm/m/it/10 =\OT1/cmr/m/
-n/10 2$\T1/ptm/m/n/10 -bit with re-con-struc-tion
- []
-
-
-Underfull \hbox (badness 4316) in paragraph at lines 317--325
-\T1/ptm/m/n/10 co-sine $\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 995\
-OML/cmm/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 978\OML/cmm
-/m/it/10 =\OT1/cmr/m/n/10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 94$ \T1/ptm/m/n/10
- (Fig. 2[]). Re-running on real
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 317--325
-\T1/pcr/m/n/10 bge-small-en-v1.5 \T1/ptm/m/n/10 em-bed-dings (20news-groups,
- []
-
-
-Underfull \hbox (badness 7759) in paragraph at lines 317--325
-\OML/cmm/m/it/10 n[]\OT1/cmr/m/n/10 3000$\T1/ptm/m/n/10 , na-tive dim 384) give
-s \T1/ptm/m/it/10 iden-ti-cal \T1/ptm/m/n/10 ra-tio and
- []
-
-
-Underfull \hbox (badness 3364) in paragraph at lines 317--325
-\T1/ptm/m/n/10 co-sine within 0.001 at matched dimension---confirming
- []
-
-<figures/fig_tier1_compression.pdf, id=32, 361.35pt x 231.26399pt>
-File: figures/fig_tier1_compression.pdf Graphic file (type pdf)
-<use figures/fig_tier1_compression.pdf>
-Package pdftex.def Info: figures/fig_tier1_compression.pdf  used on input line 
-327.
-(pdftex.def)             Requested size: 252.0pt x 161.28026pt.
-<figures/fig_tier2_crossover.pdf, id=33, 361.35pt x 231.26399pt>
-File: figures/fig_tier2_crossover.pdf Graphic file (type pdf)
-<use figures/fig_tier2_crossover.pdf>
-Package pdftex.def Info: figures/fig_tier2_crossover.pdf  used on input line 36
-0.
-(pdftex.def)             Requested size: 252.0pt x 161.28026pt.
-<figures/fig_tier3_scaling.pdf, id=34, 361.35pt x 231.26399pt>
-File: figures/fig_tier3_scaling.pdf Graphic file (type pdf)
-<use figures/fig_tier3_scaling.pdf>
-Package pdftex.def Info: figures/fig_tier3_scaling.pdf  used on input line 388.
-
-(pdftex.def)             Requested size: 252.0pt x 161.28026pt.
-[4 <./figures/fig_tier1_compression.pdf>]
-<figures/pareto_gpu.png, id=91, 252.945pt x 187.54065pt>
-File: figures/pareto_gpu.png Graphic file (type png)
-<use figures/pareto_gpu.png>
-Package pdftex.def Info: figures/pareto_gpu.png  used on input line 420.
-(pdftex.def)             Requested size: 211.67908pt x 156.94641pt.
-<figures/pareto_contended_square.png, id=93, 245.718pt x 187.902pt>
-File: figures/pareto_contended_square.png Graphic file (type png)
-<use figures/pareto_contended_square.png>
-Package pdftex.def Info: figures/pareto_contended_square.png  used on input lin
-e 475.
-(pdftex.def)             Requested size: 123.48138pt x 94.42671pt.
-<figures/pareto_contended_poisson.png, id=94, 245.718pt x 187.902pt>
-File: figures/pareto_contended_poisson.png Graphic file (type png)
-<use figures/pareto_contended_poisson.png>
-Package pdftex.def Info: figures/pareto_contended_poisson.png  used on input li
-ne 476.
-(pdftex.def)             Requested size: 123.48138pt x 94.42671pt.
-
-Underfull \hbox (badness 7777) in paragraph at lines 483--494
-[]\T1/ptm/m/n/10 To place the fab-ric among gen-eral task en-gines,
- []
-
-
-Underfull \hbox (badness 4634) in paragraph at lines 483--494
-\T1/ptm/m/n/10 we ran the \T1/ptm/m/it/10 same \T1/ptm/m/n/10 warm-pool workloa
-d---MiniLM em-
- []
-
-
-Underfull \hbox (badness 5519) in paragraph at lines 483--494
-\T1/ptm/m/n/10 bed-ding on one GV100---through Ray, Dask, a raw
- []
-
-[5 <./figures/fig_tier2_crossover.pdf> <./figures/fig_tier3_scaling.pdf>]
-<figures/embed_scaling.png, id=198, 245.718pt x 180.675pt>
-File: figures/embed_scaling.png Graphic file (type png)
-<use figures/embed_scaling.png>
-Package pdftex.def Info: figures/embed_scaling.png  used on input line 523.
-(pdftex.def)             Requested size: 186.48138pt x 137.12419pt.
-
-[6 <./figures/pareto_gpu.png> <./figures/pareto_contended_square.png> <./figure
-s/pareto_contended_poisson.png>]
-Underfull \hbox (badness 6808) in paragraph at lines 590--596
-\T1/ptm/m/n/10 state-aware peak-memory ac-count-ing, a uni-fied multi-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 598--606
-[]\T1/ptm/m/n/10 All three projects are open and on PyPI---
- []
-
-
-Underfull \hbox (badness 5802) in paragraph at lines 598--606
-\T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 [12], \T1/pcr/m/n/10 turboquant-pro
- \T1/ptm/m/n/10 [13], and
- []
-
-
-Underfull \hbox (badness 7851) in paragraph at lines 598--606
-\T1/ptm/m/n/10 vari-ant), \T1/pcr/m/n/10 bench_transport.py \T1/ptm/m/n/10 and 
-the co-existing
- []
-
-
-Underfull \hbox (badness 2875) in paragraph at lines 598--606
-\T1/pcr/m/n/10 --i-have-checked-nrp-policy\T1/ptm/m/n/10 . Re-sult files and a
- []
-
-
-Underfull \hbox (badness 4543) in paragraph at lines 598--606
-\T1/pcr/m/n/10 make_figures.py \T1/ptm/m/n/10 that re-gen-er-ates ev-ery fig-ur
-e are
- []
-
-[7 <./figures/embed_scaling.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 634--639
-[]\T1/ptm/m/n/10 The ar-ti-fact is the three open-source projects
- []
-
-
-Underfull \hbox (badness 2600) in paragraph at lines 634--639
-\T1/ptm/m/n/10 eval-u-ated here---\T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 (
-the burst-ing fab-ric),
- []
-
-
-Underfull \hbox (badness 2717) in paragraph at lines 652--655
-\T1/ptm/m/n/10 pool la-tency/throughput; GPU uti-liza-tion; ad-mis-sion
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
-[]\T1/ptm/b/n/10 Publicly avail-able: \T1/ptm/m/n/10 yes---as PyPI pack-ages
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
-\T1/ptm/m/n/10 and at \T1/pcr/m/n/10 github.com/ahb-sjsu \T1/ptm/m/n/10 (repos-
-i-to-ries
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 659--662
-\T1/pcr/m/n/10 nats-bursting\T1/ptm/m/n/10 , \T1/pcr/m/n/10 turboquant-pro\T1/p
-tm/m/n/10 ,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
-[]\T1/ptm/b/n/10 Archived DOI: \T1/pcr/m/n/10 nats-bursting \T1/ptm/m/n/10 10.5
-281/zen-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
-\T1/ptm/m/n/10 odo.20660069; \T1/pcr/m/n/10 turboquant-pro \T1/ptm/m/n/10 10.52
-81/zen-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
-\T1/ptm/m/n/10 odo.20660087; \T1/pcr/m/n/10 batch-probe \T1/ptm/m/n/10 10.5281/
-zen-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 663--666
-\T1/ptm/m/n/10 odo.21095035 (con-cept DOIs; al-ways re-solve to
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 685--687
-[]\T1/ptm/m/n/10 Each re-ported re-sult maps to one com-mand;
- []
-
-
-Underfull \hbox (badness 5203) in paragraph at lines 685--687
-\T1/pcr/m/n/10 make_figures.py \T1/ptm/m/n/10 re-gen-er-ates the fig-ures from 
-the
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
-[]\T1/ptm/b/n/10 Tier 1 (Fig. 2[]): \T1/pcr/m/n/10 python
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
-\T1/pcr/m/n/10 benchmarks/bench_compression.py $\OMS/cmsy/m/n/10 !$
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 688--691
-\T1/pcr/m/n/10 results_compression.json \T1/ptm/m/n/10 (real-embedding
- []
-
-
-Underfull \hbox (badness 5563) in paragraph at lines 691--694
-[]\T1/ptm/b/n/10 Tier 2 (Ta-bles II[], III[], Fig. 3[]): \T1/ptm/m/n/10 start a
- bus
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
-\T1/ptm/m/n/10 (\T1/pcr/m/n/10 docker run -p 4222:4222 nats\T1/ptm/m/n/10 ), th
-en
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
-\T1/pcr/m/n/10 python benchmarks/bench_transport.py
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 691--694
-\T1/pcr/m/n/10 [--compress]\T1/ptm/m/n/10 ; the real-hop driver writes
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
-[]\T1/ptm/b/n/10 Tier 3 (Ta-ble IV[], Fig. 4[]): \T1/pcr/m/n/10 python
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
-\T1/pcr/m/n/10 benchmarks/bench_cluster.py
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
-\T1/pcr/m/n/10 --mode cold|warm|scale
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 694--697
-\T1/pcr/m/n/10 --i-have-checked-nrp-policy $\OMS/cmsy/m/n/10 !$
- []
-
-
-Underfull \hbox (badness 3525) in paragraph at lines 697--701
-[]\T1/ptm/b/n/10 Admission (Ta-ble V[], Fig. 5[]): \T1/ptm/m/n/10 the pre-regis
-tered
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 697--701
-\T1/ptm/m/n/10 har-ness in \T1/pcr/m/n/10 benchmarks/infocom/ \T1/ptm/m/n/10 (\
-T1/pcr/m/n/10 run.py\T1/ptm/m/n/10 ,
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 701--702
-[]\T1/ptm/b/n/10 Figures: \T1/pcr/m/n/10 python paper/figures/
- []
-
-[8]
-Underfull \hbox (badness 10000) in paragraph at lines 715--720
-[]\T1/ptm/m/n/10 Tier 3 re-fuses to run with-out
- []
-
-
-Underfull \hbox (badness 2980) in paragraph at lines 715--720
-\T1/pcr/m/n/10 --i-have-checked-nrp-policy \T1/ptm/m/n/10 and uses ignored-
- []
-
-(paper.bbl
-Underfull \hbox (badness 10000) in paragraph at lines 84--87
-\T1/ptm/m/n/8 com-pres-sion,'' $https : / / pypi . org / project / turboquant-[
-]pro$, zen-odo:
- []
-
-
-Underfull \hbox (badness 5908) in paragraph at lines 89--92
-\T1/ptm/m/n/8 con-trol,'' $https : / / pypi . org / project / batch-[]probe$, z
-en-odo: 10.5281/zen-
- []
-
+<figures/feedback_phase.pdf, id=147, 270.18687pt x 196.60088pt>
+File: figures/feedback_phase.pdf Graphic file (type pdf)
+<use figures/feedback_phase.pdf>
+Package pdftex.def Info: figures/feedback_phase.pdf  used on input line 190.
+(pdftex.def)             Requested size: 288.95874pt x 210.28285pt.
+[3] [4 <./figures/feedback_phase.pdf>]
+Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
+put line 327.
+ [5])
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 1
+73.
+
+(C:\Users\abptl\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
+(infocom_eval.tex [6]
+<figures/tau_sweep.png, id=338, 656.2116pt x 248.6088pt>
+File: figures/tau_sweep.png Graphic file (type png)
+<use figures/tau_sweep.png>
+Package pdftex.def Info: figures/tau_sweep.png  used on input line 135.
+(pdftex.def)             Requested size: 252.0pt x 95.46999pt.
+ [7]
+<figures/e9_adaptive_curve.png, id=360, 491.436pt x 195.129pt>
+File: figures/e9_adaptive_curve.png Graphic file (type png)
+<use figures/e9_adaptive_curve.png>
+Package pdftex.def Info: figures/e9_adaptive_curve.png  used on input line 165.
+
+(pdftex.def)             Requested size: 252.0pt x 100.05933pt.
+) [8 <./figures/tau_sweep.png> <./figures/e9_adaptive_curve.png>] (infocom_appe
+ndix.tex
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\beta' on input line 1.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 1.
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 29--34
+[][]\OT1/ptm/b/n/10 Lemma 2 \OT1/ptm/m/n/10 (Lip-s-chitz value func-tion)\OT1/p
+tm/b/n/10 . []$\OML/cmm/m/it/10  \OT1/cmr/m/n/10 (\OML/cmm/m/it/10 ^^V\OT1/cmr/
+m/n/10 ) \U/msa/m/n/10 ,
+ []
+
+[9]) (infocom.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -1095,47 +934,56 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[9
-
-] (paper.aux)
+[10] (infocom.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
  ***********
+Package rerunfilecheck Info: File `infocom.out' has not changed.
+(rerunfilecheck)             Checksum: 7C4FB6C61224DC477224ABD53BFA7D4F;3219.
  ) 
 Here is how much of TeX's memory you used:
- 15580 strings out of 467870
- 316379 string characters out of 5418355
- 717783 words of memory out of 5000000
- 44182 multiletter control sequences out of 15000+600000
- 746896 words of font info for 163 fonts, out of 8000000 for 9000
+ 22676 strings out of 467870
+ 424295 string characters out of 5418355
+ 836282 words of memory out of 5000000
+ 51072 multiletter control sequences out of 15000+600000
+ 673680 words of font info for 131 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,15n,104p,639b,762s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,14n,104p,717b,879s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
-cmex10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmmi10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/p
-ublic/amsfonts/cm/cmmi7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts
-/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKT
-eX/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Users/abptl/AppData/Local/Progr
-ams/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/abptl/AppData/Loc
-al/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/abptl/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/abp
-tl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Us
-ers/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.p
+cmbx10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmex10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/p
+ublic/amsfonts/cmextra/cmex8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/abptl/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/abptl/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/abptl/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/abp
+tl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/U
+sers/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi9.p
 fb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
-/cmsy7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmsy8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/pu
-blic/amsfonts/cm/cmsy9.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/
-type1/urw/courier/ucrb8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/font
-s/type1/urw/courier/ucrr8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fo
-nts/type1/urw/courier/ucrro8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX
-/fonts/type1/urw/times/utmb8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX
-/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
-X/fonts/type1/urw/times/utmr8a.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTe
-X/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (9 pages, 439497 bytes).
+/cmr10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
+fonts/cm/cmr5.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/pub
+lic/amsfonts/cm/cmr6.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/ty
+pe1/public/amsfonts/cm/cmr7.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/f
+onts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/abptl/AppData/Local/Programs/M
+iKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/abptl/AppData/Local/Pro
+grams/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/abptl/AppData/
+Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/Users/abptl/
+AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/User
+s/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb>
+<C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cm
+sy8.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
+ts/cm/cmsy9.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/publi
+c/amsfonts/symbols/msam10.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fon
+ts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/abptl/AppData/Local/Progr
+ams/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/Users/abptl/AppData/Local/Pro
+grams/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/Users/abptl/AppData/Local/Pro
+grams/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:/Users/abptl/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:/Users/abptl/AppData/Local/Pr
+ograms/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
+Output written on infocom.pdf (10 pages, 742341 bytes).
 PDF statistics:
- 299 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 48 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 562 PDF objects out of 1000 (max. 8388607)
+ 90 named destinations out of 1000 (max. 500000)
+ 164 words of extra memory for PDF output out of 10000 (max. 10000000)
 

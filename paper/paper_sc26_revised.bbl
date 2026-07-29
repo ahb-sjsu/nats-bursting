@@ -49,6 +49,12 @@ T.~Dao, D.~Y. Fu, S.~Ermon, A.~Rudra, and C.~R{\'e}, ``{FlashAttention}: Fast
 R.~E. Kalman, ``A new approach to linear filtering and prediction problems,''
   \emph{Journal of Basic Engineering}, vol.~82, no.~1, pp. 35--45, 1960.
 
+\bibitem{companion}
+{Authors withheld during review}, ``A control-theoretic treatment of feedback
+  admission under age-limited sensing on shared clusters,'' Companion paper
+  under double-blind review; title and authors withheld to preserve its
+  anonymity, 2026.
+
 \bibitem{htcondor}
 D.~Thain, T.~Tannenbaum, and M.~Livny, ``Distributed computing in practice: the
   {Condor} experience,'' \emph{Concurrency and Computation: Practice and
