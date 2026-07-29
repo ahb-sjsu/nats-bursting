@@ -42,7 +42,11 @@ scheduled neighbours, and \emph{poisson} load is memoryless on and off arrivals,
 the adversarial case. Alongside goodput and $\rho$ we measure harm to the
 neighbour as the competitor's completed work relative to its undisturbed baseline.
 The study was pre-registered with randomized interleaved order and four seeds per
-cell.
+cell. Parameters, fixed before the runs, are $K{=}4$, $w_{\min}{=}1$,
+$\alpha{=}0.5$, $\beta{=}0.5$, $\theta{=}0.15$, $\bar a{=}1$, a $60$\,s square
+period, a Poisson rate matched to the same duty cycle, an $8$\,s GPU work unit,
+and $B{=}64$ submitted jobs per trial, with each trial ending when the burst
+drains.
 
 Table~\ref{tab:e9} reports it. Under structured load Algorithm~\ref{alg:adaptive} is the polite and efficient
 knee. It reaches $1.41$ times a fixed rate's goodput, $0.091$ against
@@ -119,15 +123,18 @@ Algorithm~\ref{alg:adaptive}, estimating $r(D)$ online, tracks the upper envelop
 It never drops below a fixed budget and recovers most of AIMD's advantage where
 feedback is worth having. Fourth, the value binds a learned controller. A
 policy-gradient agent in the DeepRM family \cite{deeprm}, using a tabular softmax
-with a per-state baseline \cite{inputdriven} and trained on the age-$D$
-observation history of four delayed readings, which is strictly more information
-than the memoryless threshold uses, converges to the threshold policy's advantage
+with a per-state baseline \cite{inputdriven} and trained on a history of four
+delayed readings rather than the newest one alone, converges to the threshold
+policy's advantage
 within $0.003$ at every point and exceeds $\tfrac12 r(D)$ by at most $0.013$, the
 threshold policy's own sampling deviation. Learning finds the frontier and does not
 pass it, which is the ceiling Thm.~\ref{thm:limit} sets for that family
-\cite{deeprm,decima}. Sweeping $D$ collapses every curve onto
+\cite{deeprm,decima}. Under the Markov model the extra readings are
+conditionally redundant given the newest one, so the experiment tests whether a
+learner recovers the sufficient statistic rather than whether extra history
+helps. Sweeping $D$ collapses every curve onto
 $\tfrac12 e^{-D/\tau_c}$ against $D/\tau_c$ (Fig.~\ref{fig:tausweep}, right),
-confirming the predicted scaling. The live square and poisson cases of Q3 are the
+confirming the predicted scaling. The live square and poisson cases of Q2 are the
 two ends of that axis.
 
 \begin{figure}[t]
@@ -143,34 +150,19 @@ collapses the advantage onto $\tfrac12 e^{-D/\tau_c}$ against $D/\tau_c$.}
 \label{fig:tausweep}
 \end{figure}
 
-\noindent\textbf{Live confirmation on GPU hardware.}
-We ran Algorithm~\ref{alg:adaptive} on the same two-GPU node across the Markov
-$\tau_c$ sweep, with $p$ from $0.01$ to $0.4$, $D{=}3$ and two seeds, estimating
-$r(D)$ online. Two claims transfer from the model. The online estimate lands on
-the predicted curve, with $\hat r=(1-2\hat p)^D$ tracking $(1-2p)^D$ to within
-$0.07$ (Fig.~\ref{fig:e9adapt}, left). And the switch modulates as predicted, its
-closed-loop fraction falling from $0.98$ to $0.48$ as $r(D)$ drops past $\theta$.
-Hardware differs from simulation in one instructive way. Raw goodput rewards
-over-admission, so live AIMD out-performs a fixed budget everywhere, and at high
-flip rate it buys that goodput with impoliteness at $\rho=0.44$ against $0.04$
-rather than by tracking. The predicted crossover therefore does not appear in raw
-goodput. It appears on the goodput and politeness frontier
-(Fig.~\ref{fig:e9adapt}, right) as the over-admission the switch sheds against
-always running AIMD, which grows from $+0.01$ to $+0.22$ as $p$ rises from $0.08$
-to $0.4$. Algorithm~\ref{alg:adaptive} matches AIMD where the neighbour is
-trackable and recovers a fixed budget's politeness where it is not.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{figures/e9_adaptive_curve.png}
-\caption{Algorithm~\ref{alg:adaptive} live on two GV100 GPUs, Markov $\tau_c$
-sweep, $D{=}3$, two seeds. \emph{Left.} The online estimate $\hat r$ and the
-realized availability autocorrelation land on $(1-2p)^D$, and the switch fires as
-$r(D)$ crosses $\theta$. \emph{Right.} The goodput and over-admission frontier,
-where the adaptive controller tracks AIMD when feedback is useful and moves toward
-a fixed budget's politeness as $p$ grows.}
-\label{fig:e9adapt}
-\end{figure}
+\noindent\textbf{Live behaviour of the switch.}
+Running Algorithm~\ref{alg:adaptive} on the same two-GPU node across the Markov
+sweep ($p$ from $0.01$ to $0.4$, two seeds) confirms two mechanical claims. The
+online estimate tracks the model, with $\hat r=(1-2\hat p)^D$ within $0.07$ of
+$(1-2p)^D$, and the switch modulates as intended, its closed-loop fraction falling
+from $0.98$ to $0.48$ as $r(D)$ drops past $\theta$. It does not reproduce the
+goodput crossover. Raw goodput rewards over-admission, so live AIMD out-performs a
+fixed budget everywhere, buying that goodput with impoliteness at high flip rate
+($\rho=0.44$ against $0.04$) rather than by tracking. What the switch delivers on
+hardware is the over-admission it sheds against always running AIMD, growing from
+$+0.01$ to $+0.22$ as $p$ rises from $0.08$ to $0.4$. Two seeds make this a
+mechanical check on the estimator and the switch, not evidence for the value of
+$\Delta(D)$.
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
@@ -185,11 +177,19 @@ within $0.013$, a learned policy-gradient agent capped by it, and
 Algorithm~\ref{alg:adaptive} never below a fixed budget, which unifies the two
 live contention cases as endpoints of one curve.
 
-Three threats remain. Contention is manufactured on a two-GPU node at $C{=}2$ with
-synthetic profiles rather than drawn from a production multi-tenant trace. The
-clean tracing of the advantage in Q4 is controller-level, because live static is a
-fixed trickle with no tunable frontier to measure an advantage against. And the
-live adaptive sweep uses two seeds per point, so it is a confirmatory anchor
-rather than primary evidence. The full system path is nonetheless verified
+Three threats remain, and the first is a limit on what the live numbers can show.
+Thm.~\ref{thm:limit} compares feedback against the best observation-oblivious
+policy \emph{at matched over-admission}, whereas the live fixed policy is a single
+trickle with no tunable frontier. The $1.41\times$ figure is therefore a systems
+measurement of one operating point and \emph{not} evidence for the value
+$\tfrac12 r(D)$. Only the controller-level sweep of \S\ref{sec:eval-law} tests
+that value, and it does so on the process the theorem assumes. A live matched-$\rho$
+frontier, sweeping randomized fixed budgets and feedback parameters and comparing
+maximum goodput at equal $\rho$, is the experiment that would close this and we
+have not run it. Second, contention is manufactured on a two-GPU node at $C{=}2$
+with synthetic profiles rather than drawn from a production multi-tenant trace.
+Third, repetition is thin at four seeds for Table~\ref{tab:e9} and two for the
+live sweep, the ``kept'' column carries no interval, and intervals printed as
+$0.000$ are below the resolution shown rather than exactly zero. The full system path is nonetheless verified
 end-to-end in \S\ref{sec:impl}, and naive's impoliteness, at $\rho\ge0.64$ with at
 least $38\%$ neighbour harm, is robust across every case.

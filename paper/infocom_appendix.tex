@@ -1,80 +1,52 @@
 \section{General-Capacity Impossibility via $\beta$-Mixing}
 \label{app:beta}
-Corollary~\ref{cor:imp} showed that feedback's value vanishes with the sensing age
-$D$ for the two-state model. We now show the same for any stationary capacity
-process, with the decay rate governed by its $\beta$-mixing coefficient, also
-called absolute regularity. The exact binary law is one tight instance of that
-general statement.
+Corollary~\ref{cor:imp} showed that feedback's value vanishes with the lag $D$ for
+the two-state model. The same holds for any stationary capacity process, with the
+decay rate set by its $\beta$-mixing coefficient, so the exact binary law is one
+tight instance of a general statement.
 
-\noindent\textbf{Setup.}
 Let $\{a_t\}$ be stationary on $\{0,\dots,C\}$ with
-$\mathcal F_{\le s}=\sigma(a_u:u\le s)$ and $\mathcal F_{\ge s}=\sigma(a_u:u\ge s)$.
-Its $\beta$-mixing coefficient at lag $D$ is
+$\mathcal F_{\le s}=\sigma(a_u:u\le s)$ and
+$\mathcal F_{\ge s}=\sigma(a_u:u\ge s)$, and let
 \begin{equation}\label{eq:beta}
 \beta(D)=\mathbb E\!\left[\ \sup_{B\in\mathcal F_{\ge t}}\big|\mathbb P(B\mid\mathcal F_{\le t-D})-\mathbb P(B)\big|\ \right],
 \end{equation}
-and $\beta(D)\!\to\!0$ holds if and only if the process is absolutely regular.
-Geometrically mixing processes satisfy $\beta(D)\le c_0\varrho^{D}$ for some
-$\varrho\in(0,1)$. Note that $\beta(D)$ always carries its lag argument and is
-unrelated to the AIMD back-off factor $\beta$. Fix any bounded per-epoch objective
-$R(w,a)$, for instance the politeness Lagrangian
-$R_\lambda(w,a)=\min(w,a)-\lambda(w-a)^{+}$, with oscillation
-$\Omega\triangleq\max_{w,a}R-\min_{w,a}R$. A causal age-$D$ controller sets $w_t$
-measurable with respect to $\mathcal G\triangleq\mathcal F_{\le t-D}$, while a
-fixed controller uses a $\mathcal G$-independent $w$. Write $V^\star(D)$ and
-$V_{\mathrm{stat}}$ for their optimal per-epoch values and
-$\Delta(D)=V^\star(D)-V_{\mathrm{stat}}$.
-
-\begin{lemma}[Lipschitz value function]\label{lem:lip}
-$\psi(\mu)\triangleq\max_w\sum_a R(w,a)\,\mu(a)$ is convex on the simplex and
-$\Omega$-Lipschitz in total variation, so
-$|\psi(\mu)-\psi(\mu')|\le\Omega\,\|\mu-\mu'\|_{\mathrm{TV}}$.
-Theorem~\ref{thm:beta} below is then the standard value-of-information
-bound~\cite{howard1966,delaragossner} specialized to the mixing coefficient.
-\end{lemma}
-\begin{proof}
-$\psi$ is a pointwise maximum of linear functionals, hence convex. Let $w_\mu$
-attain $\psi(\mu)$. Then $\psi(\mu)-\psi(\mu')\le\sum_a R(w_\mu,a)\,(\mu-\mu')(a)\le
-\mathrm{osc}_a R(w_\mu,\cdot)\,\|\mu-\mu'\|_{\mathrm{TV}}\le\Omega\|\mu-\mu'\|_{\mathrm{TV}}$,
-using $\sum_a f(a)\nu(a)\le\mathrm{osc}(f)\|\nu\|_{\mathrm{TV}}$ for zero-sum
-$\nu$. The reverse bound is symmetric.
-\end{proof}
+which tends to $0$ exactly when the process is absolutely regular and satisfies
+$\beta(D)\le c_0\varrho^{D}$ when it mixes geometrically. Note $\beta(D)$ always
+carries its lag and is unrelated to the AIMD back-off $\beta$. Fix a bounded
+per-epoch objective $R(w,a)$ with oscillation
+$\Omega\triangleq\max_{w,a}R-\min_{w,a}R$, for instance the politeness Lagrangian
+$R_\lambda=\min(w,a)-\lambda(w-a)^{+}$. A causal lag-$D$ controller makes $w_t$
+measurable with respect to $\mathcal G\triangleq\mathcal F_{\le t-D}$ and a fixed
+one uses a $\mathcal G$-independent $w$, with optimal per-epoch values
+$V^\star(D)$ and $V_{\mathrm{stat}}$ and $\Delta(D)=V^\star(D)-V_{\mathrm{stat}}$.
 
 \begin{theorem}[$\beta$-mixing impossibility]\label{thm:beta}
-For any stationary capacity process and any bounded objective,
-\begin{equation}
-0\ \le\ \Delta(D)\ \le\ \Omega\,\beta(D).
-\end{equation}
-Hence no causal age-$D$ controller outperforms a fixed budget as $D\to\infty$
-whenever the capacity is absolutely regular. If $\beta(D)\le c_0\varrho^{D}$ the
-advantage decays geometrically, with $\Delta(D)\le\Omega c_0\varrho^{D}$.
+For any such process and objective, $0\le\Delta(D)\le\Omega\,\beta(D)$. Hence no
+causal lag-$D$ controller beats a fixed budget as $D\to\infty$ whenever the
+capacity is absolutely regular, and the advantage decays geometrically when the
+process does.
 \end{theorem}
-\begin{proof}
-Let $\mu_{\mathcal G}=\mathbb P(a_t\in\cdot\mid\mathcal G)$, so the tower property
-gives $\mathbb E[\mu_{\mathcal G}]=\bar\mu\triangleq\mathbb P(a_t\in\cdot)$.
-Optimizing the $\mathcal G$-measurable window pointwise,
-$V^\star(D)=\mathbb E[\psi(\mu_{\mathcal G})]$ and
-$V_{\mathrm{stat}}=\psi(\bar\mu)$, so convexity of $\psi$ and Jensen give
-$\Delta(D)=\mathbb E[\psi(\mu_{\mathcal G})]-\psi(\bar\mu)\ge0$, meaning fresher
-information never hurts. For the upper bound, Lemma~\ref{lem:lip} gives
-$\Delta(D)\le\Omega\,\mathbb E\|\mu_{\mathcal G}-\bar\mu\|_{\mathrm{TV}}
-=\Omega\,\mathbb E[\sup_{B}|\mathbb P(a_t{\in}B\mid\mathcal G)-\mathbb P(a_t{\in}B)|]
-\le\Omega\beta(D)$. The last step holds because
-$\sigma(a_t)\subseteq\mathcal F_{\ge t}$, so \eqref{eq:beta} takes the supremum
-over a larger field.
+\begin{proof}[Proof sketch]
+Write $\mu_{\mathcal G}=\mathbb P(a_t\in\cdot\mid\mathcal G)$ and
+$\psi(\mu)=\max_w\sum_a R(w,a)\mu(a)$. Optimizing the $\mathcal G$-measurable
+window pointwise gives $V^\star(D)=\mathbb E[\psi(\mu_{\mathcal G})]$ and
+$V_{\mathrm{stat}}=\psi(\bar\mu)$, so $\Delta(D)\ge0$ by convexity of $\psi$ and
+Jensen, which is the statement that fresher information never hurts. For the upper
+bound, $\psi$ is a pointwise maximum of linear functionals and therefore
+$\Omega$-Lipschitz in total variation, the standard value-of-information
+bound~\cite{howard1966,delaragossner}. Hence
+$\Delta(D)\le\Omega\,\mathbb E\|\mu_{\mathcal G}-\bar\mu\|_{\mathrm{TV}}\le\Omega\beta(D)$,
+the last step because $\sigma(a_t)\subseteq\mathcal F_{\ge t}$, so \eqref{eq:beta}
+takes its supremum over a larger field.
 \end{proof}
 
-\begin{corollary}[Binary tightness]\label{cor:tight}
-For the symmetric two-state model, $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$ by a
-standard mixing identity~\cite{bradley2005,lpw}, so Thm.~\ref{thm:beta}
-reproduces the exact advantage of Thm.~\ref{thm:limit} up to the objective scale
-$\Omega$.
-\end{corollary}
-\begin{proof}
-The Markov property reduces $\mathcal F_{\le t-D}$ to $a_{t-D}$. The
-conditional-to-marginal total-variation distance is $|\tfrac12-q(D)|$ from either
-state, so $\beta(D)=\tfrac12-q(D)=\tfrac12 r(D)$.
-\end{proof}
+For the symmetric two-state model $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$ by a
+standard mixing identity~\cite{bradley2005,lpw}, since the Markov property reduces
+$\mathcal F_{\le t-D}$ to $a_{t-D}$ and the conditional-to-marginal total variation
+is $|\tfrac12-q(D)|$ from either state. So Thm.~\ref{thm:beta} reproduces
+Thm.~\ref{thm:limit} up to the objective scale $\Omega$, which is the sense in
+which the binary law is tight.
 
 \section{The Learning Rate of Algorithm~\ref{alg:adaptive}}
 \label{app:regret}

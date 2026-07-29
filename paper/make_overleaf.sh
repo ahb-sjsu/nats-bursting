@@ -22,7 +22,7 @@ mkdir -p "$OUT/figures"
 cp infocom.tex infocom_aoi_model.tex infocom_eval.tex infocom_appendix.tex \
    infocom.bib "$OUT/"
 
-for f in feedback_phase.pdf tau_sweep.png e9_adaptive_curve.png; do
+for f in tau_sweep.png; do
   cp "figures/$f" "$OUT/figures/$f"
 done
 
@@ -70,8 +70,20 @@ with `arrows.meta` and `positioning`, `amsmath`, `amssymb`, `amsthm`, `booktabs`
 `multirow`, `graphicx` and `hyperref` with `hidelinks`. All are in Overleaf's TeX
 Live.
 
-The current draft is **9 pages including references**, inside the limit of 9
-content pages plus 1 reference page. There is roughly one column of headroom.
+The current draft is **10 pages**, with content ending on page 9 and references
+on page 10, which is the limit of 9 content pages plus 1 reference page. There is
+no headroom, so any addition needs a compensating cut.
+
+## Open items for the authors
+
+1. **Self-citations must be de-anonymized.** Entries currently reading
+   "Anonymous Author(s)" have to carry real author lists written in third person,
+   per INFOCOM instructions, and the submission must not depend on anonymous
+   material held outside it. Only the authors have that metadata.
+2. **The companion-paper dependency should be reduced** so the systems claims
+   stand on this manuscript alone.
+3. `lindfalse` restores the author block. Under `lindtrue` no author block is
+   emitted at all, which is what the policy asks for.
 EOF
 
 if command -v zip >/dev/null 2>&1; then

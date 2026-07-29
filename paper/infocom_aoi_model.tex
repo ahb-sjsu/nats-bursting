@@ -20,52 +20,67 @@ long-run over-admission fraction, the guest solves
 The constraint is two-sided, since the guest must stay below the cap and above the
 floor, which already separates the problem from loss-only congestion control.
 
-\noindent\textbf{Age-limited sensing.}
-The guest does not observe $a_t$. It probes cluster state and the probe is stale.
-We model this as an age of information $D$, meaning that at epoch $t$ the
-controller's freshest reading of capacity has age $D$, so admissible policies are
-causal functions of $\{a_{s-D}\}_{s\le t}$. Here $D$ is a physical and measured
-quantity. Sec.~\ref{sec:eval} puts it near $2.5$\,s, dominated by CUDA start-up
-rather than by the $27$\,ms poll. A controller can only act on a $D$-old picture
-of a cluster the neighbours are still changing.
+\noindent\textbf{The decision-to-effect lag.}
+Two distinct delays act on this loop and only their sum matters. A decision taken
+at wall-clock time $\tau$ rests on a capacity reading of age
+$D_{\mathrm{obs}}$, and it takes effect at $\tau+D_{\mathrm{act}}$, when the
+admitted pod actually occupies the resource and its productivity is scored. The
+state that determines the payoff is therefore the capacity at
+$\tau+D_{\mathrm{act}}$, while the information the policy conditions on is the
+capacity at $\tau-D_{\mathrm{obs}}$. Writing
+\begin{equation}\label{eq:Ddef}
+D\ \triangleq\ D_{\mathrm{obs}}+D_{\mathrm{act}}
+\end{equation}
+for that decision-to-effect lag and relabelling $t=\tau+D_{\mathrm{act}}$, the
+admissible policies are exactly the causal functions of $\{a_{s-D}\}_{s\le t}$.
+This is the only sense in which $D$ is used below, and it is the sense the
+measurements report.
 
-A natural objection is that $D$ is an engineering choice rather than a limit.
-Distributed schedulers routinely defeat stale probes by launching more work than
-they need and binding to whichever reservation is ready first, discarding the
-rest~\cite{sparrow}, or by holding a resident probe that reports at low latency.
-Under a one-sided constraint both work. Under the two-sided constraint of
-\eqref{eq:polite} neither is legal, and that is what makes $D$ a floor rather
-than a parameter.
+The distinction matters because the two components differ by two orders of
+magnitude. Polling occupancy of resources already running costs
+$D_{\mathrm{obs}}=27$--$33$\,ms, well under one epoch, so a paper that identified
+$D$ with observation age alone would predict that feedback is always useful here.
+Actuation is what dominates. A newly admitted pod needs
+$D_{\mathrm{act}}\approx2.46$\,s of CUDA start-up before it occupies the GPU it was
+admitted for (\S\ref{sec:eval}), and the neighbour keeps moving during that
+interval. So $D$ is $2$ to $3$ epochs, not a fraction of one, and it is set by
+actuation rather than by monitoring design.
 
-\begin{proposition}[The sensing age is irreducible for a compliant guest]
+That also answers the natural objection that $D$ is an engineering choice.
+Distributed schedulers routinely hide actuation latency by launching more work
+than they need and binding to whichever reservation lands first, discarding the
+rest~\cite{sparrow}. Under a one-sided constraint that works. Under the two-sided
+constraint of \eqref{eq:polite} it does not.
+
+\begin{proposition}[The actuation component is irreducible for a compliant guest]
 \label{prop:irreducible}
-Let $\tau_{\mathrm{start}}$ be the time from launching a unit of work until its
-productivity is observable. Any policy that satisfies both the cap
-$w_t\le K$ and the utilization floor has sensing age $D\ge\tau_{\mathrm{start}}$
-for the signal that reports whether an admission was productive.
+Let $\tau_{\mathrm{start}}$ be the time from admitting a unit of work until it
+occupies the resource. Any policy satisfying both the cap $w_t\le K$ and the
+utilization floor has $D_{\mathrm{act}}\ge\tau_{\mathrm{start}}$, and hence
+$D\ge\tau_{\mathrm{start}}$ by \eqref{eq:Ddef}.
 \end{proposition}
 \begin{proof}
-Fix an admission. Its productivity is not observable before
-$\tau_{\mathrm{start}}$ by definition, so the only way to act on fresher
-information is to observe some \emph{other} admission instead. Launching $m>1$
-speculative replicas and keeping whichever becomes productive first does exactly
-that, and it consumes $m$ slots against the cap of \eqref{eq:polite}. If the losers
-are cancelled they performed no useful work and breach the floor. If they are kept
-running they respect the floor while occupying cap slots the guest wanted for real
-work, and they still reveal no individual admission's outcome sooner than
-$\tau_{\mathrm{start}}$. A resident probe held idle breaches the floor directly,
-and one doing real work occupies a cap slot while reporting its own start-up at
-$\tau_{\mathrm{start}}$. Every route is therefore infeasible, non-compliant, or
-leaves the age unchanged.
+A decision cannot take effect before the work it admits occupies the
+resource, so $D_{\mathrm{act}}<\tau_{\mathrm{start}}$ requires that some unit
+admitted \emph{earlier} be the one that lands. Launching $m>1$ speculative
+replicas and keeping whichever lands first does exactly that, and it consumes $m$
+slots against the cap of \eqref{eq:polite}. If the losers are cancelled they
+performed no useful work and breach the floor. If they are kept they respect the
+floor while occupying cap slots the guest wanted for real work, so the effective
+window available to the decision shrinks by the same amount it gained in
+freshness. Either way no compliant policy advances the moment at which an
+admission takes effect. Note what is \emph{not} claimed. Observing the neighbour
+is fast, and $D_{\mathrm{obs}}$ is genuinely reducible by better monitoring. It is
+$D_{\mathrm{act}}$ that the policy pins, and by \eqref{eq:Ddef} that is enough.
 \end{proof}
 
 Proposition~\ref{prop:irreducible} is what separates this setting from
 load balancing on stale state, where the classical prescription is to sample few
 and avoid acting greedily on old readings~\cite{mitzenmacher,goel}. Those results
 hold under a one-sided constraint, where a guest that does nothing is compliant.
-Here a guest that holds a slot and does nothing is not, so the techniques that
-would shrink $D$ are the ones the policy forbids. Everything that follows
-therefore treats $D$ as given and asks what is achievable at that age.
+Here a guest that holds a slot and does nothing is not, so the technique that
+would shrink the actuation term is the one the policy forbids. Everything that
+follows treats $D$ as given and asks what is achievable at that lag.
 
 \noindent\textbf{The contended unit.}
 Politeness is decided at the margin, so we fix attention on the single contended
@@ -80,10 +95,9 @@ observation $\hat x_t\triangleq x_{t-D}$. Marginal goodput and over-admission ar
 g \triangleq \Pr[m_t=1,\,x_t=1],\qquad
 \rho \triangleq \Pr[m_t=1,\,x_t=0].
 \end{equation}
-Everything below concerns the achievable $(\rho,g)$ region under age $D$. The
+Everything below concerns the achievable $(\rho,g)$ region under lag $D$. The
 stationary $\rho$ of \eqref{eq:margin} is the ergodic limit of the epoch fraction
-in \eqref{eq:polite}, so we reuse the symbol, and write $\bar\rho$ for the surplus
-amount in Prop.~\ref{prop:layercake}.
+in \eqref{eq:polite}, so we reuse the symbol.
 
 \begin{proposition}[Hard-cap safety]\label{prop:safety}
 Any window update that clamps additive increase at $K$ and never increases $w_t$
@@ -138,7 +152,7 @@ matched over-admission levels, is
 attained at the kink $\rho=q/2$ by the threshold policy $m_t=\hat x_t$, while at a
 lower level $\rho<q/2$ the gain is the smaller $\rho(1-2q)/q$. The peak value of
 closed-loop admission is therefore exactly half the autocorrelation of available
-capacity at the sensing lag (Fig.~\ref{fig:theory}a). Optimality of memoryless
+capacity at the sensing lag (Fig.~\ref{fig:theory}). Optimality of memoryless
 threshold policies for symmetric two-state Markov observation is classical in
 opportunistic access~\cite{myopicaccess}, and what \eqref{eq:adv} adds is the
 exact value of the resulting advantage over the best fixed budget.
@@ -163,10 +177,9 @@ vertical distance at $\rho=q/2$ is
 $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfrac12 r(D)$.
 \end{proof}
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\begin{minipage}[b]{0.40\textwidth}\centering
-\resizebox{\linewidth}{!}{%
+\resizebox{0.92\columnwidth}{!}{%
 \begin{tikzpicture}[>=Stealth]
   % value units * 10 = cm.  q=q(D); drawn at q=0.2 (r=0.6).
   \draw[->] (0,0) -- (6.0,0) node[right] {$\rho$ (over-admission)};
@@ -187,26 +200,20 @@ $\tfrac{1-q}{2}-\tfrac q2=\tfrac{1-2q}{2}=\tfrac12 r(D)$.
   \node[right=2pt] at (1,2.5) {$\Delta(D)=\tfrac12 r(D)$};
   \fill (5,5) circle (1.6pt);
   \node[below right=1pt] at (5,5) {\footnotesize $\bigl(\tfrac12,\tfrac12\bigr)$};
-\end{tikzpicture}}\\[2pt]{\footnotesize (a) the advantage is a vertical distance}
-\end{minipage}\hfill
-\begin{minipage}[b]{0.56\textwidth}\centering
-\includegraphics[width=\linewidth]{figures/feedback_phase.pdf}\\[2pt]{\footnotesize (b) the impossibility as a map}
-\end{minipage}
-\caption{\textbf{(a)} Under age-$D$ sensing the achievable $(\rho,g)$ pairs form
-the shaded hull. Fixed budgets lie on the diagonal $g=\rho$, and the closed-loop
-optimum sits a vertical $\Delta(D)=\tfrac12 r(D)$ above it
-(Thm.~\ref{thm:limit}). \textbf{(b)} The same value $\tfrac12 e^{-D/\tau_c}$ over
-the sensing-age and coherence-time plane with $\tau_c$ on a log scale. Points are
-the measured Markov contention sweep of Cor.~\ref{cor:imp}, each shaded by the
-adaptive controller's closed-loop fraction, opening onto the fixed budget as $D$
-crosses $\tau_c$.}
+\end{tikzpicture}}
+\caption{Under lag-$D$ sensing the achievable $(\rho,g)$ pairs form the shaded
+hull, drawn at $q=0.2$. Fixed budgets lie on the diagonal $g=\rho$, and the
+closed-loop optimum sits a vertical $\Delta(D)=\tfrac12 r(D)$ above it
+(Thm.~\ref{thm:limit}). The advantage is a distance, which is why it admits a
+closed form.}
 \label{fig:theory}
-\end{figure*}
+\end{figure}
 
 \begin{corollary}[Impossibility as sensing ages]\label{cor:imp}
 $\Delta(D)\!\to\!0$ as $r(D)\!\to\!0$. For the symmetric two-state Markov model
-$\Delta(D)=\tfrac12 e^{-D/\tau_c}$, so no causal controller with sensing age $D$
-outperforms a fixed budget once $D\gg\tau_c$. Closed-loop admission helps only to
+$\Delta(D)=\tfrac12 e^{-D/\tau_c}$, so any causal controller at lag $D$ gains at
+most $\tfrac12 e^{-D/\tau_c}$ over a fixed budget, which is below any tolerance
+$\eta$ once $D\ge\tau_c\ln(1/2\eta)$. Closed-loop admission helps only to
 the extent that the guest senses the neighbour faster than the neighbour changes.
 In this model low autocorrelation and unpredictability coincide, but in general
 they need not, since a decorrelated process with $r(D){=}0$ can still be exactly
@@ -214,7 +221,7 @@ predictable from its history, as a random-phase deterministic square wave is. Fo
 an arbitrary capacity process the vanishing of the advantage is therefore governed
 by the $\beta$-mixing coefficient rather than by $r(D)$. At $D=0$ we have
 $\Delta=\tfrac12$, and the advantage halves for every $\tau_c\ln 2$ epochs of
-added age (Fig.~\ref{fig:theory}b). App.~\ref{app:beta} makes the general
+added age (Fig.~\ref{fig:theory}). App.~\ref{app:beta} makes the general
 statement precise and extends the impossibility to arbitrary non-binary and
 non-Markov capacity processes.
 \end{corollary}
@@ -262,56 +269,7 @@ budget, which is the pre-registered null. The single curve \eqref{eq:adv} predic
 both cases and the crossover between them.
 \end{corollary}
 
-The binary reduction is not a special case but the atom of the general problem.
-
-\begin{proposition}[Layer-cake reduction for $C>2$]\label{prop:layercake}
-Let $a_t\in\{0,\dots,C\}$ and score over-admission by the surplus amount
-$\bar\rho\triangleq\mathbb{E}[(w_t-a_t)^{+}]$. With
-$x^u_t\triangleq\mathbf1[a_t\ge u]$ and $\pi_u\triangleq\Pr[x^u_t=1]$, both
-objectives decompose additively over units, since
-$\min(w_t,a_t)=\sum_{u\ge1}\mathbf1[w_t\ge u]\,x^u_t$ and
-$(w_t-a_t)^{+}=\sum_{u\ge1}\mathbf1[w_t\ge u](1-x^u_t)$. The age-$D$ window
-$w_t=a_{t-D}$ maximizes the advantage layer by layer, and its total goodput
-advantage over the best comonotone fixed budget at matched surplus obeys
-\begin{equation}\label{eq:adv-multi}
-\Delta(D)\ \le\ \sum_{u=1}^{K}\pi_u\,r_u(D),\qquad r_u(D)=\mathrm{corr}\big(x^u_t,x^u_{t-D}\big),
-\end{equation}
-with equality if and only if $\pi_u\big(1-r_u(D)\big)$ is non-increasing in $u$.
-For a single symmetric contended unit with $\pi_u=\tfrac12$ this recovers
-$\Delta=\tfrac12 r(D)$, and equality also holds whenever $r_u(D)$ does not vary
-with $u$.
-\end{proposition}
-\begin{proof}
-The two identities are the layer-cake expansions of $\min$ and $(\cdot)^+$.
-Setting $w_t=a_{t-D}$ makes $\mathbf1[w_t\ge u]=x^u_{t-D}$, which is the
-Thm.~\ref{thm:limit} threshold policy applied to each layer, and the layers'
-nesting $x^1_t\ge x^2_t\ge\cdots$ is inherited by the observations, so the
-per-unit thresholds compose into a valid scalar window. For an asymmetric layer
-with $\Pr[x^u{=}1]=\pi_u$, writing $P^u_{11}=\Pr[x^u_t{=}1,x^u_{t-D}{=}1]$, the
-same linear program as Thm.~\ref{thm:limit} gives per-unit advantage
-$\mathrm{Cov}(x^u_t,x^u_{t-D})/(1-\pi_u)=\pi_u r_u(D)$ over the fixed policy
-matching that layer's surplus, and additivity of goodput and surplus sums these
-to the right-hand side of \eqref{eq:adv-multi}.
-
-The bound is an inequality rather than an identity because the summed comparator
-need not be realizable. Matching layer $u$'s surplus requires the fixed policy to
-admit layer $u$ with probability
-$\theta^u=\big(\pi_u-P^u_{11}\big)/(1-\pi_u)=\pi_u\big(1-r_u(D)\big)$, while any
-scalar window satisfies $\{w_t\ge u{+}1\}\subseteq\{w_t\ge u\}$ and therefore
-forces $\theta^u$ to be non-increasing in $u$. Since $\pi_u$ decreases in $u$ but
-$1-r_u(D)$ may increase, the per-layer matched comparator is a feasible window
-exactly when $\pi_u(1-r_u(D))$ is non-increasing, which gives the stated equality
-condition. When it fails, no single fixed budget matches every layer's surplus at
-once, the true comparator is strictly better than the layerwise one, and the sum
-overstates the advantage.
-\end{proof}
-
-At $C{=}2$ only the contended layer fluctuates, with $\pi_1{=}1$, $r_1{=}0$ and
-$\pi_2{=}\tfrac12$, so \eqref{eq:adv-multi} collapses to $\tfrac12 r_2(D)$. The
-binary law is exactly the $C{=}2$ instance and the experiments measure it
-directly.
-
-\section{Two Algorithms}
+\section{An Adaptive Controller}
 \label{sec:controller}
 
 Theorem~\ref{thm:limit} leaves a shortfall that no fixed controller closes.
@@ -322,22 +280,32 @@ budget is safe everywhere and forfeits $\Delta(D)$ when $\tau_c\gg D$. Which of
 the two is right depends on a quantity the controller can measure, because $r(D)$
 is an autocorrelation of the probe stream the controller already collects.
 
-Algorithm~\ref{alg:adaptive} estimates it online and switches. It holds one
-scalar of state beyond the AIMD window, costs constant time per epoch, and
-inherits Prop.~\ref{prop:safety}, so it never exceeds the pod cap.
+Algorithm~\ref{alg:adaptive} estimates it online and switches. Beyond the AIMD
+window it holds three scalars, a flip count, a sample count and the previous
+reading, so its state and its per-epoch cost are both constant, and it inherits
+Prop.~\ref{prop:safety} and therefore never exceeds the pod cap. The counters
+accumulate over the whole run rather than over a sliding window. That matters for
+Thm.~\ref{thm:adapt}, since a fixed window of length $n$ leaves a floor on the
+misclassification probability and the shortfall would then not vanish. A sliding
+window is the right choice under drift and is what \S\ref{sec:eval} uses, at the
+cost of the asymptotic statement.
 
 \begin{algorithm}[t]
 \caption{Adaptive admission for one contended unit}
 \label{alg:adaptive}
 \begin{algorithmic}[1]
 \Require cap $K$, floor $w_{\min}$, step $\alpha$, backoff $\beta$, switch level
-$\theta$, buffer length $n$, fixed budget $\bar a$
-\State $w \gets w_{\min}$
+$\theta$, lag $D$, fixed budget $\bar a$
+\State $w \gets w_{\min}$;\ $F \gets 0$;\ $n \gets 0$;\ $\hat a_{\mathrm{prev}} \gets \bot$
 \For{each control epoch $t$}
-  \State append the newest probe reading to a buffer of the last $n$ readings
-  \State $\hat r \gets$ empirical correlation of readings $D$ epochs apart
-  \If{$\hat r > \theta$} \Comment{neighbour is trackable}
-    \If{the reading from $D$ epochs ago showed over-admission}
+  \State $\hat a \gets$ newest available capacity reading \Comment{age $D$ by \eqref{eq:Ddef}}
+  \If{$\hat a_{\mathrm{prev}} \neq \bot$}
+    \State $F \gets F + \mathbf 1[\hat a \neq \hat a_{\mathrm{prev}}]$;\ \ $n \gets n+1$
+  \EndIf
+  \State $\hat a_{\mathrm{prev}} \gets \hat a$
+  \State $\hat p \gets F/\max(n,1)$;\ \ $\hat r \gets (1-2\hat p)^{D}$
+  \If{$\hat r > \theta$} \Comment{trackable, so run the loop}
+    \If{$\hat a$ indicates the previous admission over-admitted}
       \State $w \gets \max(w_{\min},\ \lceil \beta w \rceil)$
     \Else
       \State $w \gets \min(w + \alpha,\ K)$
@@ -356,17 +324,19 @@ reliable detection of an overshoot within $D$ epochs, and \textbf{(A3)} fixed
 $\alpha,\beta,w_{\min},K$.
 
 \begin{proposition}[Sawtooth realization of the kink]\label{prop:bound}
-Under stationary capacity $a$ and (A1) to (A3), the trackable branch of
-Algorithm~\ref{alg:adaptive} forms a periodic sawtooth about $a$ with long-run
-over-admission $\rho=D\alpha/\big((1-\beta)(a+D\alpha)\big)\approx
+Under stationary capacity $a$, assumptions (A1) to (A3), a backoff deep enough to
+clear the overshoot so that $\beta(a+D\alpha)\le a$, and ignoring the integer
+rounding of the window, the trackable branch of Algorithm~\ref{alg:adaptive} forms
+a periodic sawtooth about $a$ with long-run over-admission $\rho=D\alpha/\big((1-\beta)(a+D\alpha)\big)\approx
 D\alpha/((1-\beta)a)$. Choosing $\alpha\le\epsilon(1-\beta)a/D$ gives
 $\rho\le\epsilon$, and $\rho\to0$ as $D\to0$.
 \end{proposition}
 \begin{proof}[Proof sketch]
 After a backoff the window restarts at $\beta(a+D\alpha)$ and rises by $\alpha$
 per clean epoch, overshooting $a$ for $D$ epochs before detection triggers the
-next backoff at peak $a+D\alpha$. The fraction of violating epochs per cycle gives
-$\rho$. This is the dynamic approach to the static-capacity kink of
+next backoff at peak $a+D\alpha$. The fraction of violating epochs per cycle gives $\rho$. Rounding the window to
+integers perturbs the cycle length by at most one epoch and the bound by
+$O(\alpha/a)$. This is the dynamic approach to the static-capacity kink of
 Thm.~\ref{thm:limit}, and $D$ enters both here and in \eqref{eq:adv}, which is the
 hinge between the systems measurement and the theory.
 \end{proof}
@@ -390,9 +360,18 @@ $r$ of the difference between the two branches' values at $\theta$, which is
 positive because Prop.~\ref{prop:bound} and Cor.~\ref{cor:imp} cross transversally
 there.
 
+Two comparators must be kept apart. The ceiling $\Delta(D)$ of
+Thm.~\ref{thm:limit} is attained by the threshold policy, not by AIMD, and
+\S\ref{sec:eval-law} measures AIMD capturing roughly half of it. A
+branch-selection rule can therefore never be judged against $\Delta(D)$, since no
+choice between its two branches removes the structural shortfall of the branch it
+picks. The right benchmark is the better of the two branches,
+$V^{\mathrm{br}}\triangleq\max\{V_{\mathrm{aimd}},V_{\mathrm{fixed}}\}$, and that
+is what Thm.~\ref{thm:adapt} bounds.
+
 \begin{theorem}[Matching learning rate]\label{thm:adapt}
 On the local family of symmetric two-state capacity processes at $p_\theta$, the
-minimax \emph{average per-epoch} shortfall against $\Delta(D)$ of any causal
+minimax \emph{average per-epoch} shortfall against $V^{\mathrm{br}}$ of any causal
 branch-selection rule over horizon $N$ is
 \begin{equation}\label{eq:rate}
 \Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
@@ -403,8 +382,9 @@ and Algorithm~\ref{alg:adaptive} attains it. Over switch levels,
 \sup_{\theta\in(0,1)}\Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
 =\Theta\!\left(L\sqrt{\frac{D}{N}}\right),
 \end{equation}
-attained at $\theta=e^{-1/2}$. For a fixed process with $r(D)\neq\theta$ the
-shortfall is $O(1/N)$.
+attained at $\theta=\big((D-1)/D\big)^{D/2}$, which increases to $e^{-1/2}$ as
+$D$ grows. For a fixed process with $r(D)\neq\theta$ the shortfall is $O(1/N)$
+when the counters accumulate over the run.
 \end{theorem}
 \begin{proof}[Proof sketch]
 For the upper bound, Bernstein for the independent flip indicators
@@ -435,55 +415,25 @@ $r(D)=e^{-1/2}$, neither clearly trackable nor clearly untrackable, which is
 exactly where a fixed controller has no good default and
 Algorithm~\ref{alg:adaptive} earns its state.
 
-Proposition~\ref{prop:layercake} lifts admission past a single unit.
-Algorithm~\ref{alg:layered} runs one binary decision per contended layer and adds
-them, which is a valid scalar window because the layers are nested, and its
-advantage is bounded by the per-unit sum \eqref{eq:adv-multi} and attains it under
-the monotonicity condition there. It reduces to Algorithm~\ref{alg:adaptive} when
-only one layer fluctuates. The condition is worth stating operationally. Equality
-needs $\pi_u(1-r_u(D))$ non-increasing in $u$, so it holds when every layer shares
-one correlation, as it does for a birth-death capacity process with a
-height-independent flip rate, and it can fail when the higher layers are markedly
-less predictable than the lower ones. Algorithm~\ref{alg:layered} is correct and
-safe either way, since Prop.~\ref{prop:safety} applies per layer. What the
-condition governs is only whether the achieved advantage reaches the summed
-ceiling.
-
-\begin{algorithm}[t]
-\caption{Layered admission for several contended units}
-\label{alg:layered}
-\begin{algorithmic}[1]
-\Require cap $K$, per-unit switch levels $\theta_u$, per-unit fixed decisions
-$\bar m_u$, buffer length $n$
-\For{each control epoch $t$}
-  \State $w \gets 0$
-  \For{$u = 1$ to $K$} \Comment{layers are nested, so $x^1_t\ge x^2_t\ge\cdots$}
-    \State $\hat r_u \gets$ empirical lag-$D$ correlation of layer $u$
-    \If{$\hat r_u > \theta_u$}
-      \State $m_u \gets \mathbf 1[\text{layer } u \text{ was free } D \text{ epochs ago}]$
-    \Else
-      \State $m_u \gets \bar m_u$
-    \EndIf
-    \State $w \gets w + m_u$
-  \EndFor
-  \State admit $\min(w, K)$ pods
-\EndFor
-\end{algorithmic}
-\end{algorithm}
-
 \noindent\textbf{Scope.}
-Three assumptions earn the closed form. First, per layer the unit is binary and
+Three assumptions earn the closed form. First, the contended unit is binary and
 symmetric. For any symmetric stationary $x_t$ the value $\tfrac12 r(D)$ is
-achievable by the memoryless threshold $m_t=\hat x_t$, which uses only the
-freshest sample, and it is the exact advantage when $x_t$ is Markov, since then
-$\hat x_t$ is a sufficient statistic. For a general non-Markov symmetric process a
-history-using controller can do strictly better, as a random-phase square wave
-with $r(D){=}0$ stays exactly predictable from its phase, so the equality is
-Markov-specific and the general converse is the mixing bound of
-App.~\ref{app:beta}. Second, stationarity, since $r(D)$ is a lag-$D$
-autocorrelation of a stationary process. Under slow drift it is replaced by a
-local estimate, which is what Algorithm~\ref{alg:adaptive} already tracks. Third,
-fixed age $D$. If the freshest sample has a random age $A$ the controller can
-read, the advantage is the age-averaged $\tfrac12\,\mathbb{E}[r(A)]$, the same law
-under the age law, and the impossibility persists whenever $A\gg\tau_c$ almost
-surely.
+achievable by the memoryless threshold $m_t=\hat x_t$, and it is the exact
+advantage when $x_t$ is Markov, since then $\hat x_t$ is a sufficient statistic.
+For a general non-Markov symmetric process a history-using controller can do
+strictly better, as a random-phase square wave with $r(D){=}0$ stays exactly
+predictable from its phase, so the equality is Markov-specific and the general
+converse is the mixing bound of App.~\ref{app:beta}. Second, stationarity, since
+$r(D)$ is a lag-$D$ autocorrelation. Under slow drift it is replaced by a local
+estimate, which is what Algorithm~\ref{alg:adaptive} tracks. Third, fixed $D$. If
+the freshest sample has a random age $A$ the controller can read, the advantage is
+the age-averaged $\tfrac12\,\mathbb{E}[r(A)]$ and the impossibility persists
+whenever $A\gg\tau_c$ almost surely.
+
+Integer capacity beyond a single contended unit is left open. A layer-cake
+decomposition of $\min(w,a)$ and $(w-a)^{+}$ suggests one binary decision per
+unit, but the per-layer decisions must be kept nested to correspond to a scalar
+window, the layerwise advantage is only an upper bound unless a monotonicity
+condition holds, and scoring surplus by amount rather than by violation
+probability changes the problem. We prefer to state the single-unit case exactly
+than the general case loosely.

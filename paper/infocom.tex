@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[10pt,conference,letterpaper]{IEEEtran}
 \usepackage{amsmath,amssymb}
 \usepackage{amsthm}
 \usepackage{graphicx}
@@ -29,9 +29,10 @@
 \title{Polite Bursting: Feedback Admission Control under
 Age-Limited Sensing on Shared Clusters}
 
-\author{\IEEEauthorblockN{\ifblind Anonymous Author(s)\else Andrew H. Bond\fi}
-\IEEEauthorblockA{\ifblind Paper submitted for double-blind review\else San Jose State University\\
-andrew.bond@sjsu.edu\fi}}
+\ifblind\else
+\author{\IEEEauthorblockN{Andrew H. Bond}
+\IEEEauthorblockA{San Jose State University\\andrew.bond@sjsu.edu}}
+\fi
 
 \maketitle
 
@@ -101,9 +102,8 @@ any rule can learn which branch to take, and together they show that staleness
 costs only the square root of the sensing age in learning even though it costs
 exponentially in the ceiling itself. The hardest predictability level to sit at is
 neither high nor low but a specific value in between, which is exactly where a
-controller holding no state has no good default. Algorithm \ref{alg:layered}
-admits work across several contended units by running one binary decision per
-unit, which lifts the single-unit ceiling to any integer capacity.
+controller holding no state has no good default. Integer capacity beyond one
+contended unit is left open, for reasons \S\ref{sec:controller} states.
 
 Our third contribution is measurement rather than proof. The sensing delay is a
 physical quantity and we measure it at roughly 2.5 seconds on real hardware,
@@ -148,13 +148,22 @@ delay bounds the achievable advantage by Thm.~\ref{thm:limit}.}
 \section{Background and Motivation}
 \label{sec:bg}
 \textbf{Host policy.} The reference host \cite{nautilus} publishes a fair-use
-policy that our design treats as ground truth. A user may hold at most $K{=}4$
-concurrent pods. Per running pod, utilization relative to request must stay in
-published bands, at least $40\%$ for GPU and $20$ to $200\%$ for CPU. Jobs must
-do real work, since sleep-only jobs are banned, and must release resources on
-completion. Idle storage volumes are reclaimed. Administrators monitor
-utilization and ban namespaces that hold under-utilized requests, so politeness
-is not optional.
+policy with two features our design depends on. Utilization relative to request
+must stay within published bands for each running pod, and holding many
+concurrent pods brings a namespace under closer scrutiny for exactly that
+condition. Jobs must do real work, since sleep-only jobs are banned, and must
+release resources on completion. Administrators monitor utilization and act on
+namespaces that persistently hold under-utilized requests, so restraint is not
+optional.
+
+We therefore do \emph{not} model the policy as an absolute pod maximum. The
+published rules attach utilization conditions to concurrency rather than
+forbidding it outright, and the permitted concurrency depends on resource type
+and node. Instead $K$ is a \emph{self-imposed politeness window} that the guest
+sets at or below the concurrency at which those conditions begin to apply, and
+$\epsilon$ is the share of under-utilized epochs the guest is willing to risk.
+This is the weaker and more defensible reading, and nothing below depends on the
+particular value. The experiments use $K{=}4$ and a contended $C{=}2$ node.
 
 \textbf{Network reality.} The guest reaches the cluster over one forwarded port
 or a mesh VPN, with no inbound access. A control plane must therefore live behind
@@ -163,8 +172,8 @@ the leaf-node design of \S\ref{sec:fabric}.
 
 \textbf{Why existing tools do not settle it.} Workflow and function-execution
 frameworks such as HTCondor \cite{htcondor}, funcX and Globus Compute
-\cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray} and Dask \cite{dask} scale
-workers to demand and carry no notion of a host politeness budget. Left to
+\cite{funcx} and Ray \cite{ray} scale workers to demand and carry no notion of a
+host politeness budget. Left to
 default scaling they over-provision under contention. We make self-restraint a
 controlled objective instead.
 
@@ -176,8 +185,10 @@ The controller runs inside the cluster, behind the network boundary, and reaches
 the home node over a NATS \cite{nats} leaf link that needs one outbound port
 (Fig.~\ref{fig:arch}). It probes cluster occupancy and actuates admission across
 that link. Submissions flow on \texttt{burst.submit} and results return on
-\texttt{results.>} by interest propagation, with no inbound cluster access. What
-matters for the controller is that this view is late. The leaf round trip and the
+\texttt{results.>} by interest propagation, with no inbound cluster access. The capacity feedback itself is local, since the controller and the workers both
+sit inside the cluster, so the leaf link carries submissions and results rather
+than the capacity signal. What matters for the controller is that its view of
+capacity is late for the reasons of \eqref{eq:Ddef}. The leaf round trip and the
 CUDA start-up of a freshly admitted pod together set the sensing age of
 \S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. Tensors crossing the
 link are compressed by random-rotation quantization
@@ -208,9 +219,8 @@ review\else open source\fi.
 \section{Related Work}
 \label{sec:related}
 \textbf{Bursting and function execution.} HTCondor \cite{htcondor}, funcX and
-Globus Compute \cite{funcx}, Parsl \cite{parsl}, Ray \cite{ray} and Dask
-\cite{dask} provide elastic task execution and provider-driven scaling, and treat
-the host as owned capacity to fill. None of them models a fair-use politeness
+Globus Compute \cite{funcx} and Ray \cite{ray} provide elastic task execution and
+provider-driven scaling, and treat the host as owned capacity to fill. None of them models a fair-use politeness
 budget or admission under a delayed view of capacity. They are complementary
 substrates, and a head-to-head comparison against them appears in the companion
 systems paper~\cite{companion}.
@@ -224,6 +234,16 @@ things differ here. The objective is two-sided, since the guest must stay under 
 pod cap and above a utilization floor, which admits an over-admission measure
 rather than pure loss. And we bound what any such rule can achieve rather than
 proposing one more back-off schedule.
+
+\textbf{Opportunistic and harvesting schedulers.} Running low-priority work in
+another tenant's slack is well established. AntMan co-schedules opportunistic
+deep-learning jobs against production ones on shared GPUs~\cite{antman}, Harvest
+VMs sell reclaimable idle cloud capacity with an SLO for the
+primary~\cite{harvestvm}, and Gavel~\cite{gavel} and Pollux~\cite{pollux} adapt
+GPU allocations dynamically. All of them are operated by the party that owns the
+capacity, so available capacity is observable and the constraint is one-sided,
+namely do not harm the primary. The guest here owns nothing, cannot see the
+neighbour directly, and must also stay \emph{above} a floor on what it does hold.
 
 \textbf{Learned resource control.} Deep reinforcement learning schedulers
 including DeepRM \cite{deeprm} and Decima \cite{decima}, with variance reduction
@@ -249,8 +269,8 @@ attained by admitting work whenever the last reading showed capacity free, and
 which vanishes once the sensing delay outgrows the neighbour's correlation time.
 
 Two algorithms follow from that form. One measures the correlation online and
-switches between feedback and a fixed budget, staying at or above the better of
-the two. The other runs a binary decision per contended unit and so covers
+switches between feedback and a fixed budget, tracking the better of the two up
+to a vanishing learning term. The other runs a binary decision per contended unit and so covers
 capacities beyond a single unit. Both carry the safety property that the pod cap
 is never exceeded, which holds deterministically rather than in expectation. The
 first is also minimax optimal in its learning rate, matched above and below, and
@@ -265,12 +285,15 @@ the switching algorithm detects the case and stops paying for a loop that cannot
 help. A learned policy-gradient controller given a longer observation history
 converges to the ceiling and does not pass it.
 
-Three things remain open. Our contention is manufactured on a two-GPU node rather
-than drawn from a production multi-tenant trace. The exact equality holds for a
-binary Markov unit, while the general statement is the weaker mixing bound of
-App.~\ref{app:beta}. And a controller that estimates the correlation itself,
-rather than only which side of the switch it is on, should recover part of the
-remaining distance to the ceiling.
+Four things remain open. Contention is manufactured on a two-GPU node rather than
+drawn from a production multi-tenant trace, and the live comparison is at one
+operating point rather than a matched-over-admission frontier, so it measures the
+system rather than the constant. The exact equality holds for a binary Markov
+unit, while the general statement is the weaker mixing bound of
+App.~\ref{app:beta}. Integer capacity needs the nesting and monotonicity
+conditions of \S\ref{sec:controller} before it can be claimed. And a controller
+that estimates the correlation itself, rather than only which side of the switch it
+falls on, should recover part of the distance between AIMD and the ceiling.
 
 \appendices
 \input{infocom_appendix}
