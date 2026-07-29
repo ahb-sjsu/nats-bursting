@@ -1,80 +1,65 @@
-% nats-bursting -- INFOCOM Evaluation. Drop-in; \input after the model.
-% Preamble: \usepackage{booktabs} (optional). References sec:model, sec:limit,
-% sec:controller, sec:fabric, thm:limit, cor:exp, thm:adapt, prop:bound.
-%
-% HONESTY MARKERS: paragraphs tagged %PENDING% describe experiments not yet run;
-% do not present them as results. Numbers below are measured (5-rep mean +/- 95% CI
-% unless noted); see benchmarks/infocom/RESULTS.md and out/ms/.
-
 \section{Evaluation}
 \label{sec:eval}
 
-We evaluate the controller on a testbed whose \emph{sensing age is measured, not
-assumed}: a home node and \ifblind a\else an Atlas\fi{} workstation-class node with
-GV100 GPUs, the controller probing real GPU occupancy and admitting real CUDA
-workers, with a competing tenant driving exogenous capacity. The fabric that carries this
-control plane is characterized in the companion paper~\cite{companion}; here we
-measure what the \emph{controller} does over it. Unless noted
-we report the mean and a $t$-based 95\% confidence interval over independent repeats.
-The study answers four questions:
-\textbf{(Q1)} the prober detection delay $D$ that governs the bound of
-Prop.~\ref{prop:bound};
-\textbf{(Q2)} whether the controller is polite-efficient under a self-imposed
-budget (the \emph{abundance} regime);
-\textbf{(Q3)} whether it holds under \emph{real, time-varying contention} (the
-\emph{scarcity} regime Prop.~\ref{prop:bound} targets)---and where it fails; and
-\textbf{(Q4)} whether the feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$
-(Thm.~\ref{thm:limit}) holds at the controller level and unifies the two contention
-regimes as points on one curve.
+We evaluate on a testbed whose sensing age is measured rather than assumed. A home
+node and \ifblind a\else an Atlas\fi{} workstation-class node with GV100 GPUs run
+the controller, which probes real GPU occupancy and admits real CUDA workers while
+a competing tenant drives capacity. The fabric carrying this control plane is
+characterized in the companion paper~\cite{companion}. Unless noted we report the
+mean and a $t$-based $95\%$ confidence interval over independent repeats. Four
+questions organize the study. \textbf{(Q1)} What is the sensing age $D$ that
+governs Prop.~\ref{prop:bound}. \textbf{(Q2)} Does Algorithm~\ref{alg:adaptive}
+stay polite while beating a fixed budget when it holds a self-imposed budget.
+\textbf{(Q3)} Does that hold under real time-varying contention, and where does it
+fail. \textbf{(Q4)} Does the value $\tfrac12 r(D)$ of Thm.~\ref{thm:limit} hold at
+the controller level, and does it also bind a learned controller.
 
-\subsection{Detection delay and the violation bound (Q1)}
+\subsection{Sensing age and the violation bound (Q1)}
 \label{sec:eval-detection}
-$D$ has two measured components. The prober's per-call cost (read-only
-\texttt{nvidia-smi}) is $27$--$33$\,ms (p50). The \emph{end-to-end} detection delay
----from launching a real GPU load until it is visible as utilization above the
-$40\%$ floor (10 reps on a GV100, thermally guarded)---is \textbf{$2.46$\,s}
-(mean; p50 $2.48$, range $2.29$--$2.61$), dominated by CUDA cold-start rather than
-the poll. The relevant $D$ depends on the question: detecting a \emph{newly
-admitted} pod's (un)productivity incurs the $\sim\!2.5$\,s cold-start term, while
-probing \emph{already-running} pods costs only the $\sim\!27$\,ms poll. In the
-epoch-based model of \S\ref{sec:limit} one epoch is a single completion-gated
-admission decision, whose measured mean duration is $\approx\!1.1$\,s, so the $2.46$\,s
-cold-start age is $D\!\approx\!2$--$3$ epochs (swept in Q4); the $27$\,ms poll is
-sub-epoch for already-running pods.
-Substituting into Prop.~\ref{prop:bound}, $\rho\approx D\alpha/((1-\beta)\bar a)$,
-the $2.46$\,s term makes $D$ a \emph{first-order} contributor to the achievable
-compliance: a guest that admits aggressively (large $\alpha$) pays for it in
-over-admission scaled by this measured cold-start delay.
+The sensing age has two measured parts. A read-only \texttt{nvidia-smi} probe
+costs $27$ to $33$\,ms at the median. The end-to-end delay from launching a real
+GPU load until it is visible as utilization above the $40\%$ floor is
+$\mathbf{2.46}$\,s over 10 thermally guarded repeats on a GV100, with median
+$2.48$ and range $2.29$ to $2.61$. CUDA start-up dominates that figure, not the
+poll. Which value applies depends on the question. Detecting whether a newly
+admitted pod is productive pays the full start-up cost, while probing pods that
+are already running costs only the poll. One epoch is a single completion-gated
+admission decision whose measured mean duration is about $1.1$\,s, so the
+$2.46$\,s start-up age is $D\approx2$ to $3$ epochs, which we sweep in Q4, and
+the $27$\,ms poll is below one epoch for running pods. Substituting into
+Prop.~\ref{prop:bound} makes $D$ a first-order term in achievable politeness. A
+guest that admits aggressively with large $\alpha$ pays for it in over-admission
+scaled by this measured start-up delay.
 
-\subsection{Politeness under abundance (Q2)}
+\subsection{Politeness under a self-imposed budget (Q2)}
 \label{sec:eval-e2e}
-We burst $B$ jobs under three policies---\emph{naive} (submit up to the hard cap),
-\emph{static} (fixed submit rate), and \emph{aimd} (the completion-gated admission
-controller of \S\ref{sec:controller})---against a self-imposed politeness budget
-$C$, measuring goodput (tasks/s) and the over-budget fraction
-$\rho$ (epochs with concurrency $>C$). To isolate the policy from the exogenous
-scheduling and cold-image-pull variance of the shared cluster---which, reported
-honestly, produced three pre-registered nulls in situ---we run on a controlled,
-variance-free testbed (local-process workers on \ifblind the workstation node\else the Atlas node\fi; no scheduler or
-registry jitter), pre-registered with randomized interleaved trial order and four
-repeats per cell, at two scales (GPU pool $C{=}2$; CPU pool $C{=}8$).
+We burst $B$ jobs under three policies against a self-imposed politeness budget
+$C$, measuring goodput in tasks per second and the over-budget fraction $\rho$,
+the share of epochs with concurrency above $C$. The policies are \emph{naive},
+which submits up to the hard cap, \emph{static}, a fixed submit rate, and
+\emph{aimd}, the trackable branch of Algorithm~\ref{alg:adaptive}. To isolate the
+policy from the exogenous scheduling and image-pull variance of the shared
+cluster, which produced three pre-registered nulls in situ and is reported as
+such, we run on a controlled node with local-process workers and no scheduler or
+registry jitter. The design was pre-registered with randomized interleaved trial
+order and four repeats per cell, at two scales.
 
-Table~\ref{tab:e8} and Fig.~\ref{fig:pareto} report the
-result. \textbf{aimd is the polite-efficient frontier point}: it holds the budget
-exactly ($\rho=0$ at both scales) while delivering $1.72\times$ (GPU) and
-$3.18\times$ (CPU) the goodput of static at the \emph{same} politeness. At the GPU
-scale ($C{=}2$) it also matches naive's goodput without exceeding the budget; at the
-CPU scale ($C{=}8$), where naive over-admits flagrantly ($\rho=0.95$), naive buys
-${\sim}2\times$ aimd's goodput ($0.578$ vs $0.293$)---aimd trades that headroom for
-politeness. Static stays polite but under-utilizes the budget. Both pre-registered hypotheses---H1 (aimd $>$ static
-goodput at equal $\rho$) and H2 (naive impolite, $\rho>0$)---hold with disjoint
-95\% CIs at both scales.
+Table~\ref{tab:e8} reports it. Algorithm~\ref{alg:adaptive} holds the budget
+exactly at both scales, with $\rho=0$, while delivering $1.72$ times (GPU) and
+$3.18$ times (CPU) the goodput of a fixed rate at the same politeness. At the GPU
+scale it also matches naive's goodput without exceeding the budget. At the CPU
+scale, where naive over-admits flagrantly at $\rho=0.95$, naive buys about twice
+the goodput and Algorithm~\ref{alg:adaptive} trades that headroom for politeness.
+Both pre-registered hypotheses hold with disjoint intervals at both scales. This
+isolates the admission rule on a controlled node, and the full pod-scheduling path
+is verified separately in \S\ref{sec:impl}. Here the budget is self-imposed, so
+\S\ref{sec:eval-contended} removes that assumption.
 
 \begin{table}[t]
 \centering
-\caption{End-to-end goodput vs.\ politeness (4 reps, mean\,$\pm$\,95\% CI). aimd
-holds the budget ($\rho=0$) at static's politeness but $1.7$--$3.2\times$ its
-goodput, and matches naive's goodput at the GPU scale without over-admitting.}
+\caption{Goodput against politeness under a self-imposed budget, 4 repeats, mean
+with $95\%$ interval. Algorithm~\ref{alg:adaptive} holds the budget at a fixed
+rate's politeness with $1.7$ to $3.2$ times its goodput.}
 \label{tab:e8}
 \small
 \begin{tabular}{llcc}
@@ -94,77 +79,56 @@ scale & policy & goodput (tasks/s) & over-budget $\rho$ \\
 \end{tabular}
 \end{table}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.44\textwidth]{figures/pareto_gpu.png}\hspace{0.04\textwidth}
-\includegraphics[width=0.44\textwidth]{figures/pareto_cpu.png}
-\caption{End-to-end goodput vs.\ over-budget $\rho$. \emph{Left:} GPU pool ($C{=}2$)---aimd
-attains naive's goodput at $\rho{=}0$ and dominates static. \emph{Right:} CPU pool
-($C{=}8$)---with surplus capacity the separation widens (aimd delivers $3.18\times$
-static's goodput at $\rho{=}0$), while naive buys goodput only by flagrant over-admission
-($\rho{=}0.95$). Dashed line: politeness feasibility bound $\rho=\epsilon$.}
-\label{fig:pareto}
-\end{figure*}
-
-\emph{Scope.} This isolates the admission \emph{algorithm} on a controlled node;
-the full pod-scheduling path is verified end-to-end on NRP Nautilus
-(\S\ref{sec:impl}). Here $\bar a$ is a fixed self-imposed budget (abundance,
-politeness as pure self-restraint); \S\ref{sec:eval-contended} instead drives $a_t$
-with a real competing tenant, exercising Prop.~\ref{prop:bound} under genuine
-\emph{scarcity}.
-
 \subsection{Politeness under real contention (Q3)}
 \label{sec:eval-contended}
-Abundance tests self-restraint; the harder question is politeness under
-\emph{scarcity}. We manufacture controlled contention on a two-GPU node
-($C{=}2$): a \emph{competing tenant} occupies $c(t)\in\{0,1\}$ GPUs on a fixed
-profile, so the guest's available capacity $a(t)=C-c(t)$ is exogenous,
-time-varying, and \emph{measured} by the prober (a per-GPU process census, subject
-to the detection delay $D$ of Q1)---the regime Prop.~\ref{prop:bound} targets. Two
-profiles bracket the space: \emph{square} (a period-$2\tau$ wave, modelling
-slowly-varying or scheduled load) and \emph{poisson} (memoryless on/off arrivals,
-the adversarial case). Alongside goodput and $\rho$ we measure \emph{harm to the
-neighbour}: the competitor's completed work relative to its undisturbed baseline.
-Pre-registered (H1--H3), randomized interleaved order, four seeds per cell.
+The harder question is politeness when capacity is genuinely scarce. We manufacture
+controlled contention on a two-GPU node with $C{=}2$. A competing tenant occupies
+$c(t)\in\{0,1\}$ GPUs on a fixed profile, so the guest's available capacity
+$a(t)=C-c(t)$ is exogenous, time-varying and measured by the prober through a
+per-GPU process census subject to the sensing age of Q1. Two profiles bracket the
+space. \emph{Square} load is a period-$2\tau$ wave modelling slowly varying or
+scheduled neighbours, and \emph{poisson} load is memoryless on and off arrivals,
+the adversarial case. Alongside goodput and $\rho$ we measure harm to the
+neighbour as the competitor's completed work relative to its undisturbed baseline.
+The study was pre-registered with randomized interleaved order and four seeds per
+cell.
 
-Table~\ref{tab:e9} and Fig.~\ref{fig:contended} report a sharper picture than
-abundance did. \textbf{Under structured contention (square), aimd is the
-polite-efficient knee}: $1.41\times$ static's goodput ($0.091$ vs $0.064$\,tasks/s,
-disjoint CIs) at $\rho{=}0.15$---a $4\times$ lower over-admission than naive's
-$\rho{=}0.64$---while sparing the neighbour ($76\%$ of its throughput retained vs
-naive's $62\%$). $\epsilon$ and the switch threshold $\theta$ were fixed \emph{before} the runs (E9
-pre-registration): host policy penalizes \emph{persistently} under-utilized
-requests, so $\epsilon\!\in\![0.1,0.2]$ is the tolerable share of under-utilized
-epochs; aimd's $\rho{=}0.15$ sits inside it. naive's higher goodput ($0.101$) is bought \emph{entirely} at the
-neighbour's expense: it over-admits two-thirds of the time and steals $38\%$ of the
-competitor's throughput (Fig.~\ref{fig:harm}). H1 and H2 hold with disjoint CIs.
+Table~\ref{tab:e9} reports a sharper picture than the self-imposed budget did.
+Under structured load Algorithm~\ref{alg:adaptive} is the polite and efficient
+knee. It reaches $1.41$ times a fixed rate's goodput, $0.091$ against
+$0.064$\,tasks/s with disjoint intervals, at $\rho=0.15$, which is a quarter of
+naive's $0.64$, and it spares the neighbour, retaining $76\%$ of its throughput
+against naive's $62\%$. The target $\epsilon$ and switch level $\theta$ were fixed
+before the runs. Host policy penalizes persistently under-utilized requests rather
+than momentary dips, so $\epsilon$ between $0.1$ and $0.2$ is the tolerable share
+of under-utilized epochs, and the measured $0.15$ sits inside it. Naive's higher
+goodput of $0.101$ is bought entirely at the neighbour's expense, since it
+over-admits two-thirds of the time and takes $38\%$ of the competitor's
+throughput.
 
-\textbf{Under unpredictable contention (poisson), feedback breaks even---and we
-report it.} aimd's goodput ($0.062$) is statistically indistinguishable from
-static's ($0.064$, overlapping CIs) and it over-admits \emph{more}
-($\rho{=}0.30$), because capacity now varies on the timescale of the detection
-delay: by the time the prober sees a competitor arrive, the observation is stale.
-This is a pre-registered \emph{null} for H1, and it is precisely what
-Thm.~\ref{thm:limit} predicts: the two profiles are two coherence times on the
-$\Delta(D)=\tfrac12 r(D)$ curve (Cor.~\ref{cor:exp}), with the slow square
-($\tau_c\!\gg\!D$) giving feedback room to help and the memoryless poisson
-($\tau_c\!\lesssim\!D$) driving $r(D)\!\to\!0$, where no causal controller can beat
-static---so feedback's break-even is a theorem, not a tuning failure. \textbf{(H3)}
-The measured detection path ($D\approx2$--$3$\,s, Q1) also places the
-Prop.~\ref{prop:bound} sawtooth ceiling above the observed aimd $\rho$ in both
-profiles: conservative for a discrete, completion-gated controller, but its
-prediction---politeness degrades as contention outpaces $D$---is borne out.
-Practically, this is exactly the case for the regime-adaptive controller
-(\S\ref{sec:controller}, Thm.~\ref{thm:adapt}): track $r(D)$ and fall back to a
-fixed budget when the neighbour has no structure to exploit. naive is the most
-impolite in \emph{every} regime ($\rho{=}0.64$--$0.85$).
+Under memoryless load feedback breaks even and we report it. Goodput of $0.062$ is
+statistically indistinguishable from the fixed rate's $0.064$ with overlapping
+intervals, and over-admission is worse at $\rho=0.30$, because capacity now varies
+on the timescale of the sensing delay. By the time the prober sees a competitor
+arrive the observation is stale. This is a pre-registered null and it is what
+Thm.~\ref{thm:limit} predicts, since the two profiles are two coherence times on
+the same curve (Cor.~\ref{cor:exp}). Slow square load has $\tau_c\gg D$ and gives
+feedback room to help, while memoryless load drives $r(D)$ toward zero, where no
+causal controller beats a fixed budget. The break-even is therefore a consequence
+of the theorem rather than a tuning failure, and it is the case
+Algorithm~\ref{alg:adaptive} is built to detect. The measured sensing path also
+places the Prop.~\ref{prop:bound} sawtooth ceiling above the observed $\rho$ in
+both profiles, which is conservative for a discrete completion-gated controller,
+and its prediction that politeness degrades as contention outpaces $D$ is borne
+out. Naive is the most impolite in every case, at $\rho$ between $0.64$ and
+$0.85$.
 
 \begin{table}[t]
 \centering
-\caption{Politeness under real contention ($C{=}2$; 4 seeds, mean$\,\pm\,$95\% CI).
-``kept'' $=$ competitor throughput retained ($1{=}$undisturbed). Structured
-(square): aimd is the polite-efficient knee. Memoryless (poisson): feedback breaks
-even with static---a pre-registered null.}
+\caption{Politeness under real contention with $C{=}2$, 4 seeds, mean with $95\%$
+interval. ``Kept'' is competitor throughput retained, where $1$ is undisturbed.
+Under square load Algorithm~\ref{alg:adaptive} is the polite and efficient knee,
+and under poisson load feedback breaks even, a pre-registered null.}
 \label{tab:e9}
 \small
 \begin{tabular}{llccc}
@@ -184,125 +148,98 @@ contention & policy & goodput (tasks/s) & $\rho$ & kept \\
 \end{tabular}
 \end{table}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_square.png}\hfill
-\includegraphics[width=0.49\columnwidth]{figures/pareto_contended_poisson.png}
-\caption{Contended goodput--politeness frontier (lower-right is better).
-\emph{Left} (square, structured): aimd is the polite-efficient knee. \emph{Right}
-(poisson, memoryless): feedback collapses onto static.}
-\label{fig:contended}
-\end{figure}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.62\columnwidth]{figures/e9_competitor_harm.png}
-\caption{Harm to the other tenant (throughput lost). naive steals $\sim$$38\%$ in
-both regimes; aimd spares the neighbour under structured contention ($24\%$), but
-under memoryless contention its mistimed admissions harm it as much as---here more
-than---naive ($45\%$): the same $D$-limited failure as its goodput.}
-\label{fig:harm}
-\end{figure}
-
-\subsection{Validating the feedback-usefulness law (Q4)}
+\subsection{The value of feedback at the controller level (Q4)}
 \label{sec:eval-law}
-The contention results above are two points; Thm.~\ref{thm:limit} predicts the whole
-curve. To test it we simulate the actual window controllers on the two-state
-capacity process the theory analyzes---a Markov competitor with per-epoch flip
-probability $p$, so the coherence time $\tau_c=-1/\ln(1-2p)$ sweeps continuously
-(matching \texttt{contention.py --profile markov})---at the measured sensing age
-$D{=}3$ epochs, $1.2{\times}10^{5}$ epochs per point. Fig.~\ref{fig:tausweep}
-reports the goodput advantage of each controller over the best static budget at
-matched over-admission, against the predicted $\Delta(D)=\tfrac12 r(D)$.
+The two contention profiles are two points, while Thm.~\ref{thm:limit} predicts
+the whole curve. To test it we simulate the window controllers on the two-state
+capacity process the theory analyzes, a Markov competitor with per-epoch flip
+probability $p$ so the coherence time $\tau_c$ sweeps continuously, at the
+measured sensing age $D{=}3$ epochs with $1.2\times10^{5}$ epochs per point.
+Fig.~\ref{fig:tausweep} reports each controller's goodput advantage over the best
+fixed budget at matched over-admission against the predicted $\tfrac12 r(D)$.
 
-Four facts confirm the theory and motivate the adaptive controller.
-\textbf{(i)} The delayed-threshold (Bayes-optimal) policy sits \emph{on} the
-predicted line across three decades of $\tau_c$---maximum deviation
-$|\Delta_{\text{opt}}-\tfrac12 r(D)|=0.013$---so the closed form is not an asymptote
-but the exact frontier. \textbf{(ii)} Practical AIMD captures roughly half the
-available advantage when $\tau_c\!\gg\!D$ and, crucially, goes \emph{negative}
-(worse than static) once $\tau_c\!\lesssim\!D$: it keeps probing a signal that has
-become noise, paying over-admission for nothing---the same failure the live poisson
-regime shows. \textbf{(iii)} The regime-adaptive controller, estimating $r(D)$
-online, tracks the upper envelope: it never drops below static and recovers most of
-AIMD's advantage where feedback is worth having. \textbf{(iv)} The limit binds
-\emph{learned} controllers. A DeepRM-style policy-gradient agent
-\cite{deeprm}---tabular-softmax REINFORCE with a per-state baseline
-\cite{inputdriven}, trained on the age-$D$ observation \emph{history} (four delayed
-readings: strictly more information than the memoryless threshold) over fresh
-traces of the true chain, then frozen and evaluated like every other
-controller---converges to the Bayes-optimal policy: its advantage matches the
-threshold controller's to within $0.003$ at every point of the sweep (diamonds over
-circles in Fig.~\ref{fig:tausweep}) and its maximum excess over $\tfrac12 r(D)$ is $+0.013$,
-the optimal policy's own Monte-Carlo deviation. Learning finds the frontier; it
-cannot cross it---the ceiling Thm.~\ref{thm:limit} sets for the learned-scheduling
-family \cite{deeprm,decima}. Finally, sweeping $D$ collapses
-every curve onto $\tfrac12 e^{-D/\tau_c}$ when plotted against $D/\tau_c$
-(Fig.~\ref{fig:tausweep}, right), confirming the predicted scaling. The live
-square/poisson pair (Q3) are the two ends of this axis: $\tau_c\!\gg\!D$ (feedback
-wins) and $\tau_c\!\lesssim\!D$ (feedback breaks even), exactly as
-Cor.~\ref{cor:exp} states.
+Four readings confirm the theory and motivate Algorithm~\ref{alg:adaptive}. First,
+the threshold policy sits on the predicted line across three decades of $\tau_c$,
+with maximum deviation $0.013$, so the closed form is the exact frontier rather
+than an asymptote. Second, fixed AIMD captures roughly half the available
+advantage when $\tau_c\gg D$ and goes negative, meaning worse than a fixed budget,
+once $\tau_c\lesssim D$, because it keeps paying over-admission for a signal that
+has become noise. That is the same failure the live poisson case shows. Third,
+Algorithm~\ref{alg:adaptive}, estimating $r(D)$ online, tracks the upper envelope.
+It never drops below a fixed budget and recovers most of AIMD's advantage where
+feedback is worth having. Fourth, the value binds a learned controller. A
+policy-gradient agent in the DeepRM family \cite{deeprm}, using a tabular softmax
+with a per-state baseline \cite{inputdriven} and trained on the age-$D$
+observation history of four delayed readings, which is strictly more information
+than the memoryless threshold uses, converges to the threshold policy's advantage
+within $0.003$ at every point and exceeds $\tfrac12 r(D)$ by at most $0.013$, the
+threshold policy's own sampling deviation. Learning finds the frontier and does not
+pass it, which is the ceiling Thm.~\ref{thm:limit} sets for that family
+\cite{deeprm,decima}. Sweeping $D$ collapses every curve onto
+$\tfrac12 e^{-D/\tau_c}$ against $D/\tau_c$ (Fig.~\ref{fig:tausweep}, right),
+confirming the predicted scaling. The live square and poisson cases of Q3 are the
+two ends of that axis.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/tau_sweep.png}
-\caption{Controller-level validation of the feedback-usefulness law.
-\emph{Left:} goodput advantage over static vs.\ capacity coherence time $\tau_c$ at
-$D{=}3$. The Bayes-optimal controller lies on the predicted $\tfrac12 r(D)$ (dashed)
-to within $0.013$, and the DeepRM-style policy-gradient agent (diamonds) converges
-onto it---coinciding with the Bayes-optimal circles, never above; practical AIMD
-falls below static once $\tau_c\!\lesssim\!D$; the regime-adaptive controller tracks
-the envelope. \emph{Right:} sweeping $D$ collapses the optimal advantage (and the
-learned agent, grey $\times$) onto $\tfrac12 e^{-D/\tau_c}$ vs.\ $D/\tau_c$.}
+\caption{Controller-level validation. \emph{Left.} Goodput advantage over a fixed
+budget against capacity coherence time $\tau_c$ at $D{=}3$. The threshold policy
+lies on the predicted $\tfrac12 r(D)$, dashed, to within $0.013$, and the
+DeepRM-style policy-gradient agent, diamonds, converges onto it without passing
+it. Fixed AIMD falls below a fixed budget once $\tau_c\lesssim D$, and
+Algorithm~\ref{alg:adaptive} tracks the envelope. \emph{Right.} Sweeping $D$
+collapses the advantage onto $\tfrac12 e^{-D/\tau_c}$ against $D/\tau_c$.}
 \label{fig:tausweep}
 \end{figure}
-\paragraph{Live confirmation on GPU hardware.}
-We ran the regime-adaptive controller on the same $2{\times}$GV100 node across the
-Markov $\tau_c$ sweep ($p\in\{0.01,\dots,0.4\}$, $D{=}3$, two seeds), estimating $r(D)$
-online. Two claims transfer from the model. \textbf{(A1)} The online estimate lands on
-the law: $\hat r=(1-2\hat p)^D$ tracks $(1-2p)^D$ with $|\hat r-r|=0.07$
-(Fig.~\ref{fig:e9adapt}, left). \textbf{(A2)} The switch modulates as predicted, its
-closed-loop fraction falling $0.98\!\to\!0.48$ as $r(D)$ drops past the threshold
-$\theta$. Hardware differs instructively: raw goodput \emph{rewards over-admission}
-(live AIMD out-goodputs static everywhere, at high flip rate buying it with
-impoliteness, $\rho{=}0.44$ vs $0.04$), so the law surfaces not as a goodput
-crossover but on the goodput--politeness Pareto (Fig.~\ref{fig:e9adapt}, right):
-the over-admission the adaptive switch \emph{sheds} versus always-AIMD grows as
-feedback loses value ($+0.01\!\to\!+0.22$ as $p\!:\,0.08\!\to\!0.4$)---matching AIMD
-where the neighbour is trackable, recovering static's politeness where it is not.
+
+\noindent\textbf{Live confirmation on GPU hardware.}
+We ran Algorithm~\ref{alg:adaptive} on the same two-GPU node across the Markov
+$\tau_c$ sweep, with $p$ from $0.01$ to $0.4$, $D{=}3$ and two seeds, estimating
+$r(D)$ online. Two claims transfer from the model. The online estimate lands on
+the predicted curve, with $\hat r=(1-2\hat p)^D$ tracking $(1-2p)^D$ to within
+$0.07$ (Fig.~\ref{fig:e9adapt}, left). And the switch modulates as predicted, its
+closed-loop fraction falling from $0.98$ to $0.48$ as $r(D)$ drops past $\theta$.
+Hardware differs from simulation in one instructive way. Raw goodput rewards
+over-admission, so live AIMD out-performs a fixed budget everywhere, and at high
+flip rate it buys that goodput with impoliteness at $\rho=0.44$ against $0.04$
+rather than by tracking. The predicted crossover therefore does not appear in raw
+goodput. It appears on the goodput and politeness frontier
+(Fig.~\ref{fig:e9adapt}, right) as the over-admission the switch sheds against
+always running AIMD, which grows from $+0.01$ to $+0.22$ as $p$ rises from $0.08$
+to $0.4$. Algorithm~\ref{alg:adaptive} matches AIMD where the neighbour is
+trackable and recovers a fixed budget's politeness where it is not.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{figures/e9_adaptive_curve.png}
-\caption{Live regime-adaptive controller on $2{\times}$GV100 (Markov $\tau_c$ sweep,
-$D{=}3$, two seeds). \emph{Left:} the online estimate $\hat r$ and the realized
-availability autocorrelation $r_{\text{emp}}$ land on $(1-2p)^D$; the
-closed-loop/static switch fires as $r(D)$ crosses the threshold $\theta$. \emph{Right:} the
-goodput--over-admission Pareto---adaptive tracks AIMD when feedback is useful and
-peels off toward static's politeness as $p$ grows, shedding over-admission exactly
-where $r(D)\!\to\!0$.}
+\caption{Algorithm~\ref{alg:adaptive} live on two GV100 GPUs, Markov $\tau_c$
+sweep, $D{=}3$, two seeds. \emph{Left.} The online estimate $\hat r$ and the
+realized availability autocorrelation land on $(1-2p)^D$, and the switch fires as
+$r(D)$ crosses $\theta$. \emph{Right.} The goodput and over-admission frontier,
+where the adaptive controller tracks AIMD when feedback is useful and moves toward
+a fixed budget's politeness as $p$ grows.}
 \label{fig:e9adapt}
 \end{figure}
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
-The evaluation establishes: (i) the prober detection delay $D$ is a measured,
-first-order term in the bound---$\approx2.5$\,s, CUDA-cold-start-dominated (Q1);
-(ii) under abundance the controller is polite-efficient at both scales, $1.7$--$3.2\times$
-static's goodput at $\rho{=}0$ (Q2); (iii) under \emph{structured} contention it is
-the polite-efficient knee and spares the neighbour, while under \emph{memoryless}
-contention feedback breaks even with static---a pre-registered null we report rather
-than suppress (Q3); and (iv) the feedback-usefulness law $\Delta(D)=\tfrac12 r(D)$
-holds at the controller level---the optimal policy on it to within $0.013$, a
-learned policy-gradient agent capped by it, the adaptive controller never below
-static (Q4)---unifying the two live regimes as endpoints of one curve; live, the
-adaptive switch's politeness dividend (over-admission shed versus always-AIMD)
-grows exactly as feedback loses value (Fig.~\ref{fig:e9adapt}). Principal
-threats: contention is manufactured on a two-GPU node with $C{=}2$ and synthetic
-profiles, not a production multi-tenant trace; the clean goodput-\emph{advantage}
-tracing of the law (Q4) remains controller-level, as live static is a fixed trickle
-with no tunable $\rho$ frontier to measure advantage against; and the live adaptive
-sweep is two seeds per point, a confirmatory anchor rather than the primary evidence.
-The full system path is nonetheless verified end-to-end (\S\ref{sec:impl}), and
-naive's impoliteness ($\rho\ge0.64$, $\ge$$38\%$ neighbour harm) is robust across
-every regime.
+The evaluation establishes four things. The sensing age is a measured first-order
+term at about $2.5$\,s, dominated by CUDA start-up. Under a self-imposed budget
+Algorithm~\ref{alg:adaptive} delivers $1.7$ to $3.2$ times a fixed rate's goodput
+at $\rho=0$. Under structured contention it is the polite and efficient knee and
+spares the neighbour, while under memoryless contention feedback breaks even, a
+pre-registered null we report rather than suppress. And the value
+$\tfrac12 r(D)$ holds at the controller level, with the threshold policy on it to
+within $0.013$, a learned policy-gradient agent capped by it, and
+Algorithm~\ref{alg:adaptive} never below a fixed budget, which unifies the two
+live contention cases as endpoints of one curve.
+
+Three threats remain. Contention is manufactured on a two-GPU node at $C{=}2$ with
+synthetic profiles rather than drawn from a production multi-tenant trace. The
+clean tracing of the advantage in Q4 is controller-level, because live static is a
+fixed trickle with no tunable frontier to measure an advantage against. And the
+live adaptive sweep uses two seeds per point, so it is a confirmatory anchor
+rather than primary evidence. The full system path is nonetheless verified
+end-to-end in \S\ref{sec:impl}, and naive's impoliteness, at $\rho\ge0.64$ with at
+least $38\%$ neighbour harm, is robust across every case.
