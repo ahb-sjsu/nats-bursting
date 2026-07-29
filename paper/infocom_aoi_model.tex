@@ -45,15 +45,18 @@ $w_t\le K$ and the utilization floor has sensing age $D\ge\tau_{\mathrm{start}}$
 for the signal that reports whether an admission was productive.
 \end{proposition}
 \begin{proof}
-Reducing that age below $\tau_{\mathrm{start}}$ requires one of three things.
-Observing the outcome of work not yet launched is impossible. Launching $m>1$
-speculative replicas and keeping the first to become productive consumes $m$ slots
-against the cap and leaves $m-1$ admissions that perform no useful work, so it
-violates the floor whenever $m$ exceeds the useful window. Holding a resident
-probe that is idle also violates the floor, and a resident probe doing real work
-consumes a cap slot while still reporting its own start-up at
-$\tau_{\mathrm{start}}$. Every route is therefore either infeasible or
-non-compliant.
+Fix an admission. Its productivity is not observable before
+$\tau_{\mathrm{start}}$ by definition, so the only way to act on fresher
+information is to observe some \emph{other} admission instead. Launching $m>1$
+speculative replicas and keeping whichever becomes productive first does exactly
+that, and it consumes $m$ slots against the cap of \eqref{eq:polite}. If the losers
+are cancelled they performed no useful work and breach the floor. If they are kept
+running they respect the floor while occupying cap slots the guest wanted for real
+work, and they still reveal no individual admission's outcome sooner than
+$\tau_{\mathrm{start}}$. A resident probe held idle breaches the floor directly,
+and one doing real work occupies a cap slot while reporting its own start-up at
+$\tau_{\mathrm{start}}$. Every route is therefore infeasible, non-compliant, or
+leaves the age unchanged.
 \end{proof}
 
 Proposition~\ref{prop:irreducible} is what separates this setting from

@@ -52,7 +52,7 @@ We turn the result into two algorithms. The first estimates the correlation from
 its own probe stream and switches between feedback and a fixed budget, which
 holds it at or above the better of the two everywhere. The second admits work
 across several contended units by treating each unit as a separate binary
-decision, which extends the result beyond a single unit.
+decision, which covers capacities beyond a single unit.
 Short controlled experiments support both. On a two-GPU node driven by a real
 competing tenant, feedback admission under structured neighbour load delivers
 1.41 times the goodput of a fixed budget while over-admitting a quarter as often
@@ -96,9 +96,14 @@ needs is measurable from the probe stream the controller already collects, so a
 guest can estimate it online and act on the estimate. Algorithm \ref{alg:adaptive}
 does this with one scalar of state, switching between a feedback loop and a fixed
 budget, and it never falls below the better of the two by more than a bounded
-amount. Algorithm \ref{alg:layered} admits work across several contended units by
-running one binary decision per unit, which lifts the single-unit ceiling to any
-integer capacity.
+amount. That amount is sharp. We give matching upper and lower bounds on how fast
+any rule can learn which branch to take, and together they show that staleness
+costs only the square root of the sensing age in learning even though it costs
+exponentially in the ceiling itself. The hardest predictability level to sit at is
+neither high nor low but a specific value in between, which is exactly where a
+controller holding no state has no good default. Algorithm \ref{alg:layered}
+admits work across several contended units by running one binary decision per
+unit, which lifts the single-unit ceiling to any integer capacity.
 
 Our third contribution is measurement rather than proof. The sensing delay is a
 physical quantity and we measure it at roughly 2.5 seconds on real hardware,
@@ -247,7 +252,10 @@ Two algorithms follow from that form. One measures the correlation online and
 switches between feedback and a fixed budget, staying at or above the better of
 the two. The other runs a binary decision per contended unit and so covers
 capacities beyond a single unit. Both carry the safety property that the pod cap
-is never exceeded, which holds deterministically rather than in expectation.
+is never exceeded, which holds deterministically rather than in expectation. The
+first is also minimax optimal in its learning rate, matched above and below, and
+that rate grows only with the square root of the sensing age even though the
+ceiling it chases decays exponentially in the same quantity.
 
 Short controlled experiments support the result on both sides of the crossover.
 Under structured neighbour load, feedback admission reaches 1.41 times a fixed
