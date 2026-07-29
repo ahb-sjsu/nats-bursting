@@ -214,25 +214,40 @@ $\bar\rho\triangleq\mathbb{E}[(w_t-a_t)^{+}]$. With
 $x^u_t\triangleq\mathbf1[a_t\ge u]$ and $\pi_u\triangleq\Pr[x^u_t=1]$, both
 objectives decompose additively over units, since
 $\min(w_t,a_t)=\sum_{u\ge1}\mathbf1[w_t\ge u]\,x^u_t$ and
-$(w_t-a_t)^{+}=\sum_{u\ge1}\mathbf1[w_t\ge u](1-x^u_t)$. The age-$D$ optimum is
-the delayed-capacity window $w_t=a_{t-D}$, and its total goodput advantage over
-the best comonotone fixed budget at matched surplus is
+$(w_t-a_t)^{+}=\sum_{u\ge1}\mathbf1[w_t\ge u](1-x^u_t)$. The age-$D$ window
+$w_t=a_{t-D}$ maximizes the advantage layer by layer, and its total goodput
+advantage over the best comonotone fixed budget at matched surplus obeys
 \begin{equation}\label{eq:adv-multi}
-\Delta(D)=\sum_{u=1}^{K}\pi_u\,r_u(D),\qquad r_u(D)=\mathrm{corr}\big(x^u_t,x^u_{t-D}\big),
+\Delta(D)\ \le\ \sum_{u=1}^{K}\pi_u\,r_u(D),\qquad r_u(D)=\mathrm{corr}\big(x^u_t,x^u_{t-D}\big),
 \end{equation}
-which for a single symmetric contended unit with $\pi_u=\tfrac12$ recovers
-$\Delta=\tfrac12 r(D)$.
+with equality if and only if $\pi_u\big(1-r_u(D)\big)$ is non-increasing in $u$.
+For a single symmetric contended unit with $\pi_u=\tfrac12$ this recovers
+$\Delta=\tfrac12 r(D)$, and equality also holds whenever $r_u(D)$ does not vary
+with $u$.
 \end{proposition}
 \begin{proof}
 The two identities are the layer-cake expansions of $\min$ and $(\cdot)^+$.
-Setting $w_t=a_{t-D}$ makes $\mathbf1[w_t\ge u]=x^u_{t-D}$, the
-Thm.~\ref{thm:limit} threshold policy applied independently to each layer, and the
-layers' nesting $x^1_t\ge x^2_t\ge\cdots$ is inherited by the observations, so the
+Setting $w_t=a_{t-D}$ makes $\mathbf1[w_t\ge u]=x^u_{t-D}$, which is the
+Thm.~\ref{thm:limit} threshold policy applied to each layer, and the layers'
+nesting $x^1_t\ge x^2_t\ge\cdots$ is inherited by the observations, so the
 per-unit thresholds compose into a valid scalar window. For an asymmetric layer
-with $\Pr[x^u{=}1]=\pi_u$ the same linear program as Thm.~\ref{thm:limit} gives
-per-unit advantage $\mathrm{Cov}(x^u_t,x^u_{t-D})/(1-\pi_u)=\pi_u r_u(D)$ over the
-fixed policy matching its marginal, and additivity of goodput and surplus sums
-these to \eqref{eq:adv-multi}.
+with $\Pr[x^u{=}1]=\pi_u$, writing $P^u_{11}=\Pr[x^u_t{=}1,x^u_{t-D}{=}1]$, the
+same linear program as Thm.~\ref{thm:limit} gives per-unit advantage
+$\mathrm{Cov}(x^u_t,x^u_{t-D})/(1-\pi_u)=\pi_u r_u(D)$ over the fixed policy
+matching that layer's surplus, and additivity of goodput and surplus sums these
+to the right-hand side of \eqref{eq:adv-multi}.
+
+The bound is an inequality rather than an identity because the summed comparator
+need not be realizable. Matching layer $u$'s surplus requires the fixed policy to
+admit layer $u$ with probability
+$\theta^u=\big(\pi_u-P^u_{11}\big)/(1-\pi_u)=\pi_u\big(1-r_u(D)\big)$, while any
+scalar window satisfies $\{w_t\ge u{+}1\}\subseteq\{w_t\ge u\}$ and therefore
+forces $\theta^u$ to be non-increasing in $u$. Since $\pi_u$ decreases in $u$ but
+$1-r_u(D)$ may increase, the per-layer matched comparator is a feasible window
+exactly when $\pi_u(1-r_u(D))$ is non-increasing, which gives the stated equality
+condition. When it fails, no single fixed budget matches every layer's surplus at
+once, the true comparator is strictly better than the layerwise one, and the sum
+overstates the advantage.
 \end{proof}
 
 At $C{=}2$ only the contended layer fluctuates, with $\pi_1{=}1$, $r_1{=}0$ and
@@ -328,8 +343,16 @@ fixed budget forfeits $\Delta$ tending to $\tfrac12$.
 Proposition~\ref{prop:layercake} lifts admission past a single unit.
 Algorithm~\ref{alg:layered} runs one binary decision per contended layer and adds
 them, which is a valid scalar window because the layers are nested, and its
-advantage is the per-unit sum \eqref{eq:adv-multi}. It reduces to
-Algorithm~\ref{alg:adaptive} when only one layer fluctuates.
+advantage is bounded by the per-unit sum \eqref{eq:adv-multi} and attains it under
+the monotonicity condition there. It reduces to Algorithm~\ref{alg:adaptive} when
+only one layer fluctuates. The condition is worth stating operationally. Equality
+needs $\pi_u(1-r_u(D))$ non-increasing in $u$, so it holds when every layer shares
+one correlation, as it does for a birth-death capacity process with a
+height-independent flip rate, and it can fail when the higher layers are markedly
+less predictable than the lower ones. Algorithm~\ref{alg:layered} is correct and
+safe either way, since Prop.~\ref{prop:safety} applies per layer. What the
+condition governs is only whether the achieved advantage reaches the summed
+ceiling.
 
 \begin{algorithm}[t]
 \caption{Layered admission for several contended units}
