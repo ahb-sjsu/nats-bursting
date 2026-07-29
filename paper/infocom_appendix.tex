@@ -44,13 +44,18 @@ takes its supremum over a larger field.
 For the symmetric two-state model $\beta(D)=\tfrac12|1-2q(D)|=\tfrac12 r(D)$ by a
 standard mixing identity~\cite{bradley2005,lpw}, since the Markov property reduces
 $\mathcal F_{\le t-D}$ to $a_{t-D}$ and the conditional-to-marginal total variation
-is $|\tfrac12-q(D)|$ from either state. So Thm.~\ref{thm:beta} reproduces
-Thm.~\ref{thm:limit} up to the objective scale $\Omega$, which is the sense in
-which the binary law is tight.
+is $|\tfrac12-q(D)|$ from either state. So Thm.~\ref{thm:beta} recovers the binary rate up to the objective scale
+$\Omega$. One limitation should be stated plainly. Thm.~\ref{thm:beta} bounds
+$V^\star(D)-V_{\mathrm{stat}}$ for a \emph{scalar} objective such as a Lagrangian,
+whereas Thm.~\ref{thm:limit} is a statement about the constrained frontier at every
+matched $\rho$. Transferring a support-function bound to the constrained frontier
+needs a duality argument we do not give, so this appendix is a scalarized
+value-of-information result that agrees with the binary law rather than a
+generalization of it.
 
-\section{The Learning Rate of Algorithm~\ref{alg:adaptive}}
+\section{The Branch-Decision Rate}
 \label{app:regret}
-We give both directions of Thm.~\ref{thm:adapt}. Observations are delayed but
+We give both directions of Lemma~\ref{thm:adapt}. Observations are delayed but
 clean, so $\hat a_i=a_{i-D}$, and Algorithm~\ref{alg:adaptive} forms
 $\hat p_n=\tfrac1n\sum_{i\le n}\mathbf 1[\hat a_i\neq\hat a_{i-1}]$ and
 $\hat r_n=(1-2\hat p_n)^{D}$.
@@ -75,16 +80,14 @@ Take two processes with flip probabilities $p_\theta\pm\delta/2$. Independence o
 the flip indicators makes the Kullback-Leibler divergence between $n$-sample laws
 $n\delta^{2}/(2\sigma^{2}_\theta)+O(n\delta^{3})$, so no test separates them with
 constant probability unless $n\gtrsim\sigma^{2}_\theta/\delta^{2}$. Their
-correlations differ by $s_\theta\delta$ and the loss is locally \emph{linear} in
-$r-\theta$ at the indifference level, so a rule that cannot distinguish them pays
-$\Omega(L s_\theta\delta)$ on one. Le Cam's two-point
+correlations differ by $s_\theta\delta$, so a rule that cannot distinguish them
+errs by $\Omega(s_\theta\delta)$ in $r$ on one of them. Le Cam's two-point
 argument~\cite{tsybakov} with $\delta=\sigma_\theta/\sqrt N$ matches the upper
-bound. Local linearity pins the exponent at $N^{-1/2}$, where a loss quadratic in
-$r-\theta$ would give $N^{-1}$. The two flip probabilities differ by
+bound. The two flip probabilities differ by
 $O(N^{-1/2})$, so their spectral gaps agree to that order and the pair certifies
 the rate without invoking a class boundary. That matters because $\theta$ is fixed
-by the objective, so on the hard manifold $r(D)=\theta$ the quantities $D$,
-$\gamma_\theta=1-\theta^{1/D}$ and $s_\theta$ are mutually determined. Treating
+by the objective, so on the manifold $r(D)=\theta$ the quantities $D$,
+$\gamma_\theta=1-\theta^{1/D}$ and $s_\theta$ are mutually determined, and treating
 them as free is what yields a spurious $1/\sqrt{\gamma_0 N}$ rate.
 
 \noindent\textbf{Worst switch level.}

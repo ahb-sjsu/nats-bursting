@@ -7,8 +7,17 @@ utilization floor. Time is slotted into control epochs $t\in\mathbb{N}$. Let
 $a_t\in\{0,\dots,C\}$ be the capacity the cluster can productively give the guest
 at epoch $t$. It is set by the other tenants, so it is exogenous, stochastic and
 not directly observable. The guest chooses a window $w_t\in\{0,\dots,K\}$. Useful
-goodput is $G_t=\min(w_t,a_t)$, and the surplus $(w_t-a_t)^{+}$ is over-admitted,
-since those pods sit below the utilization floor and mark the guest impolite.
+goodput is $G_t=\min(w_t,a_t)$ and the surplus $(w_t-a_t)^{+}$ is over-admitted.
+We are deliberately careful about what that surplus costs, because the obvious
+reading is wrong. A pod that requests a GPU when none is allocatable does not run
+at low utilization, it stays pending, so surplus admissions are not per-pod
+utilization violations. Their cost is that a pending claim captures capacity the
+moment the neighbour releases it, and that a guest holding many such claims is
+what fair-use review looks at. We therefore treat $\rho$ as a measure of
+\emph{claims in excess of available capacity} and validate it against the quantity
+it is supposed to proxy, namely the throughput the co-tenant keeps
+(\S\ref{sec:eval-contended}). The tolerance $\epsilon$ is a guest-chosen budget on
+that excess rather than a figure read off the published policy.
 Writing $\rho\triangleq\limsup_T\frac1T\sum_{t<T}\mathbf 1[w_t>a_t]$ for the
 long-run over-admission fraction, the guest solves
 \begin{equation}\label{eq:polite}
@@ -20,7 +29,7 @@ long-run over-admission fraction, the guest solves
 The constraint is two-sided, since the guest must stay below the cap and above the
 floor, which already separates the problem from loss-only congestion control.
 
-\noindent\textbf{The decision-to-effect lag.}
+\noindent\textbf{The information-to-effect lag.}
 Two distinct delays act on this loop and only their sum matters. A decision taken
 at wall-clock time $\tau$ rests on a capacity reading of age
 $D_{\mathrm{obs}}$, and it takes effect at $\tau+D_{\mathrm{act}}$, when the
@@ -31,10 +40,11 @@ capacity at $\tau-D_{\mathrm{obs}}$. Writing
 \begin{equation}\label{eq:Ddef}
 D\ \triangleq\ D_{\mathrm{obs}}+D_{\mathrm{act}}
 \end{equation}
-for that decision-to-effect lag and relabelling $t=\tau+D_{\mathrm{act}}$, the
+for that information-to-effect lag and relabelling $t=\tau+D_{\mathrm{act}}$, the
 admissible policies are exactly the causal functions of $\{a_{s-D}\}_{s\le t}$.
-This is the only sense in which $D$ is used below, and it is the sense the
-measurements report.
+This is the only sense in which $D$ is used below, and it is the sense the measurements
+report. It is not the age of the record at the decision instant, which is only
+$D_{\mathrm{obs}}$.
 
 The distinction matters because the two components differ by two orders of
 magnitude. Polling occupancy of resources already running costs
@@ -52,35 +62,27 @@ than they need and binding to whichever reservation lands first, discarding the
 rest~\cite{sparrow}. Under a one-sided constraint that works. Under the two-sided
 constraint of \eqref{eq:polite} it does not.
 
-\begin{proposition}[The actuation component is irreducible for a compliant guest]
+\begin{remark}[Why the actuation term is hard to remove here]
 \label{prop:irreducible}
-Let $\tau_{\mathrm{start}}$ be the time from admitting a unit of work until it
-occupies the resource. Any policy satisfying both the cap $w_t\le K$ and the
-utilization floor has $D_{\mathrm{act}}\ge\tau_{\mathrm{start}}$, and hence
-$D\ge\tau_{\mathrm{start}}$ by \eqref{eq:Ddef}.
-\end{proposition}
-\begin{proof}
-A decision cannot take effect before the work it admits occupies the
-resource, so $D_{\mathrm{act}}<\tau_{\mathrm{start}}$ requires that some unit
-admitted \emph{earlier} be the one that lands. Launching $m>1$ speculative
-replicas and keeping whichever lands first does exactly that, and it consumes $m$
-slots against the cap of \eqref{eq:polite}. If the losers are cancelled they
-performed no useful work and breach the floor. If they are kept they respect the
-floor while occupying cap slots the guest wanted for real work, so the effective
-window available to the decision shrinks by the same amount it gained in
-freshness. Either way no compliant policy advances the moment at which an
-admission takes effect. Note what is \emph{not} claimed. Observing the neighbour
-is fast, and $D_{\mathrm{obs}}$ is genuinely reducible by better monitoring. It is
-$D_{\mathrm{act}}$ that the policy pins, and by \eqref{eq:Ddef} that is enough.
-\end{proof}
-
-Proposition~\ref{prop:irreducible} is what separates this setting from
-load balancing on stale state, where the classical prescription is to sample few
-and avoid acting greedily on old readings~\cite{mitzenmacher,goel}. Those results
-hold under a one-sided constraint, where a guest that does nothing is compliant.
-Here a guest that holds a slot and does nothing is not, so the technique that
-would shrink the actuation term is the one the policy forbids. Everything that
-follows treats $D$ as given and asks what is achievable at that lag.
+For the controller studied here, where a scale-out decision creates a new CUDA
+worker, the measured information-to-effect lag is about $2.46$\,s
+(\S\ref{sec:eval-detection}) and is dominated by worker start-up. The usual way to
+hide that latency is to keep spare admitted capacity, whether by speculative
+replicas that are later cancelled or by an idle standby, and both consume claims
+against the guest's own window while contributing nothing, which is what the
+guest is trying to avoid. We do \emph{not} claim this is irreducible in general.
+A persistent worker pulling from a queue, pipelined replacement that launches a
+successor while its predecessor still works, or a warm pool all reduce or remove
+the start-up term, at the cost of holding capacity. Which trade is preferable is a
+design question, and the results below take $D$ as measured for this design rather
+than as a universal floor.
+\end{remark}
+What separates this setting from load balancing on stale state, where the classical
+prescription is to sample few and avoid acting greedily on old
+readings~\cite{mitzenmacher,goel}, is that there a guest which does nothing is
+compliant, so holding spare capacity to hide latency is free. Here it is not.
+Everything that follows treats $D$ as measured and asks what is achievable at that
+lag.
 
 \noindent\textbf{The contended unit.}
 Politeness is decided at the margin, so we fix attention on the single contended
@@ -209,7 +211,7 @@ closed form.}
 \label{fig:theory}
 \end{figure}
 
-\begin{corollary}[Impossibility as sensing ages]\label{cor:imp}
+\begin{corollary}[The advantage decays with the lag]\label{cor:imp}
 $\Delta(D)\!\to\!0$ as $r(D)\!\to\!0$. For the symmetric two-state Markov model
 $\Delta(D)=\tfrac12 e^{-D/\tau_c}$, so any causal controller at lag $D$ gains at
 most $\tfrac12 e^{-D/\tau_c}$ over a fixed budget, which is below any tolerance
@@ -252,9 +254,9 @@ normalization is what makes ``advantage over the best fixed budget'' well posed 
 all, and it is the actual technical content of Thm.~\ref{thm:limit}. Second,
 App.~\ref{app:beta} lifts the converse off the binary Markov case to any
 stationary capacity process. Third, and most important for a systems venue,
-Prop.~\ref{prop:irreducible} shows $D$ cannot be engineered away by a compliant
-guest, which is what makes an age-indexed limit the right object here rather than
-a modelling convenience. The exogenous structure also matters. Unlike the
+Rem.~\ref{prop:irreducible} records that the lag in this design is dominated by a
+term the guest cannot remove without holding spare capacity, which is what makes a
+lag-indexed limit the useful object here rather than a modelling convenience. The exogenous structure also matters. Unlike the
 driven-plant setting of networked control, the admission action does not affect
 capacity, and that is what collapses the value of feedback onto a single
 predictability coefficient.
@@ -281,11 +283,13 @@ the two is right depends on a quantity the controller can measure, because $r(D)
 is an autocorrelation of the probe stream the controller already collects.
 
 Algorithm~\ref{alg:adaptive} estimates it online and switches. Beyond the AIMD
-window it holds three scalars, a flip count, a sample count and the previous
-reading, so its state and its per-epoch cost are both constant, and it inherits
+window it holds a flip count, a sample count, the previous reading and a $D$-deep
+ring of past windows, so its state is $O(D)$ and its per-epoch cost is constant.
+The window $w$ is a real-valued target and concurrency is $\lfloor w\rfloor$, which
+matters because $\alpha<1$ otherwise leaves the window unable to move. It inherits
 Prop.~\ref{prop:safety} and therefore never exceeds the pod cap. The counters
 accumulate over the whole run rather than over a sliding window. That matters for
-Thm.~\ref{thm:adapt}, since a fixed window of length $n$ leaves a floor on the
+Lemma~\ref{thm:adapt}, since a fixed window of length $n$ leaves a floor on the
 misclassification probability and the shortfall would then not vanish. A sliding
 window is the right choice under drift and is what \S\ref{sec:eval} uses, at the
 cost of the asymptotic statement.
@@ -298,14 +302,18 @@ cost of the asymptotic statement.
 $\theta$, lag $D$, fixed budget $\bar a$
 \State $w \gets w_{\min}$;\ $F \gets 0$;\ $n \gets 0$;\ $\hat a_{\mathrm{prev}} \gets \bot$
 \For{each control epoch $t$}
-  \State $\hat a \gets$ newest available capacity reading \Comment{age $D$ by \eqref{eq:Ddef}}
+  \State $\hat a \gets$ newest capacity reading \Comment{age $D_{\mathrm{obs}}$; a decision now lands at lag $D$}
   \If{$\hat a_{\mathrm{prev}} \neq \bot$}
     \State $F \gets F + \mathbf 1[\hat a \neq \hat a_{\mathrm{prev}}]$;\ \ $n \gets n+1$
   \EndIf
   \State $\hat a_{\mathrm{prev}} \gets \hat a$
-  \State $\hat p \gets F/\max(n,1)$;\ \ $\hat r \gets (1-2\hat p)^{D}$
+  \State $\hat p \gets \min\!\big(F/\max(n,1),\ \tfrac12\big)$
+    \Comment{clamp, else $(1-2\hat p)^{D}$ turns positive again for even $D$}
+  \State $\hat r \gets (1-2\hat p)^{D}$
   \If{$\hat r > \theta$} \Comment{trackable, so run the loop}
-    \If{$\hat a$ indicates the previous admission over-admitted}
+    \State $w_{\mathrm{eff}} \gets$ window admitted $D$ epochs ago
+      \Comment{from a $D$-deep ring of past windows}
+    \If{$w_{\mathrm{eff}} > \hat a$} \Comment{that admission over-admitted}
       \State $w \gets \max(w_{\min},\ \lceil \beta w \rceil)$
     \Else
       \State $w \gets \min(w + \alpha,\ K)$
@@ -313,7 +321,8 @@ $\theta$, lag $D$, fixed budget $\bar a$
   \Else \Comment{not trackable, so stop paying for the loop}
     \State $w \gets \min(\lfloor \bar a \rfloor,\ K)$
   \EndIf
-  \State admit $w$ pods
+  \State push $w$ onto the ring;\ \ admit $\lfloor w \rfloor$ pods
+    \Comment{$w$ is a real-valued target, concurrency is its floor}
 \EndFor
 \end{algorithmic}
 \end{algorithm}
@@ -360,60 +369,69 @@ $r$ of the difference between the two branches' values at $\theta$, which is
 positive because Prop.~\ref{prop:bound} and Cor.~\ref{cor:imp} cross transversally
 there.
 
-Two comparators must be kept apart. The ceiling $\Delta(D)$ of
-Thm.~\ref{thm:limit} is attained by the threshold policy, not by AIMD, and
-\S\ref{sec:eval-law} measures AIMD capturing roughly half of it. A
-branch-selection rule can therefore never be judged against $\Delta(D)$, since no
-choice between its two branches removes the structural shortfall of the branch it
-picks. The right benchmark is the better of the two branches,
-$V^{\mathrm{br}}\triangleq\max\{V_{\mathrm{aimd}},V_{\mathrm{fixed}}\}$, and that
-is what Thm.~\ref{thm:adapt} bounds.
+What can be said sharply is how hard the \emph{decision} is, separately from what
+either branch is worth. Choosing a branch means deciding on which side of $\theta$
+the quantity $r(D)$ lies, and that is a statistical problem with a rate. We state
+it as such, and are explicit below about the step we do not take.
 
-\begin{theorem}[Matching learning rate]\label{thm:adapt}
-On the local family of symmetric two-state capacity processes at $p_\theta$, the
-minimax \emph{average per-epoch} shortfall against $V^{\mathrm{br}}$ of any causal
-branch-selection rule over horizon $N$ is
+\begin{lemma}[Branch-decision rate]\label{thm:adapt}
+Consider deciding, from $N$ consecutive age-$D$ readings of a symmetric two-state
+capacity process near $p_\theta$, whether $r(D)>\theta$. The local minimax error in
+$r$ of any causal rule is
 \begin{equation}\label{eq:rate}
-\Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
-=\Theta\!\left(L\,\theta\sqrt{\frac{D\log(1/\theta)}{N}}\right),
+\Theta\!\left(\frac{s_\theta\,\sigma_\theta}{\sqrt N}\right),
+\qquad
+s_\theta\sigma_\theta=D\,\theta^{\frac{D-1}{D}}\sqrt{1-\theta^{2/D}},
 \end{equation}
-and Algorithm~\ref{alg:adaptive} attains it. Over switch levels,
+and the estimator inside Algorithm~\ref{alg:adaptive} attains it. Maximizing over
+the switch level,
 \begin{equation}\label{eq:sup}
-\sup_{\theta\in(0,1)}\Theta\!\left(\frac{L\,s_\theta\,\sigma_\theta}{\sqrt N}\right)
-=\Theta\!\left(L\sqrt{\frac{D}{N}}\right),
+\max_{\theta\in(0,1)} s_\theta\sigma_\theta
+=\Big(1-\tfrac1D\Big)^{\frac{D-1}{2}}\sqrt D\ \longrightarrow\ e^{-1/2}\sqrt D,
 \end{equation}
-attained at $\theta=\big((D-1)/D\big)^{D/2}$, which increases to $e^{-1/2}$ as
-$D$ grows. For a fixed process with $r(D)\neq\theta$ the shortfall is $O(1/N)$
-when the counters accumulate over the run.
-\end{theorem}
+attained at $\theta=\big((D-1)/D\big)^{D/2}$, which increases to $e^{-1/2}$. When
+$r(D)$ is bounded away from $\theta$ the error decays as $O(1/N)$ provided the
+counters accumulate over the run.
+\end{lemma}
 \begin{proof}[Proof sketch]
-For the upper bound, Bernstein for the independent flip indicators
-\cite{paulin2015} gives $|\hat p_n-p|=O(\sigma_\theta/\sqrt n)$ with high
-probability, and the delta method through the $s_\theta$-Lipschitz map
-$p\mapsto(1-2p)^D$ gives $|\hat r_n-r(D)|=O(s_\theta\sigma_\theta/\sqrt n)$. A
-wrong branch costs $L$ times the correlation shortfall, and averaging over the
-misclassified prefix gives \eqref{eq:rate}. For the lower bound, take two
-processes whose flip probabilities differ by $\delta$. Their per-sample
-Kullback-Leibler divergence is $\delta^2/(2\sigma_\theta^2)$, so no rule separates
-them over $N$ samples unless $\delta\gtrsim\sigma_\theta/\sqrt N$, which through
-the same map means correlations closer than $s_\theta\sigma_\theta/\sqrt N$ are
-indistinguishable. Le Cam's two-point argument \cite{tsybakov} then forces average
-shortfall $\Omega(L s_\theta\sigma_\theta/\sqrt N)$, and both processes sit inside
-any class with a strictly smaller spectral gap, because their flip probabilities
-differ by $O(N^{-1/2})$. For \eqref{eq:sup}, substituting $u=1-2p$ gives
+Upper bound. Bernstein for the independent flip indicators \cite{paulin2015} gives
+$|\hat p_n-p|=O(\sigma_\theta/\sqrt n)$ with high probability, and the delta method
+through $p\mapsto(1-2p)^D$, whose derivative at $p_\theta$ is $s_\theta$, gives
+$|\hat r_n-r(D)|=O(s_\theta\sigma_\theta/\sqrt n)$. Lower bound. Take two processes
+whose flip probabilities differ by $\delta$. Their per-sample Kullback-Leibler
+divergence is $\delta^2/(2\sigma_\theta^2)$, so no rule separates them over $N$
+samples unless $\delta\gtrsim\sigma_\theta/\sqrt N$, which through the same map
+means correlations closer than $s_\theta\sigma_\theta/\sqrt N$ cannot be
+distinguished. Le Cam's two-point argument \cite{tsybakov} gives \eqref{eq:rate},
+and the two processes differ in flip probability by $O(N^{-1/2})$ so their spectral
+gaps agree to that order. For \eqref{eq:sup}, substituting $u=1-2p$ gives
 $s_\theta\sigma_\theta=D\,u^{D-1}\sqrt{1-u^2}$, maximized at $u^2=(D-1)/D$ where
-$\sqrt{1-u^2}=1/\sqrt D$ and $u^{D-1}\to e^{-1/2}$, so the product is
-$e^{-1/2}\sqrt D$ and $\theta=u^D\to e^{-1/2}$.
+$\sqrt{1-u^2}=1/\sqrt D$, and $\theta=u^D$.
 \end{proof}
 
-Two readings are worth stating. The spectral gap cancels, so no restriction to a
-class bounded away from zero is needed, and a rate written as
-$1/\sqrt{\gamma_0 N}$ would have the dependence inverted. And staleness costs only
-$\sqrt D$ in learning, which is far milder than its effect on the ceiling, where
-\eqref{eq:adv} decays exponentially in $D$. The hardest place to sit is
-$r(D)=e^{-1/2}$, neither clearly trackable nor clearly untrackable, which is
-exactly where a fixed controller has no good default and
-Algorithm~\ref{alg:adaptive} earns its state.
+\noindent\textbf{What this gives, and what it does not.}
+Lemma~\ref{thm:adapt} concerns the decision, not goodput. Converting it into a
+goodput shortfall needs the value of each branch as a function of $p$, and we do
+not derive those. Prop.~\ref{prop:bound} gives the AIMD sawtooth under
+\emph{constant} capacity rather than an AIMD value curve under a Markov neighbour,
+so we have no proof that the two branch values cross transversally at any
+particular $\theta$, and we therefore claim no minimax optimality for
+Algorithm~\ref{alg:adaptive} itself. What the lemma does fix is the shape of the
+learning cost. The spectral gap cancels, since the flip indicators are independent
+and carry no mixing penalty, so a rate written as $1/\sqrt{\gamma_0N}$ would have
+the dependence inverted. The lag enters only as $\sqrt D$, far milder than the
+exponential decay of the ceiling in \eqref{eq:adv}. And the hardest level to sit at
+is intermediate rather than extreme, which is the qualitative reason a controller
+gains from measuring $r(D)$ rather than committing to one branch in advance.
+Deriving the branch value curves, and with them a performance theorem for
+Algorithm~\ref{alg:adaptive}, is left open.
+
+Equation \eqref{eq:rate} is exact as written. The convenient reading
+$s_\theta\sigma_\theta\approx\theta\sqrt{2D\log(1/\theta)}$ holds only for large
+$D$ at fixed $\theta$ and fails at small $D$, since at $D=1$ with $\theta\to0$ the
+left side tends to $1$ while that expression tends to $0$.
+
+
 
 \noindent\textbf{Scope.}
 Three assumptions earn the closed form. First, the contended unit is binary and

@@ -1,22 +1,22 @@
 \section{Evaluation}
 \label{sec:eval}
 
-We evaluate on a testbed whose sensing age is measured rather than assumed. A home
+We evaluate on a testbed whose information-to-effect lag is measured rather than assumed. A home
 node and \ifblind a\else an Atlas\fi{} workstation-class node with GV100 GPUs run
 the controller, which probes real GPU occupancy and admits real CUDA workers while
 a competing tenant drives capacity. The fabric carrying this control plane is
 characterized in the companion paper~\cite{companion}. Unless noted we report the
 mean and a $t$-based $95\%$ confidence interval over independent repeats. Four
 questions organize the study, and each one defends a claim the theory makes.
-\textbf{(Q1)} What is the sensing age $D$ that governs Prop.~\ref{prop:bound} and
-Prop.~\ref{prop:irreducible}. \textbf{(Q2)} Does Algorithm~\ref{alg:adaptive} stay
+	extbf{(Q1)} What is the lag $D$ of \eqref{eq:Ddef} that governs
+Prop.~ef{prop:bound}, and how is it composed. \textbf{(Q2)} Does Algorithm~\ref{alg:adaptive} stay
 polite while beating a fixed budget under real time-varying contention, and where
 does it fail. \textbf{(Q3)} Does the value $\tfrac12 r(D)$ of Thm.~\ref{thm:limit}
 hold at the controller level, and does it also bind a learned controller.
 
-\subsection{Sensing age and the violation bound (Q1)}
+\subsection{The lag and the violation bound (Q1)}
 \label{sec:eval-detection}
-The sensing age has two measured parts. A read-only \texttt{nvidia-smi} probe
+The lag has two measured parts. A read-only \texttt{nvidia-smi} probe
 costs $27$ to $33$\,ms at the median. The end-to-end delay from launching a real
 GPU load until it is visible as utilization above the $40\%$ floor is
 $\mathbf{2.46}$\,s over 10 thermally guarded repeats on a GV100, with median
@@ -36,7 +36,7 @@ scaled by this measured start-up delay.
 We manufacture controlled contention on a two-GPU node with $C{=}2$. A competing tenant occupies
 $c(t)\in\{0,1\}$ GPUs on a fixed profile, so the guest's available capacity
 $a(t)=C-c(t)$ is exogenous, time-varying and measured by the prober through a
-per-GPU process census subject to the sensing age of Q1. Two profiles bracket the
+per-GPU process census subject to the lag of Q1. Two profiles bracket the
 space. \emph{Square} load is a period-$2\tau$ wave modelling slowly varying or
 scheduled neighbours, and \emph{poisson} load is memoryless on and off arrivals,
 the adversarial case. Alongside goodput and $\rho$ we measure harm to the
@@ -108,7 +108,7 @@ The two contention profiles are two points, while Thm.~\ref{thm:limit} predicts
 the whole curve. To test it we simulate the window controllers on the two-state
 capacity process the theory analyzes, a Markov competitor with per-epoch flip
 probability $p$ so the coherence time $\tau_c$ sweeps continuously, at the
-measured sensing age $D{=}3$ epochs with $1.2\times10^{5}$ epochs per point.
+measured lag $D{=}3$ epochs with $1.2\times10^{5}$ epochs per point.
 Fig.~\ref{fig:tausweep} reports each controller's goodput advantage over the best
 fixed budget at matched over-admission against the predicted $\tfrac12 r(D)$.
 
@@ -166,9 +166,9 @@ $\Delta(D)$.
 
 \subsection{Summary and threats to validity}
 \label{sec:eval-threats}
-The evaluation establishes three things. The sensing age is a measured
-first-order term at about $2.5$\,s, dominated by CUDA start-up, which is what
-Prop.~\ref{prop:irreducible} needs. Under structured contention
+The evaluation establishes three things. The lag is a measured
+first-order term at about $2.5$\,s, dominated by worker start-up rather than by
+polling, which is the composition \eqref{eq:Ddef} assumes. Under structured contention
 Algorithm~\ref{alg:adaptive} is the polite and efficient knee and spares the
 neighbour, while under memoryless contention feedback breaks even, a
 pre-registered null we report rather than suppress. And the value

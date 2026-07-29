@@ -14,6 +14,7 @@
 \newtheorem{lemma}{Lemma}
 \newtheorem{proposition}{Proposition}
 \newtheorem{corollary}{Corollary}
+\theoremstyle{remark}\newtheorem{remark}{Remark}
 
 % ---- Double-blind toggle -------------------------------------------------
 % \blindtrue  => anonymized submission PDF (INFOCOM double-blind).
@@ -26,8 +27,8 @@
 
 \begin{document}
 
-\title{Polite Bursting: Feedback Admission Control under
-Age-Limited Sensing on Shared Clusters}
+\title{Polite Bursting: What Feedback Is Worth When Admissions
+Land Late on a Shared Cluster}
 
 \ifblind\else
 \author{\IEEEauthorblockN{Andrew H. Bond}
@@ -38,29 +39,36 @@ Age-Limited Sensing on Shared Clusters}
 
 \begin{abstract}
 Research teams run batch GPU work on shared clusters they do not own. Fair-use
-policy caps how many pods a guest may hold and requires each pod to stay busy, so
-a guest has to restrain itself. How much capacity a guest can actually use is set
-by the other tenants. It is not announced, and a guest learns it only by probing.
-Every probe is already out of date by the time a controller acts on it.
-We show that acting on stale capacity readings has an exact ceiling. For a
-contended resource that is either free or taken, the extra goodput any feedback
-controller can win over the best fixed budget equals half the correlation between
-capacity now and capacity as last seen. A rule that admits work whenever the last
-reading showed the resource free attains that ceiling. The ceiling falls to zero
-once the sensing delay grows past the time over which neighbour load stays
-correlated, so past that point no feedback controller beats a fixed budget.
-We turn the result into two algorithms. The first estimates the correlation from
-its own probe stream and switches between feedback and a fixed budget, which
-holds it at or above the better of the two everywhere. The second admits work
-across several contended units by treating each unit as a separate binary
-decision, which covers capacities beyond a single unit.
-Short controlled experiments support both. On a two-GPU node driven by a real
-competing tenant, feedback admission under structured neighbour load delivers
-1.41 times the goodput of a fixed budget while over-admitting a quarter as often
-as a greedy policy, and it leaves the competing tenant more of its own
-throughput. Under memoryless load feedback only breaks even, which is what the
-ceiling predicts, and the switching algorithm detects that case and gives up the
-feedback loop rather than paying for it.
+policy requires each pod a guest holds to stay busy and scrutinizes guests that
+hold many at once, so a guest has to restrain itself. How much capacity a guest
+can actually use is set by the other tenants. It is not announced, and a guest
+learns it only by probing. Worse, a decision acts on information from before the
+probe and takes effect only after a new worker starts, so the state it is judged
+against has moved on by the time it lands.
+We show that acting on that lag has an exact ceiling. For a contended resource
+that is either free or taken, the extra goodput any feedback controller can win
+over the best fixed budget, compared at equal over-admission, equals half the
+correlation between capacity when the decision lands and capacity as it was last
+seen. A rule that admits work whenever the last reading showed the resource free
+attains that ceiling. The ceiling falls toward zero once the lag grows past the
+time over which neighbour load stays correlated, so past that point feedback is
+worth little however it is built. We give the elementary derivation rather than
+claim it, since the ingredients are classical.
+We turn the result into one controller. It estimates the correlation from its own
+probe stream and switches between a feedback loop and a fixed budget, and we
+bound how fast any rule can learn which of the two to run. That learning cost
+grows with the square root of the lag even though the ceiling it chases decays
+exponentially in the same quantity, and the hardest predictability level to sit at
+is an intermediate one rather than either extreme.
+Short controlled experiments measure the lag at about 2.5 seconds on a two-GPU
+node, dominated by worker start-up, and exercise the controller against a
+competing workload we drive ourselves. Under structured neighbour load feedback
+admission delivers 1.41 times the goodput of a fixed trickle at a quarter of a
+greedy policy's over-admission while leaving the competitor more of its own
+throughput. Under memoryless load it only breaks even, which the ceiling predicts,
+and the switch detects that case and stops paying for the loop. The live
+comparison is at one operating point and so measures the system rather than the
+constant.
 \end{abstract}
 
 \section{Introduction}
@@ -92,24 +100,24 @@ reading showed capacity free reaches it. It also implies an impossibility. Once
 the sensing delay exceeds the time over which neighbour load stays correlated,
 the correlation is near zero and no feedback controller can beat a fixed budget.
 
-Our second result turns the ceiling into algorithms. The correlation a controller
-needs is measurable from the probe stream the controller already collects, so a
-guest can estimate it online and act on the estimate. Algorithm \ref{alg:adaptive}
-does this with one scalar of state, switching between a feedback loop and a fixed
-budget, and it never falls below the better of the two by more than a bounded
-amount. That amount is sharp. We give matching upper and lower bounds on how fast
-any rule can learn which branch to take, and together they show that staleness
-costs only the square root of the sensing age in learning even though it costs
-exponentially in the ceiling itself. The hardest predictability level to sit at is
+Our second result turns the ceiling into a controller. The correlation it needs is
+measurable from the probe stream it already collects, so a guest can estimate it
+online and act on the estimate. Algorithm \ref{alg:adaptive} does this with a
+handful of counters, switching between a feedback loop and a fixed budget, and on
+average it trails the better of the two by an amount that shrinks with run
+length. We bound the cost of that decision from both sides. We give matching upper and lower bounds on how fast
+any rule can learn which branch to take, and together they show that the lag
+costs only its square root in learning even though it costs exponentially in the
+ceiling itself. The hardest predictability level to sit at is
 neither high nor low but a specific value in between, which is exactly where a
 controller holding no state has no good default. Integer capacity beyond one
 contended unit is left open, for reasons \S\ref{sec:controller} states.
 
 Our third contribution is measurement rather than proof. The sensing delay is a
 physical quantity and we measure it at roughly 2.5 seconds on real hardware,
-dominated by CUDA start-up rather than by polling. We then drive a two-GPU node
-with a real competing tenant and show the predicted behaviour on both sides of
-the crossover, including a case where feedback stops paying for itself and the
+dominated by CUDA start-up rather than by polling. We then drive a two-GPU node with a
+competing workload of our own construction and show the predicted behaviour on
+both sides of the crossover, including a case where feedback stops paying for itself and the
 switching algorithm gives it up.
 
 The control plane runs inside the cluster and reaches the home node over a single
@@ -189,12 +197,11 @@ that link. Submissions flow on \texttt{burst.submit} and results return on
 sit inside the cluster, so the leaf link carries submissions and results rather
 than the capacity signal. What matters for the controller is that its view of
 capacity is late for the reasons of \eqref{eq:Ddef}. The leaf round trip and the
-CUDA start-up of a freshly admitted pod together set the sensing age of
-\S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. Tensors crossing the
+CUDA start-up of a freshly admitted pod together set the information-to-effect lag
+of \S\ref{sec:limit}, which we measure in \S\ref{sec:eval}. Tensors crossing the
 link are compressed by random-rotation quantization
 \cite{turboquantpro,turboquant}, which helps bandwidth on the hop but does not
-reduce the sensing age, since that age is dominated by CUDA start-up rather than
-transport. The fabric's own design, its leaf federation, durability and
+reduce that lag, since it is dominated by CUDA start-up rather than transport. The fabric's own design, its leaf federation, durability and
 single-port traversal, is characterized in the companion paper~\cite{companion}.
 
 \section{Implementation}
@@ -256,40 +263,42 @@ policy-gradient agent of that family against it.
 value of feedback is set by the age of the capacity estimate relative to how fast
 the neighbour changes. That places polite bursting in the age-of-information line
 of work \cite{aoi}, on the control side rather than the sampling side. We bound
-the achievable goodput and politeness frontier as a function of sensing age and
-give algorithms that adapt to the measured value.
+the achievable goodput and politeness frontier as a function of that lag and give a
+controller that adapts to the measured value.
 
 \section{Conclusion}
 \label{sec:concl}
 Restraint on a shared cluster is a control problem whose difficulty is fixed by
-how stale the guest's view of the cluster is. We gave that dependence an exact
-form. The extra goodput a feedback controller can win over the best fixed budget
-is half the correlation between capacity now and capacity as last seen, which is
-attained by admitting work whenever the last reading showed capacity free, and
-which vanishes once the sensing delay outgrows the neighbour's correlation time.
+how far its decisions land behind the state they are judged against. We gave that
+dependence an exact form. The extra goodput a feedback controller can win over the
+best fixed budget, compared at equal over-admission, is half the correlation
+between capacity when the decision lands and capacity as last seen. It is attained
+by admitting work whenever the last reading showed capacity free, and it falls
+toward zero once that lag outgrows the neighbour's correlation time.
 
-Two algorithms follow from that form. One measures the correlation online and
-switches between feedback and a fixed budget, tracking the better of the two up
-to a vanishing learning term. The other runs a binary decision per contended unit and so covers
-capacities beyond a single unit. Both carry the safety property that the pod cap
-is never exceeded, which holds deterministically rather than in expectation. The
-first is also minimax optimal in its learning rate, matched above and below, and
-that rate grows only with the square root of the sensing age even though the
-ceiling it chases decays exponentially in the same quantity.
+One controller follows from that form. It measures the correlation online and
+switches between a feedback loop and a fixed budget, trailing the better of the two
+on average by an amount that shrinks with run length, and it never exceeds the
+guest's own window, which holds deterministically rather than in expectation. We
+also bound from both sides how hard
+it is to decide which branch to run, and that cost grows only with the square root
+of the lag even though the ceiling it chases decays exponentially in the same
+quantity. Converting that decision cost into a goodput guarantee needs the value of
+each branch under a Markov neighbour, which we leave open.
 
 Short controlled experiments support the result on both sides of the crossover.
 Under structured neighbour load, feedback admission reaches 1.41 times a fixed
 budget's goodput at a quarter of a greedy policy's over-admission while leaving
 the competing tenant more throughput. Under memoryless load it breaks even, and
 the switching algorithm detects the case and stops paying for a loop that cannot
-help. A learned policy-gradient controller given a longer observation history
-converges to the ceiling and does not pass it.
+help. A learned policy-gradient controller given a longer observation history converges
+to the ceiling and does not pass it, on the process the theorem assumes.
 
 Four things remain open. Contention is manufactured on a two-GPU node rather than
 drawn from a production multi-tenant trace, and the live comparison is at one
 operating point rather than a matched-over-admission frontier, so it measures the
 system rather than the constant. The exact equality holds for a binary Markov
-unit, while the general statement is the weaker mixing bound of
+unit, while the general statement is the scalarized bound of
 App.~\ref{app:beta}. Integer capacity needs the nesting and monotonicity
 conditions of \S\ref{sec:controller} before it can be claimed. And a controller
 that estimates the correlation itself, rather than only which side of the switch it
