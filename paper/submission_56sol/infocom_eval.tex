@@ -1,0 +1,161 @@
+\section{Evaluation}
+\label{sec:eval}
+
+We separate three kinds of evidence. The launch experiment measures the physical
+observation and effect times of the implementation. The two-GPU study compares
+policies at selected live operating points. The discrete-time Markov sweep tests
+the matched-mismatch law under the process assumed by the theorem. Unless noted,
+we report the mean and a $t$-based $95\%$ interval over independent repeats.
+Three questions organize the study. \textbf{(Q1)} What observation-to-effect lag
+does the launch-on-demand path exhibit. \textbf{(Q2)} How do the feedback, static
+and greedy policies behave under controlled live contention. \textbf{(Q3)} Does
+the matched-mismatch value in Theorem~\ref{thm:limit} hold in the discrete-time
+model, and does the online switch behave mechanically on hardware.
+
+\subsection{Observation and effect times (Q1)}
+\label{sec:eval-detection}
+A read-only \texttt{nvidia-smi} occupancy probe takes $27$ to $33$ ms at the
+median. The measured time from launching a real GPU worker until its utilization
+first exceeds $40\%$ is $2.46$ s over 10 thermally guarded repeats on a GV100,
+with median $2.48$ s and range $2.29$ to $2.61$ s. The first measurement is an
+observation time for already running work. The second is a launch-to-visible-work
+time for the scale-out path and instantiates Proposition~\ref{prop:launchbound}.
+It does not establish a universal lower bound for warm workers or pipelined
+execution.
+
+One completion-gated admission epoch lasts about $1.1$ s on average, so the
+launch path corresponds descriptively to about two or three decision epochs. The
+epoch duration is policy dependent and variable. We therefore use controlled
+integer values of $D$ in Q3 rather than treating the wall-clock conversion as an
+exact live Markov lag.
+
+\subsection{Selected live operating points (Q2)}
+\label{sec:eval-contended}
+We create controlled contention on a two-GPU node with $C=2$. A separate
+experiment process occupies $c(t)\in\{0,1\}$ GPUs, leaving guest capacity
+$a(t)=C-c(t)$. We refer to it as the competing workload rather than an
+independent production tenant. The prober observes a per-GPU process census.
+Square load uses a period-$2\tau$ wave. Poisson load uses memoryless on and off
+arrivals with a matched duty cycle. Alongside useful completion rate and mismatch
+fraction $\rho$, we report the competing workload's completed work relative to
+its undisturbed baseline.
+
+The study used randomized interleaved order and four seeds per cell. Parameters
+fixed before the runs were $K=4$, $w_{\min}=1$, $\alpha=0.5$, $\beta=0.5$,
+$\theta=0.15$, $\bar a=1$, a $60$ s square period, a Poisson rate matched to the
+same duty cycle, an $8$ s GPU work unit, and $64$ submitted Jobs per trial. The
+controller used a real-valued target and integer execution as specified in
+Algorithm~\ref{alg:adaptive}. Each trial ended when the burst drained.
+
+Table~\ref{tab:e9} reports the selected operating points. Under square load, the
+feedback branch obtains $0.091$ tasks/s against $0.064$ tasks/s for the static
+branch, a ratio of $1.41$. The mismatch fractions differ, $0.15$ against $0.11$,
+so this is not a matched-constraint test of Theorem~\ref{thm:limit}. The greedy
+policy obtains $0.101$ tasks/s at mismatch $0.64$ and leaves the competing
+workload $62\%$ of its baseline. The feedback branch leaves $76\%$, while the
+static branch leaves $89\%$.
+
+Under Poisson load, feedback and static goodput are statistically
+indistinguishable at the shown precision, $0.062$ and $0.064$ tasks/s. Feedback
+has the larger mismatch fraction, $0.30$ against $0.22$. This pre-registered
+break-even case is consistent with reduced predictability, but the live data do
+not estimate $r(D)$ precisely enough to identify a point on
+\eqref{eq:adv}. The mismatch metric is a model quantity. It is not presented as
+a direct count of host-policy violations.
+
+\begin{table}[t]
+\centering
+\caption{Selected live operating points with $C=2$ and four seeds. Entries are
+means with $95\%$ intervals where shown. ``Kept'' is competing-workload
+throughput relative to its undisturbed baseline. The feedback and static rows are
+not matched in $\rho$.}
+\label{tab:e9}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{llccc}
+\toprule
+contention & policy & goodput (tasks/s) & $\rho$ & kept \\
+\midrule
+\multirow{3}{*}{square}
+ & greedy   & $0.101\pm0.002$ & $0.64\pm0.01$ & $0.62$ \\
+ & feedback & $0.091\pm0.000$ & $0.15\pm0.01$ & $0.76$ \\
+ & static   & $0.064\pm0.000$ & $0.11\pm0.01$ & $0.89$ \\
+\midrule
+\multirow{3}{*}{Poisson}
+ & greedy   & $0.096\pm0.002$ & $0.85\pm0.06$ & $0.62$ \\
+ & feedback & $0.062\pm0.006$ & $0.30\pm0.06$ & $0.55$ \\
+ & static   & $0.064\pm0.000$ & $0.22\pm0.04$ & $0.79$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Matched-mismatch model test and live switch check (Q3)}
+\label{sec:eval-law}
+We next simulate the window controllers on the symmetric two-state Markov process
+used by Theorem~\ref{thm:limit}. The per-epoch flip probability $p$ sweeps the
+coherence time, the lag is $D=3$, and each point contains $1.2\times10^5$ epochs.
+For every controller, the plotted quantity is goodput increase over the best
+record-independent policy at the same mismatch fraction.
+
+Figure~\ref{fig:tausweep} supports four model-level readings. First, the delayed
+threshold policy follows $r(D)/2$ with maximum displayed deviation $0.013$.
+Second, fixed AIMD captures only part of the available increase at long coherence
+time and becomes worse than a matched static policy as predictability falls.
+Third, the branch-adaptive controller stays above the static branch at the
+simulated points and recovers much of the AIMD increase where its estimate exceeds
+the switch level. This is an empirical property of the plotted parameterization,
+not a pointwise theorem. Fourth, a tabular policy-gradient agent with four delayed
+readings converges within $0.003$ of the threshold policy at every plotted point
+and exceeds the analytical line by at most the same $0.013$ sampling deviation.
+Under the Markov model, the older readings are conditionally redundant given the
+newest one. The test therefore checks whether learning recovers the sufficient
+statistic.
+
+The right panel sweeps $D$ and shows the expected collapse against $D/\tau_c$.
+These are single long simulations rather than seed-based confidence intervals.
+Their role is to verify the model implementation and the matched-constraint
+calculation, not to substitute for a live frontier.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/tau_sweep.png}
+\caption{Discrete-time controller study. \emph{Left.} Goodput increase over a
+matched static policy at $D=3$. The delayed threshold policy follows
+$r(D)/2$. Fixed AIMD loses value as predictability falls, and the branch-adaptive
+controller selects between AIMD and static at the plotted points. \emph{Right.}
+Sweeping $D$ collapses the threshold increase against $D/\tau_c$.}
+\label{fig:tausweep}
+\end{figure}
+
+\noindent\textbf{Live behavior of the switch.}
+We also ran Algorithm~\ref{alg:adaptive} on the two-GPU node across a Markov
+contention sweep with $p$ from $0.01$ to $0.4$ and two seeds. The sliding-window
+estimate satisfies $|\hat r-(1-2p)^D|\le0.07$ over the reported points. The
+fraction of epochs using the feedback branch falls from $0.98$ to $0.48$ as
+predictability crosses the switch level. This live sweep does not reproduce a
+goodput crossover. Raw goodput rewards mismatch, so always-on AIMD outperforms
+the static branch at every live point by accepting much higher mismatch at large
+$p$, $0.44$ against $0.04$. The adaptive switch instead sheds mismatch relative
+to always-on AIMD, with the reduction growing from $0.01$ to $0.22$ as $p$ rises
+from $0.08$ to $0.4$. With two seeds, this is a mechanical check of the estimator
+and branch actuation only.
+
+\subsection{Summary and threats to validity}
+\label{sec:eval-threats}
+The measurements establish the timing of the launch-on-demand path, one useful
+structured-contention operating point, one break-even operating point, and a
+matched-constraint verification in the discrete-time model. They do not establish
+a live value of $r(D)/2$.
+
+The main limitation is the absence of a live matched-$\rho$ frontier. The static
+policy in Table~\ref{tab:e9} is one operating point rather than the best
+record-independent policy at the same mismatch. A stronger experiment would
+sweep randomized static admission probabilities and feedback parameters, then
+compare the maximum goodput at common values of $\rho$. Contention is controlled
+on one two-GPU node rather than drawn from a production multi-user trace. Four
+seeds support Table~\ref{tab:e9}, while the live switch sweep has two. The
+``kept'' column has no interval, and values printed as $0.000$ are below the shown
+resolution rather than exactly zero. Completion-gated epochs also make the live
+wall-clock lag action dependent. These limits are why the exact theorem is tested
+in the controlled discrete-time sweep rather than claimed from the hardware
+numbers.

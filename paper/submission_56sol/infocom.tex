@@ -1,0 +1,265 @@
+\documentclass[10pt,conference,letterpaper]{IEEEtran}
+\usepackage{amsmath,amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\usepackage[hidelinks]{hyperref}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+% ---- Double-blind toggle -------------------------------------------------
+% \blindtrue  => anonymized submission PDF.
+% \blindfalse => camera-ready. Insert the author block before changing it.
+\newif\ifblind
+\blindtrue
+\newcommand{\sysname}{PoliteBurst}
+\ifblind\hypersetup{pdfauthor={},pdftitle={},pdfsubject={},pdfkeywords={},pdfcreator={}}\fi
+% -------------------------------------------------------------------------
+
+\begin{document}
+
+\title{Polite Bursting with Delayed Capacity Feedback on Shared Clusters}
+
+\ifblind
+\author{}
+\else
+% CAMERA-READY AUTHOR BLOCK GOES HERE.
+\author{\IEEEauthorblockN{Author Name}
+\IEEEauthorblockA{Affiliation\\email@example.org}}
+\fi
+
+\maketitle
+
+\begin{abstract}
+Research teams often burst batch GPU work onto shared clusters they do not own.
+A guest can restrain its own concurrency, but the capacity left by other users is
+not announced and a capacity record may be stale by the time a newly admitted
+worker becomes productive. We study one exogenous binary unit and compare
+feedback with the best record-independent policy at the same capacity-mismatch
+rate. For symmetric Markov availability, the exact maximum goodput increase is
+one half of the correlation between the state at observation and at action
+effect. A delayed threshold rule attains the bound, while the increase vanishes
+as the observation-to-effect lag exceeds the capacity coherence time. We then
+give a branch-adaptive controller that estimates the transition rate and chooses
+between a feedback branch and a static branch. A local decision-theoretic result
+gives its branch-selection rate without claiming that AIMD itself attains the
+optimal frontier. Controlled experiments measure a launch-on-demand effect lag
+of about 2.5 seconds. On a two-GPU node with a controlled competing workload,
+the feedback branch obtains 1.41 times the goodput of one static operating point
+under structured contention, at a different mismatch rate, while the two break
+even under memoryless contention. A matched-constraint Markov sweep verifies the
+analytical frontier and a separate live sweep checks the estimator and shows the
+mismatch reduction obtained by disabling feedback as predictability falls.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+Machine-learning work is often bursty. Long periods of development are followed
+by short runs of sweeps, fine-tunes and evaluations that need more accelerators
+than a team owns. Shared clusters such as the National Research Platform
+\cite{nautilus} make that capacity available under usage rules that discourage
+persistently under-utilized requests \cite{nrppolicy}. A guest can suppress its
+own submissions before they reach the scheduler, but it does not control
+placement and does not observe the capacity left by other users directly.
+
+This paper asks a narrow question. How much useful admission can a guest gain
+from delayed capacity feedback if it is compared with the best static policy at
+the same rate of offering more concurrency than can be productive at that time.
+The mismatch rate is a guest-side risk proxy. It is not itself a claim that every
+mismatch is a host-policy violation, since a Kubernetes excess offer may remain
+pending rather than occupy a resource.
+
+Our first result gives an exact answer for one symmetric binary Markov unit. The
+maximum increase over a record-independent policy equals one half of the
+correlation between the observed state and the state when the admission takes
+effect. The statement is a converse over every causal controller in the stated
+model and uses a matched mismatch constraint. A delayed threshold policy reaches
+the bound. As the observation-to-effect lag grows beyond the coherence time, the
+possible increase becomes small.
+
+Our second result turns the predictability calculation into one adaptive
+controller. The controller estimates the Markov flip probability from the
+capacity samples it already receives and selects either an AIMD feedback branch
+or a static branch. We keep two claims separate. The exact frontier is achieved
+by the threshold policy, not by AIMD. The learning result concerns only how fast
+a selector can identify the better of its two supplied branches under an
+explicit local crossing assumption. It does not remove any structural shortfall
+inside those branches. Integer capacity beyond one contended unit remains open.
+
+Our third contribution is controlled measurement. We distinguish the age of a
+capacity record at decision time from the additional delay until a launch-on-
+demand worker becomes productive. Their sum is the observation-to-effect lag in
+the theory. The local occupancy poll takes tens of milliseconds, while the
+measured launch path takes about 2.5 seconds. We then run a controlled competing
+workload on a two-GPU node. The live experiments demonstrate one useful operating
+point, a pre-registered break-even case, and the mechanics of the online switch.
+A separate discrete-time Markov sweep performs the matched-constraint test of the
+closed form.
+
+The controller runs inside the cluster and the home client communicates over an
+outbound NATS leaf connection. The capacity probe itself is local to the cluster.
+NATS is therefore the submission and result path in this implementation, not the
+source of the measured capacity-record delay.
+
+\begin{figure}[t]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+  font=\footnotesize, node distance=5mm,
+  box/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2pt},
+  >={Stealth[]}]
+\node[box] (client) {home node\\client + driver};
+\node[box, below=of client] (hub) {NATS hub};
+\node[box, right=14mm of hub] (leaf) {NATS leaf\\(in-cluster)};
+\node[box, above=of leaf] (ctrl) {controller\\(admission)};
+\node[box, right=10mm of ctrl] (pods) {GPU worker\\pods};
+\draw[<->] (client) -- (hub) node[midway,right]{burst.submit};
+\draw[<->] (hub) -- (leaf) node[midway,above]{leaf link};
+\draw[->] (leaf) -- (ctrl);
+\draw[->] (ctrl) -- (pods) node[midway,above]{Job};
+\draw[->] (pods) to[bend right=25] node[midway,below]{results.$\langle$id$\rangle$} (leaf);
+\draw[->,dashed] (pods.north) to[bend right=30]
+  node[midway,above,align=center]{local capacity record\\and delayed outcome} (ctrl.north);
+\end{tikzpicture}}
+\caption{\sysname{} architecture. The home client submits over a federated NATS
+leaf connection. The in-cluster controller admits Jobs and receives local
+capacity records and resolved outcomes. The dashed path is delayed relative to
+the time at which a launch-on-demand decision becomes productive.}
+\label{fig:arch}
+\end{figure}
+
+\section{Background and Motivation}
+\label{sec:bg}
+\textbf{Host policy.}
+The reference host publishes utilization conditions for users submitting more
+than about four violating pods and asks users to match requests to expected use
+\cite{nrppolicy}. These rules are not an absolute four-pod cluster cap. We use
+$K$ as a self-imposed concurrency window chosen by the guest. The mismatch budget
+$\epsilon$ is also guest chosen and is not inferred from the host policy. This
+separation avoids treating a model event as an administrative violation.
+
+\textbf{Network boundary.}
+The home client reaches the in-cluster control plane over one outbound connection,
+with no inbound cluster access. NATS request and result delivery is useful under
+that boundary. The capacity record and scheduler outcome used by the controller
+are produced inside the cluster.
+
+\textbf{Why existing tools do not settle the question.}
+Workflow and function-execution frameworks such as HTCondor \cite{htcondor},
+funcX and Globus Compute \cite{funcx}, and Ray \cite{ray} scale workers to demand.
+They do not define a guest-side mismatch budget under delayed exogenous capacity.
+Our focus is the achievable admission frontier under that information limit.
+
+\input{infocom_aoi_model}
+
+\section{Realization Across a Federated Boundary}
+\label{sec:fabric}
+The controller runs inside the cluster and reaches the home client over a NATS
+\cite{nats} leaf connection that needs one outbound port
+(Fig.~\ref{fig:arch}). Submissions flow on \texttt{burst.submit} and results
+return on \texttt{results.>} by interest propagation. The capacity probe is local
+to the controller and workers, so leaf transport is not included in the measured
+observation-to-effect lag. The implementation records local sample time, decision
+time, Job creation time and the time at which useful GPU work becomes visible.
+This event separation is what connects the physical path to the lag in
+\eqref{eq:Ddef}.
+
+\section{Implementation}
+\label{sec:impl}
+\sysname{} is a Go control plane with a decider, prober, submitter, NATS bridge
+and back-off module, plus a Python client. The controller uses a namespace-scoped
+ServiceAccount with Job create, get and delete rights and Pod read access. It
+renders each request into a Kubernetes Job and can constrain eligible nodes with
+a \texttt{nodeSelector}. We verified the complete path on the reference host. A
+submission from the home node propagated through hub, leaf and controller,
+launched a GPU worker that executed CUDA work, and returned its result through
+the leaf. The experiments below concern the admission logic and its local
+capacity record. They do not characterize NATS performance or claim that the
+network path creates the capacity lag.
+
+\input{infocom_eval}
+
+\section{Related Work}
+\label{sec:related}
+\textbf{Bursting and function execution.}
+HTCondor \cite{htcondor}, funcX and Globus Compute \cite{funcx}, and Ray
+\cite{ray} provide elastic task execution. They are complementary substrates.
+The question here is how much a guest can gain from delayed exogenous capacity
+information under a self-imposed mismatch budget.
+
+\textbf{Congestion and scavenger control.}
+The feedback branch uses AIMD in the lineage of congestion avoidance
+\cite{chiujain}. Its goal of yielding to incumbents is related to LEDBAT
+\cite{ledbat} and TCP Nice \cite{tcpnice}. Those protocols react to loss or delay.
+Here the signal is a delayed capacity or mismatch record, and the theorem bounds
+the value of any causal policy in the stated binary model rather than proposing a
+new AIMD law.
+
+\textbf{Opportunistic and harvesting schedulers.}
+AntMan co-schedules opportunistic deep-learning jobs against production work
+\cite{antman}. Harvest VMs expose reclaimable cloud capacity \cite{harvestvm},
+and Gavel \cite{gavel} and Pollux \cite{pollux} adapt accelerator allocations.
+Those systems are operated by the capacity owner. Our guest does not control the
+scheduler and treats the residual capacity as exogenous.
+
+\textbf{Delayed state and learned resource control.}
+Old information in load balancing and admission has long been studied
+\cite{mitzenmacher,goel,kim1985,brooks1972,katsikopoulos}. DeepRM
+\cite{deeprm} and Decima \cite{decima} learn resource-control policies from
+feedback. The exact converse here applies to any causal policy under the binary
+Markov assumptions, including a learned one, because the newest delayed sample is
+then sufficient. It does not apply unchanged to non-Markov processes in which a
+longer history remains predictive.
+
+\textbf{Freshness and value of information.}
+Age of information measures the freshness of delivered updates \cite{aoi}. Our
+lag additionally includes the time from decision to useful effect. The binary
+frontier is a constrained value-of-information calculation. Appendix
+\ref{app:beta} gives a separate scalarized bound for general stationary capacity
+using absolute regularity.
+
+\section{Conclusion}
+\label{sec:concl}
+For one symmetric binary Markov unit, delayed capacity feedback has an exact
+matched-constraint value. The maximum goodput increase over a record-independent
+policy is one half of the correlation between the observed state and the state at
+action effect. A delayed threshold policy attains the bound, and the increase
+vanishes as the observation-to-effect lag outgrows the capacity coherence time.
+
+We used that predictability measure in one branch-adaptive controller. Its online
+estimator is simple because the symmetric-chain flip indicators are independent.
+The local learning theorem concerns selection between a supplied feedback branch
+and a supplied static branch. It does not claim that AIMD attains the analytical
+frontier. The exact finite-$D$ sensitivity is retained in the theorem, with the
+large-$D$ approximation stated only in its valid asymptotic domain.
+
+The controlled system measures a launch-on-demand effect lag of about 2.5 seconds
+and exercises the complete submission and result path. Under structured
+contention, the feedback branch reaches 1.41 times the goodput of one static
+operating point, but the comparison is not at matched mismatch. Under memoryless
+contention the two break even. A discrete-time Markov sweep performs the matched
+comparison and verifies the threshold frontier, while a separate two-seed live
+sweep checks the estimator and the mismatch reduction of disabling feedback.
+
+The main open work is empirical and structural. A live matched-mismatch frontier
+needs more operating points and more repetitions. The completion-gated testbed
+does not provide a fixed wall-clock lag. Warm workers or pipelining could reduce
+the launch-on-demand effect delay at a resource cost and require a different
+model. Random record ages, action-dependent capacity and nested multi-unit
+admission also remain outside the exact result.
+
+\appendices
+\input{infocom_appendix}
+
+\bibliographystyle{IEEEtran}
+\bibliography{infocom}
+
+\end{document}

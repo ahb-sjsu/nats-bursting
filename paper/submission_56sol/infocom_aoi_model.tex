@@ -1,0 +1,344 @@
+\section{System Model}
+\label{sec:model}
+
+A guest bursts batch GPU Jobs onto a shared cluster and chooses a self-imposed
+concurrency window $K$. Time is slotted into control epochs $t\in\mathbb{N}$. Let
+$a_t\in\{0,\dots,C\}$ be the concurrency that can produce useful guest work when
+the action for epoch $t$ takes effect. The process is set by other users and the
+scheduler, so the model treats it as exogenous and not directly observable. The
+guest chooses an executed window $w_t\in\{0,\dots,K\}$. Useful goodput is
+$G_t=\min(w_t,a_t)$, and $(w_t-a_t)^+$ is capacity mismatch. Depending on the
+scheduler, excess work can remain pending or can overlap with capacity that is
+not productive for the guest. The model does not equate every mismatch with an
+administrative policy violation.
+
+Writing
+$\rho\triangleq\limsup_T T^{-1}\sum_{t<T}\mathbf 1[w_t>a_t]$ for the long-run
+mismatch fraction, the guest solves
+\begin{equation}\label{eq:polite}
+\begin{aligned}
+\max_{\{w_t\}}\quad & \mathbb{E}[\min(w_t,a_t)] \\
+\text{s.t.}\quad & w_t\le K\ \forall t,\qquad \rho\le\epsilon .
+\end{aligned}
+\end{equation}
+The hard window and the mismatch budget represent different constraints. The
+first holds pathwise. The second compares policies at a common capacity-risk
+level.
+
+\noindent\textbf{The observation-to-effect lag.}
+A decision at wall-clock time $\tau$ uses a capacity record sampled
+$D_{\mathrm{obs}}$ earlier. A launch-on-demand action becomes productive at
+$\tau+D_{\mathrm{act}}$. The state that determines its payoff is therefore the
+capacity at $\tau+D_{\mathrm{act}}$, while its information was sampled at
+$\tau-D_{\mathrm{obs}}$. We define
+\begin{equation}\label{eq:Ddef}
+D\ \triangleq\ D_{\mathrm{obs}}+D_{\mathrm{act}}
+\end{equation}
+as the observation-to-effect lag, expressed in decision epochs. Relabelling the
+effect time as $t$, a lag-$D$ policy is causal with respect to
+$\{a_{s-D}\}_{s\le t}$. The capacity record at decision time is only
+$D_{\mathrm{obs}}$ old. The additional $D_{\mathrm{act}}$ appears because the
+admission is scored when its effect is realized.
+
+The measurements in Section~\ref{sec:eval} separate these quantities. Polling
+already running resources takes $27$ to $33$ ms at the median. The measured path
+from launch to visible useful GPU work takes about $2.46$ s. For the
+launch-on-demand implementation, actuation dominates the lag. This need not hold
+for a warm pool or a persistent worker queue.
+
+\begin{proposition}[Launch-on-demand effect bound]
+\label{prop:launchbound}
+Suppose a scale-out action is realized only when a worker created by that action
+becomes ready, and let $\tau_{\mathrm{ready}}$ be that worker's launch-to-ready
+time. Then the action path has
+$D_{\mathrm{act}}\ge\tau_{\mathrm{ready}}$ and
+$D\ge D_{\mathrm{obs}}+\tau_{\mathrm{ready}}$.
+\end{proposition}
+\begin{proof}
+The action cannot produce work before the worker that realizes it is ready.
+Substitution into \eqref{eq:Ddef} gives the second inequality.
+\end{proof}
+Proposition~\ref{prop:launchbound} is implementation scoped. It does not rule out
+warm workers, pipelining or speculative reservations. Those mechanisms can trade
+resident resources or extra offers for a smaller effect delay and would require
+a model that accounts for that cost.
+
+\noindent\textbf{The contended unit.}
+Politeness is decided at the margin, so we first isolate one fluctuating resource
+unit. Let $x_t\in\{0,1\}$ indicate that the unit is free at effect time. The
+guest's marginal decision $m_t\in\{0,1\}$ is a possibly randomized causal
+function of the lag-$D$ observation
+$\hat x_t\triangleq x_{t-D}$. We take $x_t$ stationary with
+$\Pr[x_t=1]=1/2$. Marginal goodput and mismatch are
+\begin{equation}\label{eq:margin}
+g \triangleq \Pr[m_t=1,\,x_t=1],\qquad
+\rho \triangleq \Pr[m_t=1,\,x_t=0].
+\end{equation}
+The stationary $\rho$ in \eqref{eq:margin} is the ergodic counterpart of the
+epoch fraction in \eqref{eq:polite}.
+
+\begin{proposition}[Window safety]\label{prop:safety}
+Any update that clamps the executed window to $[0,K]$ keeps $w_t\le K$ for every
+$t$ deterministically.
+\end{proposition}
+\begin{proof}
+The claim follows directly from the clamp at every update.
+\end{proof}
+
+\section{How Much Delayed Feedback Is Worth}
+\label{sec:limit}
+
+We characterize the gain over a record-independent policy when the only state
+signal is a lag-$D$ observation.
+
+\begin{lemma}[Predictive disagreement]\label{lem:q}
+Let $q(D)\triangleq\Pr[x_t\neq x_{t-D}]$ and
+$r(D)\triangleq\mathbb{E}[(2x_t-1)(2x_{t-D}-1)]$. Then
+$r(D)=1-2q(D)$. Under stationarity and symmetry,
+\[
+\Pr[\hat x_t=i,x_t=j]
+=\tfrac14\bigl(1+(2i-1)(2j-1)r(D)\bigr).
+\]
+For a symmetric two-state Markov process with per-epoch flip probability
+$p\in(0,1/2)$,
+$r(D)=(1-2p)^D=e^{-D/\tau_c}$, where
+$\tau_c=-1/\ln(1-2p)$.
+\end{lemma}
+\begin{proof}
+The correlation equals agreement probability minus disagreement probability.
+The joint law follows from the two uniform marginals. For the Markov process, the
+second eigenvalue is $1-2p$, so the lag-$D$ correlation is its $D$th power.
+\end{proof}
+
+\begin{theorem}[Matched-mismatch frontier]\label{thm:limit}
+For the symmetric two-state Markov process of Lemma~\ref{lem:q}, the achievable
+$(\rho,g)$ region under lag $D$ is the quadrilateral with vertices
+\[
+(0,0),\quad
+\left(\tfrac q2,\tfrac{1-q}{2}\right),\quad
+\left(\tfrac12,\tfrac12\right),\quad
+\left(\tfrac{1-q}{2},\tfrac q2\right),
+\]
+where $q=q(D)$. Its efficient upper boundary joins the first three vertices. A
+record-independent policy is confined to $g=\rho$. Consequently the maximum
+vertical goodput increase at matched mismatch is
+\begin{equation}\label{eq:adv}
+\Delta(D)=\tfrac12 r(D)=\tfrac12\bigl(1-2q(D)\bigr).
+\end{equation}
+The maximum occurs at $\rho=q/2$ and is attained by the threshold policy
+$m_t=\hat x_t$. For $0\le\rho<q/2$, the increase is
+$\rho(1-2q)/q$.
+\end{theorem}
+\begin{proof}
+The Markov property makes $\hat x_t$ sufficient for $x_t$ given the full delayed
+history. Any causal policy induces
+$\theta_i=\Pr[m_t=1\mid\hat x_t=i]$. Lemma~\ref{lem:q} gives
+\[
+g=\tfrac12\bigl((1-q)\theta_1+q\theta_0\bigr),\qquad
+\rho=\tfrac12\bigl(q\theta_1+(1-q)\theta_0\bigr).
+\]
+The image of $[0,1]^2$ under this linear map is the stated quadrilateral. Since
+$q<1/2$, admission after $\hat x_t=1$ has the larger goodput-to-mismatch ratio,
+so the upper boundary first increases $\theta_1$ and then $\theta_0$. A
+record-independent policy has $\theta_1=\theta_0$, hence $g=\rho$. The vertical
+difference at the kink is $(1-2q)/2=r(D)/2$.
+\end{proof}
+
+\begin{figure}[t]
+\centering
+\resizebox{0.92\columnwidth}{!}{%
+\begin{tikzpicture}[>=Stealth]
+  \draw[->] (0,0) -- (6.0,0) node[right] {$\rho$ (mismatch)};
+  \draw[->] (0,0) -- (0,6.0) node[above] {$g$ (goodput)};
+  \fill[black!8] (0,0) -- (1,4) -- (5,5) -- (4,1) -- cycle;
+  \node[black!55] at (4.05,1.55) {\footnotesize achievable};
+  \draw[very thick] (0,0) -- (1,4) -- (5,5);
+  \draw[dashed] (0,0) -- (5.4,5.4);
+  \node[sloped,above,black!70] at (3.25,3.25) {\footnotesize record-independent, $g=\rho$};
+  \draw[dotted] (1,0) -- (1,4);
+  \node[below] at (1,0) {\footnotesize $\tfrac{q}{2}$};
+  \fill (1,4) circle (2pt);
+  \node[above left=-1pt] at (1,4) {\footnotesize $\bigl(\tfrac{q}{2},\tfrac{1-q}{2}\bigr)$};
+  \node[align=center,anchor=south west] at (1.55,4.45)
+        {\footnotesize delayed threshold\\[-2pt]\footnotesize $m_t=\hat x_t$};
+  \fill (1,1) circle (1.6pt);
+  \draw[<->,thick] (1,1.16) -- (1,3.84);
+  \node[right=2pt] at (1,2.5) {$\Delta(D)=\tfrac12 r(D)$};
+  \fill (5,5) circle (1.6pt);
+  \node[below right=1pt] at (5,5) {\footnotesize $\bigl(\tfrac12,\tfrac12\bigr)$};
+\end{tikzpicture}}
+\caption{The achievable $(\rho,g)$ region at $q=0.2$. Record-independent
+policies lie on the diagonal. The delayed threshold policy reaches the kink and
+the maximum matched-mismatch increase $\Delta(D)$.}
+\label{fig:theory}
+\end{figure}
+
+\begin{corollary}[Decay with observation-to-effect lag]\label{cor:imp}
+For the symmetric Markov process,
+$\Delta(D)=\tfrac12 e^{-D/\tau_c}$. Thus the increase is below a tolerance
+$\eta$ once $D\ge\tau_c\ln(1/(2\eta))$. For a general process, zero
+autocorrelation does not imply unpredictability from the full history. Appendix
+\ref{app:beta} therefore gives a separate scalarized value bound using the
+$\beta$-mixing coefficient.
+\end{corollary}
+
+\noindent\textbf{Provenance and scope of the exact result.}
+The two-cell likelihood ordering is classical in opportunistic access
+\cite{myopicaccess}, and the Markov mixing calculation is standard
+\cite{lpw}. The contribution of Theorem~\ref{thm:limit} is the explicit
+matched-mismatch achievable region and its vertical comparison with the best
+record-independent policy. The equality is specific to the binary Markov model.
+A non-Markov process can retain predictive information in older samples even
+when $r(D)=0$. Appendix~\ref{app:beta} does not claim the same constrained
+frontier for arbitrary capacity. It bounds a scalarized bounded objective by a
+mixing coefficient.
+
+The live square and memoryless profiles in Section~\ref{sec:eval} are qualitative
+high- and low-predictability cases. Only the discrete-time Markov sweep in
+Section~\ref{sec:eval-law} tests the exact curve in \eqref{eq:adv}.
+
+\section{A Branch-Adaptive Controller}
+\label{sec:controller}
+
+The exact threshold policy needs the lag-$D$ predictive relation. A practical
+controller can estimate the Markov flip probability from its delayed sample
+stream and decide whether to run a feedback branch or a static branch. We use
+AIMD as the feedback branch because it is simple and common. We do not claim that
+AIMD attains Theorem~\ref{thm:limit}.
+
+At decision epoch $t$, let $y_t$ be the newest binary capacity sample. It was
+sampled $D_{\mathrm{obs}}$ earlier. Fixed delay does not change adjacent
+transition counts, so the indicators $\mathbf 1[y_t\neq y_{t-1}]$ estimate the
+one-step flip probability $p$. Let $c_t\in\{0,1,\bot\}$ be the newest resolved
+outcome for a prior window, where $c_t=1$ denotes a capacity mismatch and
+$c_t=0$ denotes no mismatch. The value $\bot$ means that no new outcome is
+available. The controller keeps a real target $z_t\in[w_{\min},K]$. The executed
+integer window is obtained by clipped unbiased rounding
+$w_t=\mathcal R_K(z_t)$, where $\mathcal R_K(z)$ is either $\lfloor z\rfloor$ or
+$\lceil z\rceil$ and has conditional mean $z$.
+
+\begin{algorithm}[t]
+\caption{Branch-adaptive admission for one contended unit}
+\label{alg:adaptive}
+\begin{algorithmic}[1]
+\Require $K,w_{\min},\alpha,\beta,\theta,D,\bar a$
+\State $z\gets w_{\min}$, $F\gets0$, $n\gets0$, $y_{\mathrm{prev}}\gets\bot$
+\For{each decision epoch $t$}
+  \State read newest sample $y_t$ and newest resolved outcome $c_t$
+  \If{$y_{\mathrm{prev}}\neq\bot$}
+    \State $F\gets F+\mathbf 1[y_t\neq y_{\mathrm{prev}}]$, $n\gets n+1$
+  \EndIf
+  \State $y_{\mathrm{prev}}\gets y_t$
+  \State $\hat p\gets\min\{1/2,F/\max(n,1)\}$
+  \State $\hat r\gets(1-2\hat p)^D$
+  \If{$\hat r>\theta$}
+    \If{$c_t=1$}
+      \State $z\gets\max\{w_{\min},\beta z\}$
+    \ElsIf{$c_t=0$}
+      \State $z\gets\min\{z+\alpha,K\}$
+    \EndIf
+  \Else
+    \State $z\gets\min\{\max\{\bar a,w_{\min}\},K\}$
+  \EndIf
+  \State $w_t\gets\mathcal R_K(z)$ and admit at most $w_t$ concurrent Jobs
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+The cumulative estimator in Algorithm~\ref{alg:adaptive} supports the asymptotic
+result below. A fixed sliding window is preferable under drift, but it leaves a
+nonzero steady-state branch-error probability. The live experiment uses a
+sliding window and is therefore a mechanical test rather than an evaluation of
+the asymptotic rate.
+
+\begin{proposition}[Continuous-target AIMD mismatch]\label{prop:bound}
+Assume constant capacity $a$, a resolved mismatch signal exactly $D$ epochs after
+an overshoot, a continuously valued target, and a backoff satisfying
+$\beta(a+D\alpha)\le a$. While the feedback branch remains active, the target
+forms a periodic sawtooth with mismatch fraction
+\begin{equation}\label{eq:saw}
+\rho_{\mathrm{aimd}}
+=\frac{D\alpha}{(1-\beta)(a+D\alpha)}.
+\end{equation}
+Thus $\alpha\le\epsilon(1-\beta)a/[D(1-\epsilon(1-\beta))]$ is sufficient for
+$\rho_{\mathrm{aimd}}\le\epsilon$ in this approximation.
+\end{proposition}
+\begin{proof}
+The target rises from $\beta(a+D\alpha)$ to $a+D\alpha$ in a cycle of length
+$(1-\beta)(a+D\alpha)/\alpha$. It exceeds $a$ for $D$ epochs. Their ratio gives
+\eqref{eq:saw}. Solving the inequality for $\alpha$ gives the stated condition.
+\end{proof}
+Randomized rounding and variable outcome delay perturb this idealized cycle. The
+proposition is an interpretation aid, not a safety guarantee for the live
+implementation.
+
+We next isolate branch selection from branch quality. Let $V_F(r)$ and $V_S(r)$
+be the stationary per-epoch values of the supplied feedback and static branches
+when the lag-$D$ correlation is $r$. Define
+$d(r)=V_F(r)-V_S(r)$. Assume that in a neighborhood of a chosen switch level
+$\theta\in(0,1)$, $d$ is differentiable, $d(\theta)=0$, and
+$L=|d'(\theta)|>0$. This crossing assumption is part of the theorem. It is not
+derived from the AIMD sawtooth proposition.
+
+Let $p_\theta=(1-\theta^{1/D})/2$,
+$s_\theta=2D\theta^{(D-1)/D}$, and
+$\sigma_\theta^2=p_\theta(1-p_\theta)$. The comparator is
+$V^{\mathrm{br}}(r)=\max\{V_F(r),V_S(r)\}$.
+
+\begin{theorem}[Local branch-selection rate]\label{thm:adapt}
+Consider the symmetric two-state Markov family in a shrinking neighborhood of
+$p_\theta$, and let a selector observe the cumulative flip indicators and choose
+between the two supplied branches. Over horizon $N$, the local minimax average
+shortfall from $V^{\mathrm{br}}$ is
+\begin{equation}\label{eq:rate}
+\Theta\!\left(\frac{L s_\theta\sigma_\theta}{\sqrt N}\right),
+\qquad
+s_\theta\sigma_\theta
+=D\theta^{(D-1)/D}\sqrt{1-\theta^{2/D}}.
+\end{equation}
+The branch selector in Algorithm~\ref{alg:adaptive} attains the upper rate with
+cumulative counters. For fixed $\theta\in(0,1)$ and $D\to\infty$,
+\begin{equation}\label{eq:largeD}
+s_\theta\sigma_\theta
+\sim \theta\sqrt{2D\log(1/\theta)}.
+\end{equation}
+For $D\ge2$, the sensitivity term is maximized over $\theta$ at
+$\theta=((D-1)/D)^{D/2}$, with value
+\begin{equation}\label{eq:sup}
+\sqrt D\left(\frac{D-1}{D}\right)^{(D-1)/2}
+\sim e^{-1/2}\sqrt D.
+\end{equation}
+For a fixed process with $r(D)\neq\theta$, the average branch-selection
+shortfall is $O(1/N)$.
+\end{theorem}
+\begin{proof}[Proof sketch]
+The delayed flip indicators are independent Bernoulli$(p)$ variables. Binomial
+Bernstein concentration gives
+$|\hat p_n-p|=O(\sigma_\theta/\sqrt n)$ locally. The derivative magnitude of
+$p\mapsto(1-2p)^D$ at $p_\theta$ is $s_\theta$, so the correlation estimation
+error is $O(s_\theta\sigma_\theta/\sqrt n)$. Local linearity of $d$ converts this
+to branch loss, and averaging over the growing sample size yields the upper
+bound. For the lower bound, two Bernoulli flip laws separated by
+$\delta=\Theta(\sigma_\theta/\sqrt N)$ have bounded total Kullback-Leibler
+divergence over $N$ samples. Le Cam's two-point argument \cite{tsybakov} then
+forces loss of order $L s_\theta\sigma_\theta/\sqrt N$ on one of the two laws.
+The exact sensitivity follows by substituting
+$\sigma_\theta=\tfrac12\sqrt{1-\theta^{2/D}}$. Equation \eqref{eq:largeD} follows
+from $\theta^{1/D}=1-\log(1/\theta)/D+o(D^{-1})$. Maximizing
+$D u^{D-1}\sqrt{1-u^2}$ over $u=\theta^{1/D}$ gives
+$u^2=(D-1)/D$ and \eqref{eq:sup}. Away from the crossing, the branch error
+probability decays exponentially in the cumulative sample size, so total
+shortfall is bounded and its average is $O(1/N)$.
+\end{proof}
+
+Theorem~\ref{thm:adapt} is a statistical decision result about choosing between
+two branches. It does not show that $V_F$ equals the optimal frontier in
+Theorem~\ref{thm:limit}. The experiments report both quantities separately.
+
+\noindent\textbf{Scope.}
+The exact frontier requires a symmetric binary Markov unit, stationarity and a
+fixed observation-to-effect lag. Under a non-Markov process, older samples can
+remain useful. Under drift, a sliding estimator trades tracking for a persistent
+error floor. Random readable record ages require a cell-allocation problem rather
+than simple averaging. Integer capacity also requires nested marginal decisions
+to correspond to one scalar window. We leave those extensions open.

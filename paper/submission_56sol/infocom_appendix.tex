@@ -1,0 +1,113 @@
+\section{A Scalarized Mixing Bound}
+\label{app:beta}
+The exact constrained frontier in Theorem~\ref{thm:limit} is binary and Markov.
+This appendix gives a different statement for a general stationary capacity
+process. It bounds the value of delayed information for one bounded scalar
+objective. It does not establish the same matched-mismatch frontier for arbitrary
+capacity.
+
+Let $\{a_t\}$ be stationary on $\{0,\dots,C\}$, with
+$\mathcal F_{\le s}=\sigma(a_u:u\le s)$ and
+$\mathcal F_{\ge s}=\sigma(a_u:u\ge s)$. Define
+\begin{equation}\label{eq:beta}
+\beta(D)=\mathbb E\!\left[
+\sup_{B\in\mathcal F_{\ge t}}
+\left|\Pr(B\mid\mathcal F_{\le t-D})-\Pr(B)\right|
+\right].
+\end{equation}
+Fix a bounded per-epoch objective $R(w,a)$ with oscillation
+$\Omega=\max_{w,a}R(w,a)-\min_{w,a}R(w,a)$. One example is the scalarized
+objective $R_\lambda(w,a)=\min(w,a)-\lambda(w-a)^+$. Let $V_R^\star(D)$ be the
+best value of a lag-$D$ causal policy and let $V_R^{\mathrm{stat}}$ be the best
+value of a record-independent action.
+
+\begin{theorem}[$\beta$-mixing value bound]\label{thm:beta}
+For any such process and objective,
+\begin{equation}\label{eq:betabound}
+0\le V_R^\star(D)-V_R^{\mathrm{stat}}\le\Omega\beta(D).
+\end{equation}
+Thus the scalarized value of delayed information vanishes for an absolutely
+regular process and decays geometrically when $\beta(D)$ does.
+\end{theorem}
+\begin{proof}
+Let $\mathcal G=\mathcal F_{\le t-D}$,
+$\mu_{\mathcal G}=\Pr(a_t\in\cdot\mid\mathcal G)$, and
+$\psi(\mu)=\max_w\sum_a R(w,a)\mu(a)$. Pointwise optimization gives
+$V_R^\star(D)=\mathbb E[\psi(\mu_{\mathcal G})]$ and
+$V_R^{\mathrm{stat}}=\psi(\bar\mu)$. Convexity of $\psi$ gives the lower bound.
+The function $\psi$ is $\Omega$-Lipschitz in total variation because it is the
+maximum of linear functionals whose ranges are at most $\Omega$. Hence
+\[
+V_R^\star(D)-V_R^{\mathrm{stat}}
+\le \Omega\,\mathbb E\|\mu_{\mathcal G}-\bar\mu\|_{\mathrm{TV}}
+\le \Omega\beta(D),
+\]
+where the last inequality follows because $\sigma(a_t)$ is contained in
+$\mathcal F_{\ge t}$.
+\end{proof}
+
+For the symmetric two-state Markov process,
+$\beta(D)=|1-2q(D)|/2=r(D)/2$ under the convention in \eqref{eq:beta}. This shows
+that the exponential decay rate in Theorem~\ref{thm:limit} is a tight mixing-rate
+example. Equality of the scalarized bound with the constrained vertical frontier
+requires the binary objective geometry proved in Section~\ref{sec:limit}.
+
+\section{Details of the Branch-Selection Rate}
+\label{app:regret}
+Algorithm~\ref{alg:adaptive} observes delayed but clean samples
+$y_i=x_{i-D_{\mathrm{obs}}}$. The fixed shift does not change adjacent flips, so
+\[
+\hat p_n=\frac1n\sum_{i=1}^n\mathbf 1[y_i\neq y_{i-1}]
+\]
+is the average of independent Bernoulli$(p)$ variables under the symmetric
+Markov model. The controller projects $\hat p_n$ onto $[0,1/2]$ before computing
+$\hat r_n=(1-2\hat p_n)^D$.
+
+\noindent\textbf{Upper bound.}
+In a local neighborhood of $p_\theta$, binomial Bernstein concentration gives
+$|\hat p_n-p|=O(\sigma_\theta/\sqrt n)$ at constant confidence. The derivative
+of $r(p)=(1-2p)^D$ has magnitude $s_\theta$ at $p_\theta$. The branch-value
+difference satisfies
+$d(r)=d'(\theta)(r-\theta)+o(|r-\theta|)$, so a wrong branch incurs local loss of
+order $L|r-\theta|$. Summing the resulting $n^{-1/2}$ bound over
+$n=1,\dots,N$ and dividing by $N$ gives
+$O(Ls_\theta\sigma_\theta/\sqrt N)$.
+
+\noindent\textbf{Lower bound.}
+Take two flip probabilities
+$p_{\pm}=p_\theta\pm\delta/2$. Their $N$-sample Kullback-Leibler divergence is
+$N\delta^2/(2\sigma_\theta^2)+O(N\delta^3)$. Choosing
+$\delta=c\sigma_\theta/\sqrt N$ for a sufficiently small constant $c$ keeps the
+two laws statistically indistinguishable with constant probability. Their
+correlations differ by
+$s_\theta\delta+o(\delta)$ and their better branches are opposite. Le Cam's
+two-point lemma \cite{tsybakov} therefore gives
+$\Omega(Ls_\theta\sigma_\theta/\sqrt N)$ average loss on one of the two
+processes.
+
+\noindent\textbf{Exact sensitivity and asymptotics.}
+Let $u=\theta^{1/D}=1-2p_\theta$. Since
+$\sigma_\theta=\tfrac12\sqrt{1-u^2}$ and
+$s_\theta=2D u^{D-1}$,
+\begin{equation}\label{eq:exactsens}
+s_\theta\sigma_\theta
+=D u^{D-1}\sqrt{1-u^2}
+=D\theta^{(D-1)/D}\sqrt{1-\theta^{2/D}}.
+\end{equation}
+For fixed $\theta\in(0,1)$ and $D\to\infty$,
+$u=1-\log(1/\theta)/D+o(D^{-1})$, which gives
+\[
+s_\theta\sigma_\theta
+\sim \theta\sqrt{2D\log(1/\theta)}.
+\]
+For $D\ge2$, differentiating
+$(D-1)\log u+\tfrac12\log(1-u^2)$ gives the maximizer
+$u^2=(D-1)/D$. Substitution yields \eqref{eq:sup} and the switch level
+$\theta=((D-1)/D)^{D/2}$.
+
+\noindent\textbf{Fixed alternatives.}
+When $p$ is separated from $p_\theta$ by a constant, Chernoff concentration makes
+the probability of choosing the wrong branch decay exponentially in the
+cumulative sample size. The expected total branch loss is then finite, so the
+average loss over horizon $N$ is $O(1/N)$. A fixed sliding window does not have
+this property because its error probability does not vanish.
