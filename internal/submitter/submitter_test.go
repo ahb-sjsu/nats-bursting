@@ -90,3 +90,59 @@ func TestCancelDeletesJob(t *testing.T) {
 		t.Fatalf("Cancel: %v", err)
 	}
 }
+
+func TestToJobRendersVolumes(t *testing.T) {
+	d := JobDescriptor{
+		Name:  "fleet-build-0",
+		Image: "python:3.12",
+		Volumes: []Volume{
+			{Name: "idx", MountPath: "/idx", ClaimName: "tqp-fleet-10b-0"},
+			{Name: "shared", MountPath: "/shared", ClaimName: "tqp-fleet-shared"},
+			{Name: "code", MountPath: "/work", ConfigMap: "tqp-fleet-code", ReadOnly: true},
+		},
+	}
+	job, err := d.ToJob("ns")
+	if err != nil {
+		t.Fatalf("ToJob: %v", err)
+	}
+	spec := job.Spec.Template.Spec
+	if len(spec.Volumes) != 3 || len(spec.Containers[0].VolumeMounts) != 3 {
+		t.Fatalf("want 3 volumes and 3 mounts, got %d and %d",
+			len(spec.Volumes), len(spec.Containers[0].VolumeMounts))
+	}
+	if spec.Volumes[0].PersistentVolumeClaim == nil ||
+		spec.Volumes[0].PersistentVolumeClaim.ClaimName != "tqp-fleet-10b-0" {
+		t.Errorf("volume 0 should be the PVC tqp-fleet-10b-0")
+	}
+	if spec.Volumes[2].ConfigMap == nil || spec.Volumes[2].ConfigMap.Name != "tqp-fleet-code" {
+		t.Errorf("volume 2 should be the ConfigMap tqp-fleet-code")
+	}
+	if spec.Containers[0].VolumeMounts[0].MountPath != "/idx" {
+		t.Errorf("mount 0 path = %q, want /idx", spec.Containers[0].VolumeMounts[0].MountPath)
+	}
+	if !spec.Containers[0].VolumeMounts[2].ReadOnly {
+		t.Errorf("mount 2 should be read-only")
+	}
+}
+
+func TestToJobRejectsBadVolumes(t *testing.T) {
+	cases := map[string]Volume{
+		"no name":     {MountPath: "/x", ClaimName: "c"},
+		"no path":     {Name: "v", ClaimName: "c"},
+		"no source":   {Name: "v", MountPath: "/x"},
+		"two sources": {Name: "v", MountPath: "/x", ClaimName: "c", ConfigMap: "m"},
+	}
+	for label, v := range cases {
+		_, err := JobDescriptor{Name: "n", Image: "i", Volumes: []Volume{v}}.ToJob("ns")
+		if err == nil {
+			t.Errorf("%s: want error, got none", label)
+		}
+	}
+	_, err := JobDescriptor{Name: "n", Image: "i", Volumes: []Volume{
+		{Name: "dup", MountPath: "/a", ClaimName: "c"},
+		{Name: "dup", MountPath: "/b", ClaimName: "c"},
+	}}.ToJob("ns")
+	if err == nil {
+		t.Error("duplicate volume name: want error, got none")
+	}
+}

@@ -34,6 +34,30 @@ class Resources:
 
 
 @dataclass
+class Volume:
+    """One storage source mounted into the job's container.
+
+    Exactly one of ``claim_name`` or ``config_map`` must be set. Mirrors
+    the Go ``submitter.Volume``.
+    """
+
+    name: str
+    mount_path: str
+    read_only: bool = False
+    claim_name: str = ""
+    config_map: str = ""
+
+    def to_dict(self) -> dict:
+        return {
+            "name": self.name,
+            "mount_path": self.mount_path,
+            "read_only": self.read_only,
+            "claim_name": self.claim_name,
+            "config_map": self.config_map,
+        }
+
+
+@dataclass
 class JobDescriptor:
     """High-level description of a one-shot Kubernetes Job.
 
@@ -50,6 +74,7 @@ class JobDescriptor:
     labels: dict[str, str] = field(default_factory=dict)
     node_selector: dict[str, str] = field(default_factory=dict)
     backoff_limit: int = 0
+    volumes: list[Volume] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         d = {
@@ -62,6 +87,7 @@ class JobDescriptor:
             "labels": dict(self.labels),
             "node_selector": dict(self.node_selector),
             "backoff_limit": self.backoff_limit,
+            "volumes": [v.to_dict() for v in self.volumes],
         }
         return d
 
@@ -86,6 +112,16 @@ class JobDescriptor:
             labels=dict(data.get("labels", {}) or {}),
             node_selector=dict(data.get("node_selector", {}) or {}),
             backoff_limit=int(data.get("backoff_limit", 0) or 0),
+            volumes=[
+                Volume(
+                    name=v["name"],
+                    mount_path=v["mount_path"],
+                    read_only=bool(v.get("read_only", False)),
+                    claim_name=v.get("claim_name", ""),
+                    config_map=v.get("config_map", ""),
+                )
+                for v in (data.get("volumes", []) or [])
+            ],
         )
 
 

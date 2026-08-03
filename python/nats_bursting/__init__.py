@@ -42,7 +42,7 @@ IPython magic (ephemeral only)::
 from __future__ import annotations
 
 from nats_bursting.client import Client, SubmitResult
-from nats_bursting.descriptor import JobDescriptor, Resources
+from nats_bursting.descriptor import JobDescriptor, Resources, Volume
 from nats_bursting.pool import (
     PoolDescriptor,
     TaskDispatcher,
@@ -65,6 +65,7 @@ __all__ = [
     "probe_local_gpu",
     "publish_task",
     "run_worker",
+    "Volume",
 ]
 
 __version__ = "0.1.0"
