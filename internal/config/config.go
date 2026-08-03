@@ -31,6 +31,16 @@ type NATSConfig struct {
 	StatusPrefix string        `yaml:"status_prefix"`
 	ResultPrefix string        `yaml:"result_prefix"`
 	ConnectWait  time.Duration `yaml:"connect_wait"`
+
+	// QueueGroup makes the submit subscription a NATS queue subscription,
+	// so exactly one controller in the group receives each submit message.
+	// Without it every running controller receives every message and they
+	// race to create the same Job: one wins and the others get AlreadyExists,
+	// which is silent, so a caller sees a job that was accepted but never
+	// appears. Observed on 2026-08-03 with an Atlas controller and an
+	// in-cluster controller both subscribed. Set empty to restore the old
+	// broadcast behaviour.
+	QueueGroup string `yaml:"queue_group"`
 }
 
 // K8sConfig describes how to talk to the target Kubernetes cluster.
@@ -67,6 +77,7 @@ func Defaults() Config {
 			StatusPrefix: "burst.status",
 			ResultPrefix: "burst.result",
 			ConnectWait:  10 * time.Second,
+			QueueGroup:   "burst-controllers",
 		},
 		K8s: K8sConfig{
 			Namespace: "default",

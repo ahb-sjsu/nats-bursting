@@ -74,11 +74,25 @@ type StatusMessage struct {
 // is cancelled.
 func (b *Bridge) Run(ctx context.Context) error {
 	subj := b.cfg.SubmitSubj
-	b.log.Info("subscribing", "subject", subj)
+	queue := b.cfg.QueueGroup
 
-	sub, err := b.nc.Subscribe(subj, func(msg *nats.Msg) {
-		b.handle(ctx, msg)
-	})
+	// A queue subscription delivers each message to exactly one member of the
+	// group. A plain subscription delivers it to every controller running,
+	// which then race to create the same Job; the loser's AlreadyExists is
+	// silent, so the submitter sees a job that was accepted and never appears.
+	var (
+		sub *nats.Subscription
+		err error
+	)
+	handler := func(msg *nats.Msg) { b.handle(ctx, msg) }
+	if queue != "" {
+		b.log.Info("subscribing", "subject", subj, "queue_group", queue)
+		sub, err = b.nc.QueueSubscribe(subj, queue, handler)
+	} else {
+		b.log.Warn("subscribing without a queue group, so concurrent "+
+			"controllers will race to create the same job", "subject", subj)
+		sub, err = b.nc.Subscribe(subj, handler)
+	}
 	if err != nil {
 		return fmt.Errorf("subscribe %s: %w", subj, err)
 	}
