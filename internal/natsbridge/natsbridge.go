@@ -117,9 +117,18 @@ func (b *Bridge) handle(ctx context.Context, msg *nats.Msg) {
 	if err != nil {
 		status.State = "error"
 		status.Reason = err.Error()
+		// Log it as well as publishing it. The status subject is the only
+		// place this used to go, and the Python client misses it (it requests
+		// a reply the handler never sends, then subscribes after the publish
+		// has already happened). So a descriptor rejected by admission looked
+		// exactly like a submission that silently did nothing: "submit
+		// request" in the journal and no other trace anywhere.
+		b.log.Error("submit failed", "job_id", req.JobID,
+			"name", req.Descriptor.Name, "err", err)
 	} else {
 		status.State = "submitted"
 		status.K8sJob = jobName
+		b.log.Info("job created", "job_id", req.JobID, "k8s_job", jobName)
 	}
 
 	payload, _ := json.Marshal(status)
