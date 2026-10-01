@@ -40,35 +40,37 @@ ax.spines[["top", "right"]].set_visible(False)
 fig.tight_layout()
 fig.savefig("fig_trichotomy.pdf")
 
-# ---- Fig 2: tightness vs the SYMMETRIC law |r|/2 ----
-# (the ratio to V1 lifts off at small r for mildly imbalanced series ---
-#  that is the hinge threshold of Fig 1, deliberately kept out of this panel)
+# ---- Fig 2: envelope over the exact single-sample value, one pair table ----
+# Both sqrt(I/2) and V1 come from the same pooled 2x2 lag table, so Theorem 2
+# applied to that empirical distribution forces every point >= 1. The x-axis
+# uses 2*V1, which equals |r| for a symmetric pair, so the curve is the
+# symmetric (pi = 1/2) limit; imbalance can only add slack above it.
 fig, ax = plt.subplots(figsize=(3.6, 2.6))
 r = np.linspace(1e-4, 0.995, 400)
 I = 0.5 * ((1 + r) * np.log(1 + r) + (1 - r) * np.log(1 - r))
 ax.plot(r, np.sqrt(2 * I) / r, color=BLUE, lw=2,
-        label=r"exact ratio $\sqrt{I(r)/2}\,/\,(|r|/2)$")
+        label=r"symmetric limit $\sqrt{I(r)/2}\,/\,(|r|/2)$")
 ax.plot(r, 1 + r**2 / 12, color=GREY, lw=1.2, ls="--",
         label=r"$1+r^2/12$ (leading correction)")
 d4 = json.load(open("battery_v4.json"))
-markers = {"Two-state Markov": "o", "i.i.d. null": "s", "LOCATA azimuth": "^",
+markers = {"Two-state Markov": "o", "LOCATA azimuth": "^",
            "Sperm-whale codas": "D", "GOES protons": "v", "Seismic ANMO": "P"}
 for dom in d4["domains"]:
     if abs(dom["pi"] - 0.5) > 0.035 or dom["title"] not in markers:
         continue
-    rr = np.abs(np.array(dom["r"]))
+    v1 = np.array(dom["v1_exact"])
     I1 = np.array(dom["I_nats"])
-    m = rr > 0.05
+    m = v1 > 0.025
     if m.sum() < 2:
         continue
-    ax.scatter(rr[m], np.sqrt(np.maximum(I1[m], 0) / 2) / (rr[m] / 2), s=11,
+    ax.scatter(2 * v1[m], np.sqrt(np.maximum(I1[m], 0) / 2) / v1[m], s=11,
                alpha=0.6, marker=markers[dom["title"]], label=dom["title"])
-ax.set_xlabel(r"$|r(D)|$")
-ax.set_ylabel(r"envelope / symmetric law $\frac{1}{2}|r|$")
+ax.set_xlabel(r"$2\widehat V_1$ (equals $|r|$ for a symmetric pair)")
+ax.set_ylabel(r"$\sqrt{\hat I/2}\,/\,\widehat V_1$")
 ax.set_xlim(0, 1.0)
-ax.set_ylim(0.93, 1.20)
+ax.set_ylim(0.98, 1.72)
 ax.axhline(1.0, color=GREY, lw=0.6, ls=":")
-ax.legend(loc="upper left", framealpha=0.9)
+ax.legend(loc="upper right", framealpha=0.9, fontsize=6)
 ax.spines[["top", "right"]].set_visible(False)
 fig.tight_layout()
 fig.savefig("fig_tightness.pdf")

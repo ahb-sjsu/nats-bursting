@@ -23,6 +23,7 @@ Department of Computer Engineering, San Jos\'e State University\\
 \texttt{andrew.bond@sjsu.edu} ~\textbar~ ORCID: 0009-0003-2599-6158}
 \date{Working draft --- v1.0 (submission candidate: max-statistic target stated correctly; selection-aware column in Table 2)}
 
+\setlength{\emergencystretch}{2em}
 \begin{document}
 \maketitle
 
@@ -84,8 +85,8 @@ entropy. (\textbf{C2}) We show the envelope is \emph{sharp
 where it matters}: on the canonical binary chain it matches the exact law to
 $O(r^3)$ (Proposition~\ref{prop:tight}), and the battery of
 \S\ref{sec:battery} \emph{illustrates} this tightness on real binary
-pair distributions, including the predicted $O(r^2)$ correction (a
-consistency illustration: $\hat I$ and $\widehat V_1$ derive
+pair distributions (a
+consistency check: $\hat I$ and $\widehat V_1$ derive
 from the same lag table). (\textbf{C3}) We prove no universal
 equality $\Delta=f(I)$ exists for bounded objectives
 (Proposition~\ref{prop:noneq}): information is a scalar, value is a
@@ -117,13 +118,37 @@ For every lag and every $K$, a \emph{preview process} keeps
 $\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
 vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A nine-series
 battery across four physical domains establishes registered-class
-equivalence on four series, leaves one noise-limited, and finds one
-clearly material history gain; read backwards, the incremental theorem
+equivalence on three series, leaves one noise-limited and one
+inconclusive, and finds one clearly material history gain; read backwards, the incremental theorem
 converts that gain into a model-calibrated, dependence-aware lower bound
 on \emph{conditional} history information, always one-sided:
 $I(X_t;\text{history}\mid X_{t-D})\ge
 2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}).
+
+Table~\ref{tab:novelty} separates what this paper restates from what it adds.
+
+\begin{table}[!ht]\centering\small
+\begin{tabular}{p{0.58\linewidth}p{0.36\linewidth}}
+\toprule
+Component & Status \\
+\midrule
+Bayes envelope \eqref{eq:envelope} & classical \cite{howard1966,raiffa61,delaragossner} \\
+Information envelopes (Thm.~\ref{thm:mi}, Thm.~\ref{thm:incr}) & known minimum-excess-risk inequalities, restated \\
+Garbling monotonicity (Lemma~\ref{lem:blackwell}) & classical (Blackwell) \\
+Bit-budget corollary (Cor.~\ref{cor:bits}) & immediate from $I(X;Y)\le H(Y)$ \\
+No universal $\Delta=f(I)$ (Prop.~\ref{prop:noneq}) & elementary construction \\
+Local marginal-value trichotomy & known \cite{delaragossner} \\
+Exact lag-covariance hinge law, sign-asymmetric thresholds (Thm.~\ref{thm:hinge}) & new, to our knowledge \\
+Explicit contact-order coefficients (Thm.~\ref{thm:contact}) & new, to our knowledge \\
+Mixing/information separation construction (Prop.~\ref{prop:incomp}) & new, to our knowledge \\
+Conditional-information certificate from policy gain & new operational use \\
+Multi-domain battery (\S\ref{sec:battery}) & new \\
+\bottomrule
+\end{tabular}
+\caption{What is known and what is new. The known results are restated because the exact laws and the battery are built on them.}
+\label{tab:novelty}
+\end{table}
 
 The scope is stated precisely: this is a unified theory for
 \emph{exogenous one-step bounded-reward decisions} under delay. The
@@ -702,6 +727,28 @@ of Theorem~\ref{thm:mi}?
 
 \subsection{Protocol}
 
+Throughout this section, ``registered'' means fixed in the protocol code
+before the final analysis runs. The battery was not preregistered with a
+third party, and its protocol was revised during the v3 and v4
+development runs, whose record is part of the released artifact.
+
+\textbf{Stationarity.} The envelopes of \S\ref{sec:mi} need no stationarity.
+The covariance parametrization of \S\ref{sec:multistate}, the fitted homogeneous
+Markov null, and the empirical dead-zone threshold all assume stationary
+marginals, and the GOES and seismic series are plausibly piecewise
+stationary at best. Pooling a long nonstationary series can make history
+valuable because it identifies the regime or the time, not because of
+stationary higher-order dependence. We therefore read every battery
+quantity, including the seismic certificate, as a property of the
+empirical mixture the series samples, not as a parameter of a stationary
+process.
+
+\textbf{Use of generative AI.} An AI assistant (Claude, Anthropic) was used
+for drafting and copy-editing text, for reviewing the analysis code against
+the reported numbers, and for writing the Lean and MATLAB scripts that
+machine-check the finite and analytic results. The theory, the battery
+design, the data and every claim are the author's responsibility.
+
 \textbf{States.} Binary regime series from four physical domains plus
 controls: acoustic source azimuth and voice activity (LOCATA, 120\,Hz);
 sperm-whale coda type (Dominica corpus, per-exchange); GOES space-weather
@@ -819,13 +866,12 @@ quantile is reused as an approximation and labelled as such.
 \subsection{Results}
 
 Table~\ref{tab:battery} reports the final analysis
-(\texttt{battery\_v5.json} for gains, $p$ and calibration tails,
-\texttt{battery\_v5b.json} for the fixed-$D^*$ bounds,
-\texttt{battery\_v5c.json} for the selection-aware bounds). The
-single-sample quantities $\widehat V_1$ and $\widehat I$, the tightness
-ratios, Fig.~\ref{fig:tightness} and the total-information witness come
-from \texttt{battery\_v4.json}; the v3 run and the protocol corrections
-are preserved in the repository record. Per domain: the class proportion $\hat\pi$; the
+from four analysis runs of the released artifact. Run v5 gives the gains,
+$p$ and calibration tails, v5b the fixed-$D^*$ bounds and v5c the
+selection-aware bounds. Run v4 gives the single-sample quantities
+$\widehat V_1$ and $\widehat I$, the tightness ratios,
+Fig.~\ref{fig:tightness} and the total-information witness. The v3 run and the
+protocol corrections are preserved in the artifact. Per domain: the class proportion $\hat\pi$; the
 maximum history-class gain over the exact single-sample Bayes value
 $\widehat V_1$; the parametric-bootstrap $p$ under the fitted Markov null
 ($M{=}299$, floor $1/300$, written $<.004$); the two calibration tails
@@ -849,7 +895,7 @@ Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $-.003\
 i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $+.005\,/\,+.008$ & selection control \\
 LOCATA azimuth & $.494$ & $+.008$ & $.063$ & $.009$ & $.020$ & $.027$ & $-.003\,/\,-.001$ & equivalent \\
 LOCATA VAD & $.636$ & $-.000$ & $.82$ & $.052$ & $.000$ & $.000$ & $.000\,/\,.000$ & equivalent \\
-Sperm-whale codas & $.483$ & $+.046$ & $.997$ & $.117$ & $-.063$ & $-.016$ & $+.010\,/\,+.040$ & equivalent$^{\ddagger}$ \\
+Sperm-whale codas & $.483$ & $+.046$ & $.997$ & $.117$ & $-.063$ & $-.016$ & $+.010\,/\,+.040$ & inconclusive$^{\ddagger}$ \\
 GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $+.002\,/\,+.020$ & not established \\
 GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $+.011\,/\,+.017$ & detected, below floor \\
 GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $+.022\,/\,+.026$ & detected (exploratory) \\
@@ -860,7 +906,8 @@ Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{
 \emph{registered six-lag lookup class}. ``Detected'' means the
 parametric-bootstrap $p$ is at its floor ($<.004$); no series has $p$
 between $.004$ and $.023$, so any level in that range gives the same
-verdicts. Detection takes precedence over equivalence, so X-ray, which
+verdicts. This is a conservative analysis rule adopted during the final
+analysis, not a preregistered significance level. Detection takes precedence over equivalence, so X-ray, which
 also has $U_2<0.03$, is reported as detected. ``Equivalent'' $=$ no
 detection and $U_2<0.03$ under both-tail calibration; ``not established''
 $=$ no detection but $U_2\ge0.03$; ``detected (exploratory)'' $=$ a
@@ -871,36 +918,33 @@ with lag selection repeated inside each replicate (the latter bounds the
 \emph{maximal} gain over the grid). VAD's fixed-$D^*$ entry is exactly zero because at $D^*{=}1$ the $k{=}6$
 policy and the exact single-sample policy reduce to the same majority rule
 on every fold; its selection-aware entry rounds to zero.
-$^{\ddagger}$On whale the two calibrations disagree. The fitted-Markov
+$^{\ddagger}$Inconclusive: the calibrations disagree. The fitted-Markov
 calibration finds the estimator biased upward ($U_2<0$), while both
 moving-block lower bounds are positive and the selection-aware one
-($+.040$) exceeds the practical floor. The detection test does not fire on
-this short series ($p=.997$), so no certificate is claimed, and the
-equivalence verdict rests on $U_2$ alone. The i.i.d.\ null's \emph{positive} paired interval is the
+($+.040$) exceeds the practical floor, and the detection test does not
+fire on this short series ($p=.997$). We claim neither equivalence nor a
+certificate. The i.i.d.\ null's \emph{positive} paired interval is the
 empirical lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
 paired bounds, since $D^*$ is an argmax the bootstrap treats as fixed).
-Bold: the one interval that dwarfs every calibration concern.}
+Bold: the one interval that dwarfs every calibration concern. Sample sizes, lag grids, selected lags and block lengths are in Table~\ref{tab:details}.}
 \label{tab:battery}
 \end{table}
 
 \begin{figure}[t]\centering
 \includegraphics[width=.72\linewidth]{fig_tightness.pdf}
 \caption{Tightness of the information envelope on approximately
-balanced binary pairs (Proposition~\ref{prop:tight}). Curve: the exact
-ratio $\sqrt{I(r)/2}\,/\,(|r|/2)$; dashes: the leading correction
-$1+r^2/12$; points: per-lag plug-in ratios
-$\sqrt{\hat I/2}\,/\,(|\hat r|/2)$ for the approximately balanced battery
-series ($|\hat\pi-\tfrac12|<.035$, lags with $|\hat r|>.05$; the i.i.d.\
-null has none). An illustration, not a test. $\hat I$ comes from the
-pooled lag table and $\hat r$ from the full-series autocorrelation, and
-points below $4\hat\pi(1-\hat\pi)$, which Pinsker's inequality forbids for
-a single pair table, reflect that estimator mismatch. Above
-$|\hat r|\approx0.5$ the points follow the predicted curve; at small
-$|\hat r|$ the Markov reference and protons fall below one. (The ratio
-to the exact \emph{value} $\widehat V_1$ lifts above this curve at
-small $r$ for the mildly imbalanced series. That is
-Theorem~\ref{thm:hinge}'s threshold, not envelope slack; see
-Fig.~\ref{fig:trichotomy}.)}
+balanced binary pairs (Proposition~\ref{prop:tight}). Points: per-lag ratio
+$\sqrt{\hat I/2}\,/\,\widehat V_1$ of the information envelope to the exact
+single-sample value, both computed from the same pooled lag table, for
+the series with $|\hat\pi-\tfrac12|<.035$ (lags with $\widehat V_1>.025$; the
+i.i.d.\ null has none). Theorem~\ref{thm:mi} applied to that table forces every
+point to at least one. The horizontal axis is $2\widehat V_1$, which equals
+$|r|$ for a symmetric pair, so the curve is the symmetric limit
+$\sqrt{I(r)/2}\,/\,(|r|/2)$ and the dashes its leading correction
+$1+r^2/12$. Points above the curve at small $\widehat V_1$ are the mildly
+imbalanced series, whose single-sample value is pulled toward
+Theorem~\ref{thm:hinge}'s threshold (Fig.~\ref{fig:trichotomy}). A consistency
+check, not an independent test.}
 \label{fig:tightness}\end{figure}
 
 Four readings, in increasing order of consequence.
@@ -930,8 +974,9 @@ majority-class head start), X-ray shrank $0.185\to0.028$, magnetometer
 $0.147\to0.033$, and only seismic survived at strength
 ($0.367\to0.158$). The two-tail calibration then \emph{strengthened}
 the equivalence side: $\varepsilon_{\mathrm{under}}$ is near zero or
-negative on most series, so VAD and the whale codas join the
-class-equivalent block. Sub-unity ratios of the envelope to the exact
+negative on most series, so VAD joins the class-equivalent block. On the
+whale codas the two calibrations point in opposite directions, and that
+series is reported as inconclusive. Sub-unity ratios of the envelope to the exact
 single-sample value disappeared with the imbalance correction. On the five
 series with $|\hat\pi-\tfrac12|<.035$ the median ratio
 $\sqrt{\hat I/2}/\widehat V_1$ runs from $1.11$ to $1.35$, above one as
@@ -963,9 +1008,10 @@ this an \emph{empirical} dead zone.)
 
 \textbf{The conditional lower bound stands, once at strength.} By
 Theorem~\ref{thm:incr}, seismic's history gain converts into a lower
-bound on conditional predictive information. The \emph{primary} result is now fully
-dependence- \emph{and} selection-aware, with the correctly-stated
-target: inference on the per-replicate maximum bounds the
+bound on conditional predictive information. The \emph{primary} result is dependence-aware and
+empirically selection-calibrated (the i.i.d.\ null measures the
+procedure's residual optimism; we give no formal coverage argument for the
+maximum), with the correctly-stated target: inference on the per-replicate maximum bounds the
 \emph{maximal} gain over the registered lag grid, so the certificate
 reads
 $\max_{D\in\mathcal D} I(X_t;\text{history}_D\mid X_{t-D})
@@ -1017,8 +1063,7 @@ conditional information; \cite{xuraginsky22}, Lem.~1), which joins the
 Kelly--Barron--Cover bracket below. What we have not found there, in the
 economics of information or elsewhere, is the value-of-delayed-observation
 framing, the exact covariance-parametrized laws of \S\ref{sec:multistate},
-the envelope \emph{anchored to an exact law} (sharp to $O(r^3)$, with the
-$O(r^2)$ correction illustrated on real data), its ordering against mixing
+the envelope \emph{anchored to an exact law} (sharp to $O(r^3)$), its ordering against mixing
 envelopes with both separations constructed, and its inversion into
 certified conditional-information witnesses.
 
@@ -1076,8 +1121,7 @@ response instead), and exactly nothing (inside the dead
 zone) when the prior sits off a kink and the coupling is weak. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the nine-series
 battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
-the envelope's predicted tightness is illustrated, with its $O(r^2)$
-correction, as a consistency check,
+the envelope holds on every real pair table as a consistency check,
 and history gains beyond the single-sample value yield dependence-aware
 lower bounds on conditional predictive information in nats. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
@@ -1129,6 +1173,28 @@ optimal the total advantage over the best comonotone static budget at
 matched surplus is $\Delta(D)=\sum_u\pi_u r_u(D)$ for layers with
 $r_u(D)=\mathrm{corr}(x^u_t,x^u_{t-D})\ge0$. Joint optimality of the nested
 policy is the open step.
+
+\paragraph{Battery protocol details.} Table~\ref{tab:details} lists, for each series, the sample size, cadence, lag grids, selected lag and block length.
+
+\begin{table}[h]\centering\footnotesize
+\begin{tabular}{lrlrrrr}
+\toprule
+Series & $N$ & cadence & lag grid & sel.\ grid & $D^*$ & block \\
+\midrule
+Two-state Markov & 19,874 & per step & 1--126 (40) & 21 & 76 & 152 \\
+i.i.d.\ null & 19,874 & per step & 1--126 (40) & 21 & 11 & 22 \\
+LOCATA azimuth & 21,452 & 120 Hz & 1--118 (42) & 22 & 118 & 236 \\
+LOCATA VAD & 17,708 & 120 Hz & 1--118 (42) & 21 & 1 & 10 \\
+Sperm-whale codas & 4,698 & per step & 1--39 (39) & 21 & 36 & 72 \\
+GOES X-ray flux & 9,988 & 60 s & 1--88 (38) & 19 & 55 & 110 \\
+GOES magnetometer & 9,988 & 60 s & 1--88 (38) & 19 & 33 & 66 \\
+GOES protons & 1,976 & 300 s & 1--39 (39) & 20 & 35 & 70 \\
+Seismic ANMO & 12,512 & 60 s & 1--88 (38) & 19 & 5 & 10 \\
+\bottomrule
+\end{tabular}
+\caption{Battery protocol details. $N$: pooled pairs at the least-populated lag. Cadence: sampling interval (whale codas and the synthetic series are indexed per step). Lag grid: registered lags in steps (count); sel.\ grid: lags entering the in-replicate reselection of \texttt{battery\_v5c}. $D^*$: selected lag; block: moving-block length, $\max(10,2D^*)$ steps. Binarization thresholds and missing-data handling follow the companion study's preparation scripts, released with the artifact.}
+\label{tab:details}
+\end{table}
 
 \begin{thebibliography}{9}
 \bibitem{infocom}
