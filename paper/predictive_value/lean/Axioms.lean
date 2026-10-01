@@ -1,0 +1,62 @@
+import PredictiveValue
+open PredictiveValue
+-- Lemma 2.1
+#print axioms lip_linear
+#print axioms sup'_sub_le
+#print axioms lip_value
+#print axioms envelope_le_tv
+-- Theorem 6.1 ingredients and statement
+#print axioms joint_unique
+#print axioms joint_marginals
+#print axioms posterior_one
+#print axioms posterior_zero
+#print axioms posterior_mean
+#print axioms feasible_iff
+#print axioms feasible_iff_of_le_half
+#print axioms hingeGain_eq
+#print axioms hinge_pos
+#print axioms hinge_neg
+#print axioms bayesDelta_poly
+#print axioms hinge_law_pos
+#print axioms hinge_law_neg
+#print axioms two_action_hinge_form
+-- worked examples
+#print axioms example_aPlus
+#print axioms example_aMinus
+#print axioms example_pos_value
+#print axioms example_neg_worthless
+#print axioms example_neg_infeasible
+#print axioms figure_aPlus
+#print axioms figure_aMinus
+#print axioms figure_feasible
+#print axioms threshold_ratio
+-- Corollary 6.5
+#print axioms zero_one_hinge_form
+#print axioms symmetric_cov
+#print axioms companion_law
+-- Proposition 6.2, Theorem 6.3
+#print axioms sq_value_isGreatest
+#print axioms quadratic_delta
+#print axioms posterior_variance
+#print axioms contact_pos
+#print axioms contact_neg
+#print axioms contact_q1_is_kink_hinge
+-- Proposition 4.1
+#print axioms negMulLog_quarter
+#print axioms negMulLog_div4
+#print axioms negMulLog_half
+#print axioms mi_Y1
+#print axioms mi_Y2
+#print axioms rewardB1_range
+#print axioms gain_Y1
+#print axioms gain_Y2
+#print axioms no_universal_f
+-- Proposition 3.5 / Appendix binary chain
+#print axioms mi_fairPair
+#print axioms fairPair_value
+#print axioms fairPair_posterior_tv
+-- Corollary 3.2
+#print axioms two_lt_two_div_log_two
+#print axioms two_div_log_two_lt_three
+#print axioms bitbudget_vacuous_iff
+#print axioms bitbudget_bites_nat

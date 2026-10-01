@@ -52,7 +52,7 @@ ax.plot(r, 1 + r**2 / 12, color=GREY, lw=1.2, ls="--",
         label=r"$1+r^2/12$ (leading correction)")
 d4 = json.load(open("battery_v4.json"))
 markers = {"Two-state Markov": "o", "i.i.d. null": "s", "LOCATA azimuth": "^",
-           "Sperm-whale codas": "D", "GOES protons": "v"}
+           "Sperm-whale codas": "D", "GOES protons": "v", "Seismic ANMO": "P"}
 for dom in d4["domains"]:
     if abs(dom["pi"] - 0.5) > 0.035 or dom["title"] not in markers:
         continue
@@ -66,7 +66,8 @@ for dom in d4["domains"]:
 ax.set_xlabel(r"$|r(D)|$")
 ax.set_ylabel(r"envelope / symmetric law $\frac{1}{2}|r|$")
 ax.set_xlim(0, 1.0)
-ax.set_ylim(0.985, 1.20)
+ax.set_ylim(0.93, 1.20)
+ax.axhline(1.0, color=GREY, lw=0.6, ls=":")
 ax.legend(loc="upper left", framealpha=0.9)
 ax.spines[["top", "right"]].set_visible(False)
 fig.tight_layout()
