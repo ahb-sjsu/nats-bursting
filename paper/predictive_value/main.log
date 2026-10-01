@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 00:44
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 08:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -455,7 +455,7 @@ File: fig_trichotomy.pdf Graphic file (type pdf)
 Package pdftex.def Info: fig_trichotomy.pdf  used on input line 599.
 (pdftex.def)             Requested size: 338.22418pt x 244.2869pt.
  [8] [9 <./fig_trichotomy.pdf>] [10] [11] [12] [13]
-Overfull \hbox (8.60977pt too wide) in paragraph at lines 1007--1050
+Overfull \hbox (8.60977pt too wide) in paragraph at lines 1010--1053
  [][] 
  []
 
@@ -465,14 +465,17 @@ LaTeX Warning: `h' float specifier changed to `ht'.
 <fig_tightness.pdf, id=343, 260.17201pt x 187.902pt>
 File: fig_tightness.pdf Graphic file (type pdf)
 <use fig_tightness.pdf>
-Package pdftex.def Info: fig_tightness.pdf  used on input line 1055.
+Package pdftex.def Info: fig_tightness.pdf  used on input line 1058.
 (pdftex.def)             Requested size: 338.22418pt x 244.2869pt.
 <fig_battery.pdf, id=352, 354.12299pt x 227.6505pt>
 File: fig_battery.pdf Graphic file (type pdf)
 <use fig_battery.pdf>
-Package pdftex.def Info: fig_battery.pdf  used on input line 1074.
+Package pdftex.def Info: fig_battery.pdf  used on input line 1077.
 (pdftex.def)             Requested size: 422.77664pt x 271.80365pt.
 [14] [15] [16 <./fig_tightness.pdf>] [17 <./fig_battery.pdf>] [18] [19]
+
+LaTeX Warning: `h' float specifier changed to `ht'.
+
 [20] [21] [22] (main.aux)
  ***********
 LaTeX2e <2025-11-01>
@@ -522,7 +525,7 @@ onts/type1/public/amsfonts/cm/cmti10.pfb><C:/Users/abptl/AppData/Local/Programs
 ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msam10.pfb><C:/Us
 ers/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msb
 m10.pfb>
-Output written on main.pdf (22 pages, 569342 bytes).
+Output written on main.pdf (22 pages, 569528 bytes).
 PDF statistics:
  763 PDF objects out of 1000 (max. 8388607)
  101 named destinations out of 1000 (max. 500000)
