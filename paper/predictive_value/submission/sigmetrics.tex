@@ -2,6 +2,7 @@
 \acmJournal{POMACS}
 \settopmatter{printacmref=false}
 \usepackage{booktabs}
+\usepackage{placeins}
 \setlength{\emergencystretch}{2em}
 % Theorem notes are set in Libertine small caps, which sets ``qu'' as one
 % ligature glyph whose Unicode map is ``q'' alone (``Squared'' copies as
@@ -37,7 +38,7 @@ ten-series battery across acoustics, bioacoustics, space weather,
 seismology and the BGP control plane of the Internet, with synthetic
 controls, tests these predictions. Two series, a teleseismic earthquake
 record and a BGP update stream, carry material history value, and
-calendar blocks show that value concentrated in identifiable regimes. A
+calendar blocks show that the value is concentrated in identifiable regimes. A
 chain-rule decomposition separates what history reveals about the regime
 from what it predicts within one, and the envelope inverts into
 dependence-aware lower bounds on conditional predictive information. All
@@ -74,8 +75,8 @@ $\Delta_Y\le\Omega\sqrt{I(X;Y)/2}$ (Theorem~\ref{thm:mi}; known as a
 minimum-excess-risk inequality, attribution in \S\ref{sec:mi}), with the
 \emph{bit-budget corollary}: an observation carrying at most $b$ bits
 ($H(Y)\le b\ln 2$) caps feedback value at $\Omega\sqrt{(b\ln2)/2}$, so
-compression can preserve but never create feedback value. The cap binds only
-for $b\le2$, and a controller that accumulates messages across decisions
+compression can preserve but never create feedback value. For integer $b$, the cap
+improves on the trivial range bound only when $b\le2$, and a controller that accumulates messages across decisions
 holds a richer observation to which the corollary applies with its total
 entropy. (\textbf{C2}) We show the envelope is \emph{sharp
 where it matters}: on the canonical binary chain it matches the exact law to
@@ -86,7 +87,7 @@ consistency check: $\hat I$ and $\widehat V_1$ derive
 from the same lag table). (\textbf{C3}) We prove no universal
 equality $\Delta=f(I)$ exists for bounded objectives
 (Proposition~\ref{prop:noneq}): information is a scalar, value is a
-geometry. This sharpens against the classical exception. For
+geometry. This stands in contrast to the classical exception. For
 \emph{logarithmic} (unbounded) utility, Kelly and Barron--Cover
 \cite{kelly56,barroncover88} show the value of side information \emph{equals}
 $I$. For general bounded objectives, mutual information provides a
@@ -112,11 +113,13 @@ envelopes (mixing, information, bit-budget) below the master
 total-variation envelope and prove mixing and information are incomparable.
 For every lag and every $K$, a \emph{preview process} keeps
 $\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
-vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A ten-series
-battery across four physical domains and one computer system establishes
-equivalence for the protocol-fixed policy class on three series, leaves one noise-limited and
-one inconclusive, and finds material history gains on two, a teleseismic
-record and a BGP update stream. Calendar blocks show both gains
+vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) Across ten
+series from four physical domains, one computer system and controls, the
+battery establishes equivalence for the protocol-fixed policy class on
+three series, leaves one noise-limited and one inconclusive, records two
+smaller detections near the practical threshold, and finds material
+history gains on two, a teleseismic record and a BGP update stream; the
+i.i.d.\ series serves as the selection control. Calendar blocks show both gains
 concentrated in identifiable regimes, which a chain-rule decomposition
 (Lemma~\ref{lem:regime}) separates into regime identification and
 within-regime prediction. Read backwards, the incremental theorem
@@ -178,12 +181,12 @@ $\mu\in\Delta(\mathcal X)$:
 \[
 \psi(\mu)\;=\;\sup_{w}\sum_{x}R(w,x)\,\mu(x),
 \]
-(we assume throughout that the supremum is attained by a measurable
-policy, automatic for finite action sets and a standing assumption
-for continuous ones)
-a pointwise maximum of linear functionals, hence convex; and the posterior
-$\mu_Y=\mathbb P(X\in\cdot\mid Y)$, with $\E[\mu_Y]=\bar\mu$ by the tower
-property. The optimal $Y$-measurable controller attains
+We assume throughout that the supremum is attained by a measurable
+policy, which is automatic for finite action sets and a standing
+assumption for continuous ones. The function $\psi$ is a pointwise
+supremum of linear functionals and hence convex. Let
+$\mu_Y=\mathbb P(X\in\cdot\mid Y)$ denote the posterior; by the tower
+property, $\E[\mu_Y]=\bar\mu$. The optimal $Y$-measurable controller attains
 $V^\star_Y=\E[\psi(\mu_Y)]$; the best static controller attains
 $V_{\mathrm{stat}}=\psi(\bar\mu)$. The exact object of this paper is the
 \textbf{Bayes envelope}
@@ -805,8 +808,8 @@ data were fetched. It reviewed the proofs by independent re-derivation,
 audited every reported number against the result files, and searched the
 literature for prior statements of the results (the attribution of
 Theorems~\ref{thm:mi} and~\ref{thm:incr} came from that search). It wrote
-the Lean and MATLAB scripts that machine-check the finite and analytic
-results, and it drafted and copy-edited text. The author chose the
+the Lean scripts that machine-check the finite and algebraic results and
+the MATLAB scripts that symbolically verify the analytic results, and it drafted and copy-edited text. The author chose the
 questions, the theory and the battery design, checked the outputs, and is
 responsible for every claim.
 
@@ -1258,8 +1261,8 @@ essential, not technical.
 
 \emph{Age of information, and its critics.} AoI \cite{yates21} treats
 freshness as the object, with sampling-policy results such as \cite{sun17}
-optimizing age processes. That plain age is not decision significance is
-already argued \emph{within} the field: age-of-incorrect-information
+optimizing age processes. That age alone lacks decision significance has
+already been argued \emph{within} the field: age-of-incorrect-information
 replaces the clock with an error-aware penalty \cite{maatouk20}, explicit
 AoI-vs-VoI scheduling comparisons exist for networked control
 \cite{ayan19}, and value-of-information metrics for feedback control have
@@ -1300,11 +1303,12 @@ objectives (a smooth value function giving quadratic weak-correlation
 response instead), and exactly nothing (inside the dead
 zone) when the prior sits off a kink and the coupling is weak. Beyond one effective dimension, no scalar summary of dependence
 determines value at all. Each claim is falsifiable, and the ten-series
-battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
-the envelope holds on every real pair table as a consistency check,
-and history gains beyond the single-sample value yield dependence-aware
-lower bounds on conditional predictive information in nats, and
-calendar blocks locate the regimes in which that history value lives. The instrument reads in both directions; that, more
+battery exercises the operational claims: the protocol-fixed policy shows
+no detectable history excess where the model-calibrated equivalence
+criterion is met; the information envelope holds on every real pair table
+as a consistency check; policy gains yield dependence-aware lower bounds on
+conditional predictive information; and calendar blocks identify where
+those gains occur. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
 
 \appendix
@@ -1353,7 +1357,7 @@ objective decomposes additively over layers via
 $\min(w,a)=\sum_u\mathbf 1[w\ge u]\,x^u_t$ and
 $(w-a)^+=\sum_u\mathbf 1[w\ge u](1-x^u_t)$; when the observation is the delayed capacity, the per-layer binary policies
 (the delayed indicators) are nested, and if that nested policy is jointly
-optimal the total advantage over the best comonotone static budget at
+optimal, the total advantage over the best comonotone static budget at
 matched surplus is $\Delta(D)=\sum_u\pi_u r_u(D)$ for layers with
 $r_u(D)=\mathrm{corr}(x^u_t,x^u_{t-D})\ge0$. Joint optimality of the nested
 policy is the open step.
@@ -1382,6 +1386,7 @@ registered lag, plus $D^*$). $D^*$: selected lag; block: moving-block length, $\
 \label{tab:details}
 \end{table}
 
+\FloatBarrier
 \begin{thebibliography}{9}
 \bibitem{infocom}
 Anonymous. Companion systems submission, under review, 2026. All results
