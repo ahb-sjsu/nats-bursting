@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 08:08
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 08:17
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1148,27 +1148,27 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [12.12]
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 8.0pt on input line 924.
+(Font)              scaled to size 8.0pt on input line 923.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 6.0pt on input line 924.
+(Font)              scaled to size 6.0pt on input line 923.
 
 [13.13]
-<fig_tightness.pdf, id=350, 260.17201pt x 187.902pt>
+<fig_tightness.pdf, id=352, 260.17201pt x 187.902pt>
 File: fig_tightness.pdf Graphic file (type pdf)
 <use fig_tightness.pdf>
-Package pdftex.def Info: fig_tightness.pdf  used on input line 1048.
+Package pdftex.def Info: fig_tightness.pdf  used on input line 1047.
 (pdftex.def)             Requested size: 284.99268pt x 205.83842pt.
 
 
-Class acmart Warning: A possible image without description on input line 1062.
+Class acmart Warning: A possible image without description on input line 1061.
 
-<fig_battery.pdf, id=359, 354.12299pt x 227.6505pt>
+<fig_battery.pdf, id=361, 354.12299pt x 227.6505pt>
 File: fig_battery.pdf Graphic file (type pdf)
 <use fig_battery.pdf>
-Package pdftex.def Info: fig_battery.pdf  used on input line 1067.
+Package pdftex.def Info: fig_battery.pdf  used on input line 1066.
 (pdftex.def)             Requested size: 356.23782pt x 229.0255pt.
 
-Class acmart Warning: A possible image without description on input line 1081.
+Class acmart Warning: A possible image without description on input line 1080.
 
 [14.14] [15.15 <./fig_tightness.pdf>] [16.16 <./fig_battery.pdf>] [17.17]
 Underfull \vbox (badness 5119) has occurred while \output is active []
@@ -1178,7 +1178,7 @@ Underfull \vbox (badness 5119) has occurred while \output is active []
 LaTeX Warning: `h' float specifier changed to `ht'.
 
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1394.
+(Font)              scaled to size 8.0pt on input line 1393.
 [19.19]
 Underfull \vbox (badness 1072) has occurred while \output is active []
 
@@ -1225,7 +1225,7 @@ Package rerunfilecheck Info: File `sigmetrics.out' has not changed.
 Here is how much of TeX's memory you used:
  21980 strings out of 467869
  364149 string characters out of 5418334
- 837557 words of memory out of 5000000
+ 837626 words of memory out of 5000000
  49349 multiletter control sequences out of 15000+600000
  909786 words of font info for 751 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
@@ -1250,9 +1250,9 @@ fb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/txexs
 iaX.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/
 txsym.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newt
 x/txsys.pfb>
-Output written on sigmetrics.pdf (21 pages, 847770 bytes).
+Output written on sigmetrics.pdf (21 pages, 848458 bytes).
 PDF statistics:
- 727 PDF objects out of 1000 (max. 8388607)
+ 729 PDF objects out of 1000 (max. 8388607)
  102 named destinations out of 1000 (max. 500000)
  137368 words of extra memory for PDF output out of 154059 (max. 10000000)
 
