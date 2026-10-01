@@ -1,0 +1,47 @@
+== start Thu Oct  1 06:09:29 AM UTC 2026
+{"n_minutes": 10080, "n_observed": 10080, "n_runs": 1, "median_per_minute": 5053.0, "total_elems_observed": 64166908, "mean_per_minute": 6365.764682539682, "max_per_minute": 300020, "min_per_minute": 2245, "ties_at_median": 5, "pi_hat": 0.4998015873015873, "fetch": {"collector": "rrc06", "n_nominal": 2016, "n_missing": 0, "frac_missing": 0.0, "missing": [], "total_elems": 64166908, "bytes": 564966733}}
+BGP rrc06 updates    pi=0.500 gmax=+0.053 p=0.0033 eps=0.015 U=0.068 envexc=+0.052 I_LCB=0.0446
+BGP_V4_DONE
+BGP rrc06 updates    g=+0.053 p=0.0033 eps=(0.015,-0.002) U2=0.051 paired=[0.0816872427983539,0.1463991769547325] Icond(bb)=0.013345611271994443
+BGP_V5_DONE
+BGP rrc06 updates    D*= 67 mean=+0.0545 CI=[+0.0440,+0.0658] I_cond>=0.0039
+V5B_DONE
+BGP rrc06 updates    lags=19 obsmax=+0.0545 selL05=+0.0472 I_cond>=0.0045 (11.0s)
+V5C_DONE
+Seismic ANMO [block 1/3] g=+0.012 p=0.4500 eps=(0.024,0.001) U2=0.013 paired=[-0.01240506329113924,0.03722784810126581] Icond(bb)=0.0
+  Seismic ANMO b1: n=4200 pi=0.513 P10=0.283 P11=0.731 g=+0.0118 p=0.4500 U2=0.0128 D*=45 selL05=+0.0138 LD*=-0.020253164556962026 -> equivalent (89.4s)
+Seismic ANMO [block 2/3] g=+0.237 p=0.0033 eps=(0.027,0.001) U2=0.238 paired=[0.21995192307692307,0.25576923076923075] Icond(bb)=0.09675769693047337
+  Seismic ANMO b2: n=4200 pi=0.501 P10=0.138 P11=0.863 g=+0.2365 p=0.0033 U2=0.2377 D*=3 selL05=+0.2195 LD*=0.21995192307692307 -> history adds (92.5s)
+Seismic ANMO [block 3/3] g=+0.181 p=0.0033 eps=(0.026,0.001) U2=0.182 paired=[0.16409638554216868,0.19951807228915663] Icond(bb)=0.05385524749600813
+  Seismic ANMO b3: n=4200 pi=0.514 P10=0.116 P11=0.890 g=+0.1808 p=0.0033 U2=0.1823 D*=5 selL05=+0.1646 LD*=0.16409638554216868 -> history adds (90.0s)
+Seismic ANMO: homogeneity chi2=447.91 df=4 p=1.23e-95 not block-robust; failing blocks [1]
+GOES X-ray flux [block 1/3] g=+0.020 p=0.0167 eps=(0.017,0.002) U2=0.022 paired=[0.0009262117937635072,0.08028712565606667] Icond(bb)=1.7157365738132272e-06
+  GOES X-ray flux b1: n=3359 pi=0.370 P10=0.069 P11=0.882 g=+0.0204 p=0.0167 U2=0.0221 D*=19 selL05=+0.0133 LD*=0.005557270762581044 -> equivalent (69.7s)
+GOES X-ray flux [block 2/3] g=+0.036 p=0.0067 eps=(0.019,0.002) U2=0.037 paired=[0.032846715328467155,0.08659588586595886] Icond(bb)=0.0021578134157387184
+  GOES X-ray flux b2: n=3359 pi=0.424 P10=0.083 P11=0.888 g=+0.0358 p=0.0067 U2=0.0375 D*=64 selL05=+0.0170 LD*=0.0092899800928998 -> not established (67.8s)
+GOES X-ray flux [block 3/3] g=+0.006 p=0.6600 eps=(0.030,0.002) U2=0.007 paired=[0.003428927680798005,0.06485349127182044] Icond(bb)=2.3515090080285568e-05
+  GOES X-ray flux b3: n=3358 pi=0.468 P10=0.065 P11=0.926 g=+0.0055 p=0.6600 U2=0.0071 D*=25 selL05=+0.0054 LD*=-0.045199501246882795 -> equivalent (67.4s)
+GOES X-ray flux: homogeneity chi2=23.86 df=4 p=8.53e-05 
+GOES magnetometer [block 1/3] g=+0.030 p=0.0400 eps=(0.028,0.002) U2=0.032 paired=[0.02175765225623225,0.09089618176080781] Icond(bb)=0.0009467908634062566
+  GOES magnetometer b1: n=3359 pi=0.475 P10=0.118 P11=0.870 g=+0.0299 p=0.0400 U2=0.0316 D*=33 selL05=+0.0195 LD*=0.008520037866834964 -> not established (67.9s)
+GOES magnetometer [block 2/3] g=+0.024 p=0.0567 eps=(0.026,0.002) U2=0.026 paired=[0.027339980701190092,0.09327758121582502] Icond(bb)=0.0014949490894828933
+  GOES magnetometer b2: n=3359 pi=0.447 P10=0.089 P11=0.889 g=+0.0244 p=0.0567 U2=0.0262 D*=45 selL05=+0.0276 LD*=0.01704728208427147 -> equivalent (67.9s)
+GOES magnetometer [block 3/3] g=+0.022 p=0.0433 eps=(0.020,0.002) U2=0.024 paired=[-0.01134089392928619,0.015026684456304189] Icond(bb)=0.0
+  GOES magnetometer b3: n=3358 pi=0.446 P10=0.127 P11=0.841 g=+0.0224 p=0.0433 U2=0.0244 D*=67 selL05=+0.0006 LD*=-0.01134089392928619 -> equivalent (67.3s)
+GOES magnetometer: homogeneity chi2=30.06 df=4 p=4.76e-06 
+GOES protons [block 1/3] g=+0.017 p=0.7600 eps=(0.070,-0.001) U2=0.016 paired=[-0.004672897196261682,0.04361370716510903] Icond(bb)=0.0
+  GOES protons b1: n=672 pi=0.499 P10=0.255 P11=0.746 g=+0.0165 p=0.7600 U2=0.0160 D*=1 selL05=+0.0031 LD*=-0.004672897196261682 -> equivalent (13.1s)
+GOES protons [block 2/3] g=+0.055 p=0.1233 eps=(0.065,0.005) U2=0.061 paired=[0.006329113924050633,0.07753164556962025] Icond(bb)=8.01153661272232e-05
+  GOES protons b2: n=672 pi=0.478 P10=0.360 P11=0.604 g=+0.0554 p=0.1233 U2=0.0608 D*=3 selL05=+0.0258 LD*=0.006329113924050633 -> not established (12.8s)
+GOES protons [block 3/3] g=+0.040 p=0.3333 eps=(0.065,0.005) U2=0.045 paired=[0.015723270440251572,0.07547169811320754] Icond(bb)=0.0004944424666745778
+  GOES protons b3: n=671 pi=0.484 P10=0.287 P11=0.695 g=+0.0398 p=0.3333 U2=0.0448 D*=2 selL05=+0.0267 LD*=0.015723270440251572 -> not established (14.0s)
+GOES protons: homogeneity chi2=24.88 df=4 p=5.31e-05 
+BGP rrc06 updates [block 1/3] g=+0.010 p=0.0033 eps=(0.005,0.004) U2=0.014 paired=[-0.004615384615384616,0.02707692307692308] Icond(bb)=0.0
+  BGP rrc06 updates b1: n=3360 pi=0.649 P10=0.454 P11=0.755 g=+0.0100 p=0.0033 U2=0.0139 D*=17 selL05=+0.0012 LD*=-0.004615384615384616 -> detected, below floor (68.2s)
+BGP rrc06 updates [block 2/3] g=+0.062 p=0.0033 eps=(0.020,0.004) U2=0.066 paired=[0.08121212121212121,0.12818181818181817] Icond(bb)=0.013190817263544536
+  BGP rrc06 updates b2: n=3360 pi=0.527 P10=0.370 P11=0.667 g=+0.0615 p=0.0033 U2=0.0657 D*=7 selL05=+0.0556 LD*=0.04151515151515151 -> history adds (69.3s)
+BGP rrc06 updates [block 3/3] g=+0.003 p=0.1967 eps=(0.006,0.005) U2=0.008 paired=[-0.008580858085808581,0.0036303630363036304] Icond(bb)=0.0
+  BGP rrc06 updates b3: n=3360 pi=0.323 P10=0.243 P11=0.492 g=+0.0028 p=0.1967 U2=0.0080 D*=61 selL05=-0.0027 LD*=-0.008580858085808581 -> equivalent (69.5s)
+BGP rrc06 updates: homogeneity chi2=397.86 df=4 p=8.05e-85 
+STATIONARITY_DONE
+== ALL_DONE Thu Oct  1 06:32:32 AM UTC 2026

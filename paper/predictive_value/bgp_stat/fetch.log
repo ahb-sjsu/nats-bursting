@@ -1,0 +1,22 @@
+0 updates.20260831.2355.gz True
+100 updates.20260901.0815.gz True
+200 updates.20260901.1635.gz True
+300 updates.20260902.0100.gz True
+400 updates.20260902.0910.gz True
+500 updates.20260902.1735.gz True
+600 updates.20260903.0210.gz True
+700 updates.20260903.1015.gz True
+800 updates.20260903.1835.gz True
+900 updates.20260904.0250.gz True
+1000 updates.20260904.1120.gz True
+1100 updates.20260904.1935.gz True
+1200 updates.20260905.0355.gz True
+1300 updates.20260905.1210.gz True
+1400 updates.20260905.2035.gz True
+1500 updates.20260906.0455.gz True
+1600 updates.20260906.1315.gz True
+1700 updates.20260906.2135.gz True
+1800 updates.20260907.0555.gz True
+1900 updates.20260907.1415.gz True
+2000 updates.20260907.2235.gz True
+FETCH_DONE {"collector": "rrc06", "n_nominal": 2016, "n_missing": 0, "frac_missing": 0.0, "total_elems": 64166908, "bytes": 564966733}

@@ -1,0 +1,10 @@
+Two-state Markov     lags=21 obsmax=+0.0056 selL05=+0.0002 I_cond>=0.0000 (22.8s)
+i.i.d. null          lags=21 obsmax=+0.0123 selL05=+0.0079 I_cond>=0.0001 (24.6s)
+LOCATA azimuth       lags=22 obsmax=-0.0007 selL05=-0.0009 I_cond>=0.0000 (32.8s)
+LOCATA VAD           lags=21 obsmax=+0.0015 selL05=+0.0000 I_cond>=0.0000 (40.9s)
+Sperm-whale codas    lags=21 obsmax=+0.0428 selL05=+0.0397 I_cond>=0.0032 (16.6s)
+GOES X-ray flux      lags=19 obsmax=+0.0248 selL05=+0.0175 I_cond>=0.0006 (11.5s)
+GOES magnetometer    lags=19 obsmax=+0.0341 selL05=+0.0258 I_cond>=0.0013 (11.7s)
+GOES protons         lags=20 obsmax=+0.0269 selL05=+0.0197 I_cond>=0.0008 (3.8s)
+Seismic ANMO         lags=19 obsmax=+0.1570 selL05=+0.1453 I_cond>=0.0422 (14.7s)
+V5C_DONE

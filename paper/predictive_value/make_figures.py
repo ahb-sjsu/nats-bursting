@@ -53,8 +53,10 @@ ax.plot(r, np.sqrt(2 * I) / r, color=BLUE, lw=2,
 ax.plot(r, 1 + r**2 / 12, color=GREY, lw=1.2, ls="--",
         label=r"$1+r^2/12$ (leading correction)")
 d4 = json.load(open("battery_v4.json"))
+d4["domains"] += json.load(open("bgp_stat/bgp_v4.json"))["domains"]
 markers = {"Two-state Markov": "o", "LOCATA azimuth": "^",
-           "Sperm-whale codas": "D", "GOES protons": "v", "Seismic ANMO": "P"}
+           "Sperm-whale codas": "D", "GOES protons": "v", "Seismic ANMO": "P",
+           "BGP rrc06 updates": "X"}
 for dom in d4["domains"]:
     if abs(dom["pi"] - 0.5) > 0.035 or dom["title"] not in markers:
         continue
@@ -79,13 +81,14 @@ fig.savefig("fig_tightness.pdf")
 # (legend upper-right keeps the seismic row clear; U2 can sit below the
 #  point estimate where eps_under < 0 --- bias-corrected bound)
 d5 = json.load(open("battery_v5.json"))["domains"]
-b5b = {d["title"]: d for d in json.load(open("battery_v5b.json"))}
-b5c = {d["title"]: d for d in json.load(open("battery_v5c.json"))}
+d5 += json.load(open("bgp_stat/bgp_v5.json"))["domains"]
+b5b = {d["title"]: d for d in json.load(open("battery_v5b.json")) + json.load(open("bgp_stat/bgp_v5b.json"))}
+b5c = {d["title"]: d for d in json.load(open("battery_v5c.json")) + json.load(open("bgp_stat/bgp_v5c.json"))}
 order = ["Two-state Markov", "i.i.d. null", "LOCATA azimuth", "LOCATA VAD",
          "Sperm-whale codas", "GOES protons", "GOES X-ray flux",
-         "GOES magnetometer", "Seismic ANMO"]
+         "GOES magnetometer", "Seismic ANMO", "BGP rrc06 updates"]
 v5 = {d["title"]: d for d in d5}
-fig, ax = plt.subplots(figsize=(4.9, 2.9))
+fig, ax = plt.subplots(figsize=(4.9, 3.15))
 ys = np.arange(len(order))[::-1]
 for y, name in zip(ys, order):
     d = v5[name]
@@ -103,7 +106,8 @@ for y, name in zip(ys, order):
                 mew=1.8, lw=0, zorder=5)
 ax.axvline(0, color="0.8", lw=0.8)
 ax.axvline(0.03, color=RED, lw=1.0, ls=":")
-ax.text(0.031, ys[-1] - 0.55, "practical floor", color=RED, fontsize=7, va="bottom")
+ax.set_ylim(-1.05, len(order) - 0.4)
+ax.text(0.031, -0.95, "practical floor", color=RED, fontsize=7, va="bottom")
 ax.set_yticks(ys)
 ax.set_yticklabels(order)
 ax.set_xlabel("history-class gain over exact single-sample value")

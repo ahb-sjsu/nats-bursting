@@ -58,8 +58,15 @@ def selection_aware_boot(diffs_by_lag, block_of, seed=0):
     rng = np.random.default_rng(seed)
     lags = sorted(diffs_by_lag)
     maxes = np.empty(N_BOOT)
+    # Repair of the 64-fraction cap: draw one fractional block start per block
+    # actually needed. With the fixed 64, long series (seismic) used too few
+    # blocks and the bound collapsed (0.0098 instead of 0.1453). This version
+    # reproduces battery_v5c.json exactly on all nine series
+    # (bgp_stat/repro_v5c_existing.json).
+    kk_max = max(max(1, int(np.ceil(len(d) / min(block_of(D), max(2, len(d) // 3)))))
+                 for D in lags for d in diffs_by_lag[D])
     for bi in range(N_BOOT):
-        fracs = rng.random(64)  # shared fractional block starts this replicate
+        fracs = rng.random(kk_max)  # shared fractional block starts this replicate
         best = -1e9
         for D in lags:
             s = 0.0; n_tot = 0

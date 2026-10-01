@@ -30,9 +30,13 @@ information can carry all or none of the decision-relevant distinction.
 For binary state, the local decision geometry at the prior sets how value
 grows with correlation: as a sum of hinges with dead zones for finite
 action sets, and quadratically when the value function is smooth. A
-nine-series battery across acoustics, bioacoustics, space weather and
-seismology, with synthetic controls, tests these predictions, finds one
-clearly material history gain, and inverts the envelope into
+ten-series battery across acoustics, bioacoustics, space weather,
+seismology and the BGP control plane of the Internet, with synthetic
+controls, tests these predictions. Two series, a teleseismic earthquake
+record and a BGP update stream, carry material history value, and
+calendar blocks show that value concentrated in identifiable regimes. A
+chain-rule decomposition separates what history reveals about the regime
+from what it predicts within one, and the envelope inverts into
 dependence-aware lower bounds on conditional predictive information.
 \end{abstract}
 \keywords{value of information, age of information, Bayes envelope, minimum excess risk, mutual information}
@@ -103,17 +107,24 @@ envelopes (mixing, information, bit-budget) below the master
 total-variation envelope and prove mixing and information are incomparable.
 For every lag and every $K$, a \emph{preview process} keeps
 $\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
-vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A nine-series
-battery across four physical domains establishes registered-class
-equivalence on three series, leaves one noise-limited and one
-inconclusive, and finds one clearly material history gain; read backwards, the incremental theorem
-converts that gain into a model-calibrated, dependence-aware lower bound
+vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A ten-series
+battery across four physical domains and one computer system establishes
+registered-class equivalence on three series, leaves one noise-limited and
+one inconclusive, and finds material history gains on two, a teleseismic
+record and a BGP update stream. Calendar blocks show both gains
+concentrated in identifiable regimes, which a chain-rule decomposition
+(Lemma~\ref{lem:regime}) separates into regime identification and
+within-regime prediction. Read backwards, the incremental theorem
+converts each gain into a model-calibrated, dependence-aware lower bound
 on \emph{conditional} history information, always one-sided:
 $I(X_t;\text{history}\mid X_{t-D})\ge
 2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}).
 
-Table~\ref{tab:novelty} separates what this paper restates from what it adds.
+Table~\ref{tab:novelty} separates what this paper restates from what it adds. The
+finite and algebraic results are machine-checked in Lean~4 against Mathlib
+(52 theorems), and the analytic ones symbolically; both are part of the
+released artifact.
 
 \begin{table}[!ht]\centering\small
 \begin{tabular}{p{0.58\linewidth}p{0.36\linewidth}}
@@ -129,8 +140,9 @@ Local marginal-value trichotomy & known \cite{delaragossner} \\
 Exact lag-covariance hinge law, sign-asymmetric thresholds (Thm.~\ref{thm:hinge}) & new, to our knowledge \\
 Explicit contact-order coefficients (Thm.~\ref{thm:contact}) & new, to our knowledge \\
 Mixing/information separation construction (Prop.~\ref{prop:incomp}) & new, to our knowledge \\
+Regime decomposition (Lemma~\ref{lem:regime}) & elementary (chain rule) \\
 Conditional-information certificate from policy gain & new operational use \\
-Multi-domain battery (\S\ref{sec:battery}) & new \\
+Multi-domain battery with a BGP series and regime analysis (\S\ref{sec:battery}) & new \\
 \bottomrule
 \end{tabular}
 \caption{What is known and what is new. The known results are restated because the exact laws and the battery are built on them.}
@@ -144,7 +156,7 @@ scope the theory is closed on itself: one decision-theoretic object
 explaining an exact systems law, envelopes ordered by what they require
 (a model, samples, or a bit rate), sharpness results tying envelope to law,
 impossibility results delimiting both, and a falsifiable empirical program
-run on real processes from four physical domains.
+run on real processes from four physical domains and one computer system.
 
 \section{Setting and the exact object}\label{sec:envelope}
 
@@ -290,6 +302,30 @@ the value-of-delayed-information reading, the corollaries in that reading
 (bit budget, Blackwell garbling), the operational inversion the battery
 executes (\S\ref{sec:battery}), and the exactness theory that anchors
 the envelopes (\S\ref{sec:multistate}).
+
+\begin{lemma}[Regime decomposition]\label{lem:regime}
+For any delayed observables $Z$, $H$ and any random variable $R$ (a regime
+label),
+\[
+I(X;H\mid Z)\;\le\;I(X;R\mid Z)+I(X;H\mid Z,R),
+\]
+with equality when $R$ is a function of $(Z,H)$. Hence the incremental value
+of Theorem~\ref{thm:incr} satisfies
+$\Delta_W-\Delta_Z\le\Omega\sqrt{\tfrac12[I(X;R\mid Z)+I(X;H\mid Z,R)]}$.
+\end{lemma}
+
+\begin{proof}
+By the chain rule, $I(X;H,R\mid Z)=I(X;R\mid Z)+I(X;H\mid Z,R)$,
+and $I(X;H\mid Z)\le I(X;H,R\mid Z)$, with equality when $R$ is
+determined by $(Z,H)$.
+\end{proof}
+
+The lemma is elementary, and we state it because it is what the battery
+measures. A history gain pooled over a nonstationary record bounds the
+sum, so part of it can be regime identification: history that only reveals
+which regime the system is in. A history gain measured inside one regime
+bounds the within-regime term. The two readings coincide only for a
+stationary process, and \S\ref{sec:battery} measures both.
 
 \begin{proposition}[Leading-order tightness in the canonical case]
 \label{prop:tight}
@@ -745,11 +781,16 @@ results, and it drafted and copy-edited text. The author chose the
 questions, the theory and the battery design, checked the outputs, and is
 responsible for every claim.
 
-\textbf{States.} Binary regime series from four physical domains plus
-controls: acoustic source azimuth and voice activity (LOCATA, 120\,Hz);
+\textbf{States.} Binary regime series from four physical domains, one
+computer system, and controls: acoustic source azimuth and voice activity (LOCATA, 120\,Hz);
 sperm-whale coda type (Dominica corpus, per-exchange); GOES space-weather
 series (X-ray flux, magnetometer, proton flux; 1--5-minute cadence); seismic
-station regime (ANMO, 1-minute); a synthetic two-state Markov chain
+ground motion at station IU.ANMO (1~Hz over 3.5 hours, from 30 minutes
+before the origin of the 2015 Mw~8.3 Illapel, Chile earthquake, so the
+record holds the teleseismic arrivals and their coda); BGP control-plane
+activity at RIPE RIS collector rrc06 (1-minute, 1 to 7 September 2026,
+state 1 when the minute's count of announced or withdrawn prefixes exceeds
+the week's median, a rule registered before the data were fetched); a synthetic two-state Markov chain
 (flip probability $0.02$) as positive reference; an i.i.d.\ fair-bit series
 as null. Each series is binarized by the domain's registered thresholding
 (the companion study's preparation scripts, unchanged).
@@ -866,7 +907,9 @@ from four analysis runs of the released artifact. Run v5 gives the gains,
 $p$ and calibration tails, v5b the fixed-$D^*$ bounds and v5c the
 selection-aware bounds. Run v4 gives the single-sample quantities
 $\widehat V_1$ and $\widehat I$, the tightness ratios,
-Fig.~\ref{fig:tightness} and the total-information witness. The v3 run and the
+Fig.~\ref{fig:tightness} and the total-information witness. The BGP series and the calendar-block
+analysis come from separate runs of the same code, registered in the
+artifact before the BGP data were fetched. The v3 run and the
 protocol corrections are preserved in the artifact. Per domain: the class proportion $\hat\pi$; the
 maximum history-class gain over the exact single-sample Bayes value
 $\widehat V_1$; the parametric-bootstrap $p$ under the fitted Markov null
@@ -896,6 +939,7 @@ GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $+.002\,/\,
 GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $+.011\,/\,+.017$ & detected, below floor \\
 GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $+.022\,/\,+.026$ & detected (exploratory) \\
 Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{+.146\,/\,+.145}$ & history adds \\
+BGP rrc06 & $.500$ & $+.053$ & $<.004$ & $.015$ & $-.002$ & $.051$ & $+.044\,/\,+.047$ & history adds \\
 \bottomrule
 \end{tabular}
 \caption{Battery v5 (final analysis). Verdicts are statements about the
@@ -952,7 +996,7 @@ the exact single-sample value; grey bars: the model-calibrated interval
 $[\hat g-\varepsilon_{\mathrm{over}},\hat g+\varepsilon_{\mathrm{under}}]$;
 ticks: the moving-block one-sided bounds at fixed $D^*$ (upper, teal)
 and with in-replicate lag selection (lower, orange); dotted line: the
-registered practical floor. Only seismic separates decisively from both
+registered practical floor. Seismic and BGP separate from both
 zero and the floor; the i.i.d.\ null's positive selection-aware tick
 is the empirical winner's-curse floor; whale's wide bar is the
 short-series noise the verdict language respects. Where
@@ -973,14 +1017,16 @@ the equivalence side: $\varepsilon_{\mathrm{under}}$ is near zero or
 negative on most series, so VAD joins the class-equivalent block. On the
 whale codas the two calibrations point in opposite directions, and that
 series is reported as inconclusive. Sub-unity ratios of the envelope to the exact
-single-sample value disappeared with the imbalance correction. On the five
+single-sample value disappeared with the imbalance correction. On the
 series with $|\hat\pi-\tfrac12|<.035$ the median ratio
-$\sqrt{\hat I/2}/\widehat V_1$ runs from $1.11$ to $1.35$, above one as
+$\sqrt{\hat I/2}/\widehat V_1$ runs from $1.01$ (BGP) to $1.35$ on the six
+such series, above one as
 Theorem~\ref{thm:mi} requires. This is a consistency check, not an
 independent test, since $\hat I$ and $\widehat V_1$ come from the same
 pooled lag table.
 
-\textbf{Only seismic exhibits a clearly material history gain.} X-ray
+\textbf{Two series exhibit material history gains.} Seismic and BGP are
+detected with both moving-block lower bounds above the practical floor. X-ray
 and magnetometer show smaller statistically detected gains near the
 registered practical threshold (point gains $.028$ and $.033$ against
 $.03$, lower bounds below it); on the remaining series \emph{no
@@ -1002,9 +1048,9 @@ Proposition~\ref{prop:noneq}, on a physical series. (Population
 uncertainty for the dead-zone boundary itself is future work; we label
 this an \emph{empirical} dead zone.)
 
-\textbf{The conditional lower bound stands, once at strength.} By
-Theorem~\ref{thm:incr}, seismic's history gain converts into a lower
-bound on conditional predictive information. The \emph{primary} result is dependence-aware and
+\textbf{The pooled conditional lower bounds.} By
+Theorem~\ref{thm:incr}, each detected history gain converts into a lower
+bound on conditional predictive information over its whole record. The \emph{primary} result is dependence-aware and
 empirically selection-calibrated (the i.i.d.\ null measures the
 procedure's residual optimism; we give no formal coverage argument for the
 maximum), with the correctly-stated target: inference on the per-replicate maximum bounds the
@@ -1020,13 +1066,63 @@ corroborate to within a few percent: the fixed-$D^*$ moving-block
 interval ($[+.146,+.168]$, $\approx0.042$) and the fitted-Markov
 surrogate calibration ($2(0.158-0.014)^2\approx0.041$), alongside the \emph{approximate} total-information witness
 $I(X_t;\text{window})\gtrsim0.176$ nats (exploratory: its estimator
-reuses the gain-error calibration, as noted in the protocol). History knows what the last
-sample does not; that is what ``aftershock clustering'' means in
-information units. Magnetometer's selection-aware bound ($+.026$, certificate
+reuses the gain-error calibration, as noted in the protocol). The same
+route gives BGP $2(0.0472)^2\approx0.0045$ nats (fixed-$D^*$ bound $+.044$;
+surrogate route $2(0.053-0.015)^2\approx0.0028$). Magnetometer's selection-aware bound ($+.026$, certificate
 $\approx0.001$ nats) is small and reported as exploratory. The instrument reads in
 both directions: class equivalence or bounded excess on most series; a
 dependence-aware conditional-information lower bound exactly where the
 history structure is found.
+
+\textbf{Regimes.} The stationarity check was registered with the BGP
+series before its data were fetched: each of the five series with a
+detection splits into three equal contiguous calendar blocks, and the
+seismic certificate counts as block-robust only if its selection-aware
+bound clears the practical floor in all three. \emph{It does not.} Block~1,
+which is mostly the 30 minutes before the earthquake's waves arrive, gives
+$+.014$ ($p=.45$, no detection), while blocks~2 and~3 give $+.220$ and
+$+.165$, certificates of $0.096$ and $0.054$ nats, both larger than the
+pooled $0.042$ (Table~\ref{tab:regimes}). BGP shows the same shape: a
+detection below the floor in block~1, history adds in block~2 (certificate
+$0.0062$ nats) and nothing in block~3, while its class proportion drifts
+from $.65$ to $.32$ under the single weekly threshold. The GOES detections
+do not reach the bootstrap floor in any block, and a chi-square test
+rejects equal lag-1 transition matrices across blocks for every series
+($p\le10^{-4}$). By Lemma~\ref{lem:regime}, the pooled certificates bound
+regime identification plus within-regime prediction, and the block
+certificates isolate the second: on both the earthquake record and the
+BGP week, history is worth something inside a regime and nothing outside
+it. For a controller this is the operational reading. The value of
+delayed history is a property of the regime, and the instrument says
+where it pays. The registered robustness test failed and is reported as
+failed; the block results are descriptive.
+
+\begin{table}[h]\centering\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llrrrrl}
+\toprule
+Series & block & $\hat\pi$ & gain & $p$ & $L^{\mathrm{blk}}_{\max}$ & verdict \\
+\midrule
+Seismic ANMO & 1 & $.513$ & $+.012$ & $.45$ & $+.014$ & equivalent \\
+ & 2 & $.501$ & $+.237$ & $<.004$ & $\mathbf{+.220}$ & adds (0.096 nats) \\
+ & 3 & $.514$ & $+.181$ & $<.004$ & $\mathbf{+.165}$ & adds (0.054 nats) \\
+BGP rrc06 & 1 & $.649$ & $+.010$ & $<.004$ & $+.001$ & below floor \\
+ & 2 & $.527$ & $+.062$ & $<.004$ & $+.056$ & adds (0.006 nats) \\
+ & 3 & $.323$ & $+.003$ & $.20$ & $-.003$ & equivalent \\
+GOES X-ray & 1/2/3 & $.37$/$.42$/$.47$ & $+.020$/$+.036$/$+.006$ & $.017$/$.007$/$.66$ & $+.013$/$+.017$/$+.005$ & none detected \\
+GOES magn. & 1/2/3 & $.48$/$.45$/$.45$ & $+.030$/$+.024$/$+.022$ & $.040$/$.057$/$.043$ & $+.020$/$+.028$/$+.001$ & none detected \\
+GOES protons & 1/2/3 & $.50$/$.48$/$.48$ & $+.017$/$+.055$/$+.040$ & $.76$/$.12$/$.33$ & $+.003$/$+.026$/$+.027$ & none detected \\
+\bottomrule
+\end{tabular}
+\caption{Registered calendar-block analysis (three equal contiguous blocks
+per series; same pipeline and verdict rules as Table~\ref{tab:battery}). The
+pre-stated seismic test (selection-aware bound above $0.03$ in every block)
+fails in block~1. ``Adds'' means history adds, with its certificate. Both history-adds series carry their value in one or two
+regimes, and the block certificates exceed the pooled ones where history
+pays. Homogeneity of the lag-1 transition matrices is rejected for every
+series (chi-square, df $=4$, $p\le10^{-4}$).}
+\label{tab:regimes}
+\end{table}
 
 \section{Related work}\label{sec:related}
 
@@ -1115,11 +1211,12 @@ of the observation (given nothing); for binary state it is a sign-dependent sum 
 objectives (a smooth value function giving quadratic weak-correlation
 response instead), and exactly nothing (inside the dead
 zone) when the prior sits off a kink and the coupling is weak. Beyond one effective dimension, no scalar summary of dependence
-determines value at all. Each claim is falsifiable, and the nine-series
+determines value at all. Each claim is falsifiable, and the ten-series
 battery exercises all of them: no history excess is detectable where the equivalence bound requires none,
 the envelope holds on every real pair table as a consistency check,
 and history gains beyond the single-sample value yield dependence-aware
-lower bounds on conditional predictive information in nats. The instrument reads in both directions; that, more
+lower bounds on conditional predictive information in nats, and
+calendar blocks locate the regimes in which that history value lives. The instrument reads in both directions; that, more
 than any single inequality, is what we hope survives.
 
 \appendix
@@ -1185,7 +1282,8 @@ Sperm-whale codas & 4,698 & per step & 1--39 (39) & 21 & 36 & 72 \\
 GOES X-ray flux & 9,988 & 60 s & 1--88 (38) & 19 & 55 & 110 \\
 GOES magnetometer & 9,988 & 60 s & 1--88 (38) & 19 & 33 & 66 \\
 GOES protons & 1,976 & 300 s & 1--39 (39) & 20 & 35 & 70 \\
-Seismic ANMO & 12,512 & 60 s & 1--88 (38) & 19 & 5 & 10 \\
+Seismic ANMO & 12,512 & 1 s & 1--88 (38) & 19 & 5 & 10 \\
+BGP rrc06 & 9,992 & 60 s & 1--88 (38) & 19 & 67 & 134 \\
 \bottomrule
 \end{tabular}
 \caption{Battery protocol details. $N$: pooled pairs at the least-populated lag. Cadence: sampling interval (whale codas and the synthetic series are indexed per step). Lag grid: registered lags in steps (count); sel.\ grid: lags entering the in-replicate reselection of \texttt{battery\_v5c}. $D^*$: selected lag; block: moving-block length, $\max(10,2D^*)$ steps. Binarization thresholds and missing-data handling follow the companion study's preparation scripts, released with the artifact.}

@@ -1,0 +1,24 @@
+{
+ "n_minutes": 10080,
+ "n_observed": 10080,
+ "n_runs": 1,
+ "run_lengths": [
+  10080
+ ],
+ "median_per_minute": 5053.0,
+ "total_elems_observed": 64166908,
+ "mean_per_minute": 6365.764682539682,
+ "max_per_minute": 300020,
+ "min_per_minute": 2245,
+ "ties_at_median": 5,
+ "pi_hat": 0.4998015873015873,
+ "fetch": {
+  "collector": "rrc06",
+  "n_nominal": 2016,
+  "n_missing": 0,
+  "frac_missing": 0.0,
+  "missing": [],
+  "total_elems": 64166908,
+  "bytes": 564966733
+ }
+}
