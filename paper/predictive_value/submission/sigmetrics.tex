@@ -3,6 +3,9 @@
 \settopmatter{printacmref=false}
 \usepackage{booktabs}
 \setlength{\emergencystretch}{2em}
+% Theorem notes are set in Libertine small caps, which sets ``qu'' as one
+% ligature glyph whose Unicode map is ``q'' alone (``Squared'' copies as
+% ``Sqared''). The zero kerns in Proposition 6.2's note break the ligature.
 \newcommand{\TV}{\mathrm{TV}}
 \newcommand{\KL}{D_{\mathrm{KL}}}
 \newcommand{\E}{\mathbb{E}}
@@ -599,7 +602,7 @@ The polyhedral hypothesis is not decoration. For a continuous action set
 $\psi$ is a supremum of \emph{infinitely} many affine functions and need
 not be piecewise-linear, and the hinge law fails, constructively:
 
-\begin{proposition}[Squared-error prediction: exactly quadratic]
+\begin{proposition}[Sq\kern0pt uared-error prediction: exactly q\kern0pt uadratic]
 \label{prop:quadratic}
 For $w\in[0,1]$ and $R(w,x)=-(w-x)^2$ (oscillation $\Omega=1$),
 $\psi(p)=-p(1-p)$ is smooth and strictly convex, and, exactly,
@@ -1090,9 +1093,11 @@ do not reach the bootstrap floor in any block, and a chi-square test
 rejects equal lag-1 transition matrices across blocks for every series
 ($p\le10^{-4}$). By Lemma~\ref{lem:regime}, the pooled certificates bound
 regime identification plus within-regime prediction, and the block
-certificates isolate the second: on both the earthquake record and the
-BGP week, history is worth something inside a regime and nothing outside
-it. For a controller this is the operational reading. The value of
+certificates isolate the second. On both the earthquake record and the
+BGP week, the registered lookup policy detects material within-block value
+in selected blocks and no material value in the remaining blocks; a richer
+policy class could find value the lookup class does not. For a controller
+this is the operational reading. The value of
 delayed history is a property of the regime, and the instrument says
 where it pays. The registered robustness test failed and is reported as
 failed; the block results are descriptive.
