@@ -54,7 +54,7 @@ calendar blocks show that value concentrated in identifiable regimes. A
 chain-rule decomposition separates what history reveals about the regime
 from what it predicts within one, and the envelope inverts into
 dependence-aware lower bounds on conditional predictive information. All
-history values are measured for a registered six-lag lookup policy and are
+history values are measured for a protocol-fixed six-lag lookup policy and are
 lower bounds on what a richer policy could extract.
 \end{abstract}
 
@@ -124,7 +124,7 @@ For every lag and every $K$, a \emph{preview process} keeps
 $\beta(D)\ge\tfrac12$ while the information envelope, and the true value,
 vanish with $K$ (\S\ref{sec:comparison}). (\textbf{C6}) A ten-series
 battery across four physical domains and one computer system establishes
-registered-class equivalence on three series, leaves one noise-limited and
+equivalence for the protocol-fixed policy class on three series, leaves one noise-limited and
 one inconclusive, and finds material history gains on two, a teleseismic
 record and a BGP update stream. Calendar blocks show both gains
 concentrated in identifiable regimes, which a chain-rule decomposition
@@ -135,7 +135,7 @@ on \emph{conditional} history information, always one-sided:
 $I(X_t;\text{history}\mid X_{t-D})\ge
 2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
 (\S\ref{sec:battery}). Every history value in the battery is measured for
-a registered six-lag lookup policy, so it is a lower bound on what a
+a protocol-fixed six-lag lookup policy, so it is a lower bound on what a
 richer policy (longer lags, a recurrent model) could extract, and every
 negative finding is a statement about that policy class.
 
@@ -311,8 +311,8 @@ single-sample information itself.
 \paragraph{Attribution.} Neither inequality is new. In the
 minimum-excess-risk literature the unconditional form appears with a
 weaker constant in \cite{makhdoumi14} and in the present form in
-\cite{gyorfi23} (Cor.~1 and Rem.~(ii); Rem.~(iii) notes the Pinsker
-proof) and \cite{xu20} (Thm.~1, with the oscillation constant); the
+\cite{gyorfi23} (Cor.~1 and Rem.~3(ii); Rem.~3(iii) notes the Pinsker
+proof) and \cite{xu20} (Thm.~1 and Cor.~5, with the oscillation constant); the
 conditional/incremental form is \cite{hafezkolahi21} (Lem.~1) and
 \cite{xuraginsky22} (Cors.~2--3), and the Lipschitz--Pinsker--Jensen
 engine is \cite{russo16} (Fact~9 and Prop.~4). What this paper claims is
@@ -676,7 +676,8 @@ exchanging the weights. The affine case is immediate.
 \begin{remark}[The trichotomy, as leading cases]\label{rem:trichotomy}
 The three named regimes (dead zone, linear at a kink, quadratic under
 smooth curvature) are precisely De~Lara and Gossner's small-information
-trichotomy (\cite{delaragossner}, Prop.~10), and their exact zero-value
+trichotomy (\cite{delaragossner}, Thms.~3, 5 and 7, illustrated in their
+Prop.~10), and their exact zero-value
 characterization (their Prop.~2, the confidence-set condition) is the
 posterior-space form of our dead zone. Theorem~\ref{thm:contact} adds
 what their bounds deliberately do not: \emph{exact leading coefficients}
@@ -769,7 +770,7 @@ of Theorem~\ref{thm:mi}?
 \subsection{Protocol}
 
 Throughout this section, ``registered'' means fixed in the protocol code
-before the final analysis runs. The battery was not preregistered with a
+before the final analysis runs (the introduction calls this protocol-fixed). The battery was not preregistered with a
 third party, and its protocol was revised during the v3 and v4
 development runs, whose record is part of the released artifact.
 
@@ -790,7 +791,7 @@ section measures both.
 
 \textbf{Supplementary artifact.} An anonymized artifact accompanies this
 submission: the code, the derived binary series, every result file, the
-Lean and MATLAB proof-check logs, the seeds of every resampling step, a
+Lean proof-check logs and MATLAB symbolic-verification logs, the seeds of every resampling step, a
 verification record for every reference, and a notebook that rebuilds
 every table and figure from the result files and checks each printed
 certificate. On acceptance it will be archived on Zenodo.
@@ -1145,7 +1146,7 @@ $+.014$ ($p=.45$, no detection), while blocks~2 and~3 give $+.220$ and
 $+.165$, certificates of $0.096$ and $0.054$ nats, both larger than the
 pooled $0.042$ (Table~\ref{tab:regimes}). BGP shows the same shape: a
 detection below the floor in block~1, history adds in block~2 (certificate
-$0.0062$ nats) and nothing in block~3, while its class proportion drifts
+$0.0062$ nats), and no material gain was detected by the registered lookup policy in block~3, while its class proportion drifts
 from $.65$ to $.32$ under the single weekly threshold. The GOES detections
 do not reach the bootstrap floor in any block, and a chi-square test
 rejects equal lag-1 transition matrices across blocks for every series
@@ -1195,7 +1196,7 @@ geometry is charted territory: De Lara and Gossner \cite{delaragossner}
 study the value function as a support function, characterize
 \emph{exactly} when information has zero value (their Prop.~2), and prove
 the small-information trichotomy our Theorem~\ref{thm:contact}
-generalizes (their Prop.~10; see Remark~\ref{rem:trichotomy} for the
+generalizes (their Thms.~3, 5 and 7; see Remark~\ref{rem:trichotomy} for the
 precise delta). Our Lipschitz lemma instantiates their payoffs--beliefs
 duality; the sum-over-kinks skeleton of Theorem~\ref{thm:hinge} descends
 from the mixture-of-primitives representations of statistical information
@@ -1214,7 +1215,7 @@ the conditional form in \cite{hafezkolahi21,xuraginsky22}, the proof
 engine in \cite{russo16}; Fano-type families bounding Bayes \emph{error}
 by information are the classical ancestors. That literature also
 contains the exact logarithmic anchor (MER under log loss \emph{equals}
-conditional information; \cite{xuraginsky22}, Lem.~1), which joins the
+conditional information; \cite{xuraginsky22}, Lem.~2), which joins the
 Kelly--Barron--Cover bracket below. What we have not found there, in the
 economics of information or elsewhere, is the value-of-delayed-observation
 framing, the exact covariance-parametrized laws of \S\ref{sec:multistate},
@@ -1368,7 +1369,8 @@ R.~A.~Howard. Information value theory.
 
 \bibitem{delaragossner}
 M.~De~Lara, O.~Gossner. Payoffs-beliefs duality and the value of
-information. \emph{SIAM J.\ Optimization} 30(1):287--310, 2020.
+information. \emph{SIAM J.\ Optimization} 30(1):464--489, 2020.
+Result numbers follow arXiv:1908.01633v2.
 
 \bibitem{raiffa61}
 H.~Raiffa, R.~Schlaifer. \emph{Applied Statistical Decision Theory}.
@@ -1376,7 +1378,7 @@ Harvard University, 1961.
 
 \bibitem{kelly56}
 J.~L.~Kelly, Jr. A new interpretation of information rate.
-\emph{Bell System Technical Journal} 35:917--926, 1956.
+\emph{Bell System Technical Journal} 35(4):917--926, 1956.
 
 \bibitem{barroncover88}
 A.~R.~Barron, T.~M.~Cover. A bound on the financial value of information.
@@ -1416,12 +1418,13 @@ arXiv:2012.15829, 2020.
 
 \bibitem{xuraginsky22}
 A.~Xu, M.~Raginsky. Minimum excess risk in Bayesian learning.
-\emph{IEEE Trans.\ Information Theory} 68(12), 2022.
+\emph{IEEE Trans.\ Information Theory} 68(12):7935--7955, 2022.
+Result numbers follow arXiv:2012.14868v2.
 
 \bibitem{hafezkolahi21}
 H.~Hafez-Kolahi, B.~Moniri, S.~Kasaei, M.~Soleymani~Baghshah.
 Rate-distortion analysis of minimum excess risk in Bayesian learning.
-In \emph{Proc.\ ICML}, 2021.
+In \emph{Proc.\ ICML}, PMLR 139:3998--4007, 2021.
 
 \bibitem{russo16}
 D.~Russo, B.~Van~Roy. An information-theoretic analysis of Thompson
@@ -1470,7 +1473,7 @@ information: a new performance metric for status updates.
 \bibitem{ayan19}
 O.~Ayan, M.~Vilgelm, M.~Kl\"ugel, S.~Hirche, W.~Kellerer.
 Age-of-information vs.\ value-of-information scheduling for cellular
-networked control systems. In \emph{Proc.\ ACM/IEEE ICCPS}, 2019.
+networked control systems. In \emph{Proc.\ ACM/IEEE ICCPS}, pp.~109--117, 2019.
 
 \bibitem{soleymani22}
 T.~Soleymani, J.~S.~Baras, S.~Hirche. Value of information in
@@ -1479,7 +1482,7 @@ feedback control: quantification.
 
 \bibitem{bialek01}
 W.~Bialek, I.~Nemenman, N.~Tishby. Predictability, complexity, and
-learning. \emph{Neural Computation} 13:2409--2463, 2001.
+learning. \emph{Neural Computation} 13(11):2409--2463, 2001.
 \end{thebibliography}
 
 
