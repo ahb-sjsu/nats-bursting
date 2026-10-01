@@ -757,6 +757,13 @@ carried automatically? Second, \emph{the envelope}: does the measured value
 respect, and how tightly does it approach, the predictive-information bound
 of Theorem~\ref{thm:mi}?
 
+One caution frames everything that follows. Every battery quantity is a
+property of the empirical mixture a series samples. A history gain pooled
+over a whole record can come from identifying the regime as well as from
+prediction within one (Lemma~\ref{lem:regime}), and every series here rejects
+a homogeneous lag-1 law across calendar blocks, so the section reports the
+pooled results and the block results side by side.
+
 \subsection{Protocol}
 
 Throughout this section, ``registered'' means fixed in the protocol code
@@ -902,12 +909,33 @@ the gain is a difference in the probability of a correct decision, so the
 floor is three percentage points of correct decisions per decision. It was
 fixed with the equivalence rule before the final runs, and it sits above
 the procedure's own false-positive floor, the upper end of the i.i.d.\ null's
-paired interval ($\approx0.02$). It does not come from a cost model, so
+paired interval ($\approx0.02$), and above the selection-aware residual
+optimism ($+0.008$). It does not come from a cost model, so
 we report how the verdicts move with it. Seismic is ``history adds'' at
 floors of $0.02$, $0.03$ and $0.05$. BGP is ``history adds'' at $0.02$ and
 $0.03$ and only detected at $0.05$, where its lower bounds ($+.044$,
 $+.047$) fall short. Magnetometer becomes ``history adds'' at $0.02$; at
-$0.05$ the whale codas and protons become equivalent.
+$0.05$ the whale codas and protons become equivalent (Table~\ref{tab:floor}).
+
+\begin{table}[h]\centering\footnotesize
+\begin{tabular}{lccc}
+\toprule
+Series & floor $0.02$ & floor $0.03$ (used) & floor $0.05$ \\
+\midrule
+LOCATA azimuth & not established & equivalent & equivalent \\
+Sperm-whale codas & inconclusive & inconclusive & equivalent \\
+GOES protons & not established & not established & equivalent \\
+GOES X-ray flux & detected (exploratory) & detected, below floor & detected, below floor \\
+GOES magnetometer & history adds & detected (exploratory) & detected, below floor \\
+Seismic ANMO & history adds & history adds & history adds \\
+BGP rrc06 & history adds & history adds & detected (exploratory) \\
+\bottomrule
+\end{tabular}
+\caption{Verdicts at three practical floors, from the same result files.
+Series not listed (two-state Markov, LOCATA VAD) are equivalent at every
+floor, and the i.i.d.\ null is the selection control throughout.}
+\label{tab:floor}
+\end{table}
 
 \emph{Non-rejection is not exactness}: where the test does not fire, we
 report the model-calibrated two-tail upper bound
@@ -988,12 +1016,16 @@ BGP rrc06 & $.500$ & $+.053$ & $<.004$ & $.015$ & $-.002$ & $.051$ & $+.044\,/\,
 parametric-bootstrap $p$ is at its floor ($<.004$); no series has $p$
 between $.004$ and $.023$, so any level in that range gives the same
 verdicts. This is a conservative analysis rule adopted during the final
-analysis, not a preregistered significance level. Detection takes precedence over equivalence, so X-ray, which
-also has $U_2<0.03$, is reported as detected. ``Equivalent'' $=$ no
-detection and $U_2<0.03$ under both-tail calibration; ``not established''
-$=$ no detection but $U_2\ge0.03$; ``detected (exploratory)'' $=$ a
-detected point gain just above the practical floor whose lower bounds
-fall below it. The i.i.d.\ null ($p=.023$) is the selection control. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
+analysis, not a preregistered significance level. The verdicts, applied
+in this order: ``history adds'' $=$ detected, with both moving-block lower
+bounds above the practical floor $0.03$ (a certificate is issued);
+``detected (exploratory)'' $=$ detected, point gain above the floor, lower
+bounds below it; ``detected, below floor'' $=$ detected, point gain at or
+below the floor; ``equivalent'' $=$ not detected and $U_2<0.03$;
+``not established'' $=$ not detected and $U_2\ge0.03$; ``inconclusive''
+$=$ the calibrations disagree (footnote). Detection takes precedence, so
+X-ray, which also has $U_2<0.03$, is reported as detected. ``Exploratory''
+refers to the size of the gain, not to the calendar-block analysis. The i.i.d.\ null ($p=.023$) is the selection control. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
 one-sided 95\% moving-block lower bounds at the pre-selected lag and
 with lag selection repeated inside each replicate (the latter bounds the
 \emph{maximal} gain over the grid).
