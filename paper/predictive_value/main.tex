@@ -56,7 +56,11 @@ chain-rule decomposition separates what history reveals about the regime
 from what it predicts within one, and the envelope inverts into
 dependence-aware lower bounds on conditional predictive information. All
 history values are measured for a protocol-fixed six-lag lookup policy and are
-lower bounds on what a richer policy could extract.
+lower bounds on what a richer policy could extract. When actions move the
+state, the envelope still bounds the decision value of delayed
+information under the law the controller induces, but not the value of
+steering, and in a registered closed-loop queue almost all of the feedback
+gain is steering.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -140,11 +144,18 @@ $I(X_t;\text{history}\mid X_{t-D})\ge
 (\S\ref{sec:battery}). Every history value in the battery is measured for
 a protocol-fixed six-lag lookup policy, so it is a lower bound on what a
 richer policy (longer lags, a recurrent model) could extract, and every
-negative finding is a statement about that policy class.
+negative finding is a statement about that policy class. (\textbf{C7}) We
+close the loop: the envelope survives any closed-loop controller as a
+bound on decision value under the law that controller induces
+(Proposition~\ref{prop:clstep}), steering value has no information envelope
+(Proposition~\ref{prop:clsteer}, machine-checked for every horizon), and a
+registered closed-loop queue attributes at least $99\%$ of its feedback gain
+to steering (\S\ref{sec:queue}).
 
 Table~\ref{tab:novelty} separates what this paper restates from what it adds. The
 finite and algebraic results are machine-checked in Lean~4 against Mathlib
-(52 theorems), and the analytic ones symbolically; both are part of the
+(73 theorems, including the closed-loop counterexample for every horizon),
+and the analytic ones symbolically; both are part of the
 released artifact.
 
 \begin{table}[!ht]\centering\small
@@ -162,6 +173,8 @@ Exact lag-covariance hinge law, sign-asymmetric thresholds (Thm.~\ref{thm:hinge}
 Explicit contact-order coefficients (Thm.~\ref{thm:contact}) & new, to our knowledge \\
 Mixing/information separation construction (Prop.~\ref{prop:incomp}) & new, to our knowledge \\
 Regime decomposition (Lemma~\ref{lem:regime}) & elementary (chain rule) \\
+Closed loop: per-step envelope (Prop.~\ref{prop:clstep}) and the steering
+counterexample (Prop.~\ref{prop:clsteer}) & new, to our knowledge \\
 Conditional-information certificate from policy gain & new operational use \\
 Multi-domain battery with a BGP series and regime analysis (\S\ref{sec:battery}) & new \\
 \bottomrule
@@ -178,6 +191,11 @@ explaining an exact systems law, envelopes ordered by what they require
 (a model, samples, or a bit rate), sharpness results tying envelope to law,
 impossibility results delimiting both, and a falsifiable empirical program
 run on real processes from four physical domains and one computer system.
+Section~\ref{sec:closedloop} says exactly what transfers when actions do move
+the state: the envelope still bounds the decision value of delayed
+information under whatever law a closed-loop controller induces, and it
+does not bound the value of steering, which can grow without limit while
+every per-step envelope stays small.
 
 \section{Setting and the exact object}\label{sec:envelope}
 
@@ -757,6 +775,71 @@ the value ceases to be a function of any scalar summary of dependence,
 correlation or information alike.
 \end{remark}
 
+\section{Closed loop: what transfers, and what does not}\label{sec:closedloop}
+
+The theory so far assumes the action does not move the state. In a
+closed loop it does: an admission controller changes the queue it will
+observe, and a sender changes the congestion it will be told about. Let the
+state evolve as $X_{t+1}\sim P(\cdot\mid X_t,w_t)$, let the step-$t$ reward be
+$R_t(w_t,X_t)$ with oscillation $\Omega$, and let a policy $\pi$ choose $w_t$ from
+the controller's information $G_t$ (the delayed observations and its own
+past actions). The action at step~$t$ is taken after $X_t$ is realized and
+moves only later states.
+
+\begin{proposition}[The per-step envelope survives closing the loop]\label{prop:clstep}
+Fix any policy $\pi$ and a step $t$. Holding $\pi$ fixed at every other step, let
+$\Delta^\pi_t$ be the gain in expected step-$t$ reward of the best
+$G_t$-measurable action over the best constant action. Then
+\[
+0\;\le\;\Delta^\pi_t\;\le\;\Omega\sqrt{\tfrac12\,I^\pi(X_t;G_t)},
+\]
+where $I^\pi$ is the mutual information under the joint law that $\pi$
+induces on $(X_t,G_t)$.
+\end{proposition}
+
+\begin{proof}
+Changing only the step-$t$ action does not change the joint law of
+$(X_t,G_t)$, which is fixed by the earlier steps. The step-$t$ reward is
+$R_t(w_t,X_t)$, so the comparison is a one-step decision under that law,
+and Theorem~\ref{thm:mi} applies to it.
+\end{proof}
+
+So every decision-value statement of \S\S\ref{sec:mi}--\ref{sec:multistate} holds in
+closed loop, provided the information is measured under the law the
+controller itself induces. What fails is the step from per-step decision
+value to total value, because a closed-loop controller can use delayed
+information to steer the state rather than to predict it.
+
+\begin{proposition}[Steering has no information envelope]\label{prop:clsteer}
+There is a controlled binary process with a reward of oscillation
+$\Omega=1$ and delay $D=1$ such that, over $T\ge2$ steps, the best delayed-feedback
+policy earns $(T-2)/2$ more than the best open-loop policy, while under that
+feedback policy $\Delta^\pi_t=0$ at every step and the per-step envelopes
+$\Omega\sqrt{\tfrac12 I^\pi(X_t;G_t)}$ sum to $\sqrt{(\ln 2)/2}\approx0.589$.
+\end{proposition}
+
+\begin{proof}
+Let $X_0$ be a fair bit, $X_{t+1}=X_t\oplus w_t$ with $w_t\in\{0,1\}$, and
+$R_t(w,x)=\mathbf 1[x=1]$, which does not depend on $w$, so
+$\psi$ is linear at every step and $\Delta^\pi_t=0$ for every policy. An
+open-loop policy leaves each $X_t=X_0\oplus c_t$ a fair bit and earns
+$T/2$. With $G_t=(X_{t-1},w_0,\dots,w_{t-1})$ the controller knows
+$X_t=X_{t-1}\oplus w_{t-1}$ from step~1 on; setting $w_1=1\oplus X_1$ and
+$w_t=0$ afterwards holds $X_t=1$ for $t\ge2$ and earns $1+(T-2)=T-1$, which is
+optimal because $X_0$ and $X_1$ are fair bits whatever is done before any
+observation. Under this policy $G_0$ is trivial, $X_1$ is a fair bit
+determined by $G_1$, and $X_t$ is constant for $t\ge2$, so the only
+nonzero envelope is $\sqrt{(\ln 2)/2}$ at $t=1$.
+\end{proof}
+
+The pair draws the boundary precisely. Delayed information has a
+decision value, which the envelope bounds in open and closed loop alike,
+and a steering value, which it does not bound. The second is the subject
+of control under communication constraints \cite{tatikondamitter04}, where
+the information a controller needs is set by how fast the plant drifts
+from its target, not by how much the past predicts the present. A
+closed-loop instance of both is measured in \S\ref{sec:queue}.
+
 \section{The law and its envelopes across domains}\label{sec:battery}
 
 The companion paper had room for one paragraph of this study; the full
@@ -1225,6 +1308,68 @@ series (chi-square, df $=4$, $p\le10^{-4}$).}
 \label{tab:regimes}
 \end{table}
 
+\subsection{A closed-loop queue}\label{sec:queue}
+
+Section~\ref{sec:closedloop} separates decision value from steering value. To see
+both on a system, we registered (before running it) a discrete-time
+bottleneck queue with capacity $K=20$ in which the controller's own
+packets change the occupancy it later observes. Each slot the sender
+chooses to send or not and earns $w\,(1-2X_t/K)$, so sending pays while the
+queue is short and costs while it is long; then its packet and
+cross-traffic (probability $0.3$) arrive and one packet departs with
+probability $0.5$. The controller sees the occupancy with delay $D$ and
+knows its own past actions. We compare the best open-loop policy (send
+with a fixed probability) with two delayed-feedback threshold policies,
+one on the delayed occupancy alone and one on the delayed occupancy plus
+the packets it has sent since; parameters are selected on two seeds and
+every value below is measured on two held-out seeds of $2\times10^5$ slots
+each. Under the selected feedback policy we compute, from the empirical
+joint law it induces, the per-step decision value $\Delta$ of the statistic
+(delayed occupancy, own recent sends) and its envelope
+$\Omega\sqrt{\hat I/2}$ (Table~\ref{tab:queue}).
+
+Three readings were fixed in advance. First, Proposition~\ref{prop:clstep}
+predicts $\Delta\le\Omega\sqrt{\hat I/2}$ at every delay; it holds at all
+eight, by three to four orders of magnitude. Second, the feedback gain
+falls with every step in $D$, from $0.117$ to $0.013$ per slot, but has not
+reached zero at $D=64$ (interval $[0.011,0.014]$): the count of the
+controller's own recent sends is fresh even when the occupancy reading is
+stale, and the policy that ignores it falls below open loop from $D=16$
+on. Third, as a description, almost the whole gain is steering: the
+steering share $1-\Delta/g_{\mathrm{dyn}}$ is at least $0.994$ at every delay.
+The selected policies hold the queue at zero to two packets, where the
+one-step choice is always to send, so the decision value nearly
+vanishes: the controller has steered itself into a dead zone of its own
+immediate decision. In this queue the per-step envelope happens to exceed
+the dynamic gain at every delay; by Proposition~\ref{prop:clsteer} it need not,
+and it bounds the decision part only.
+
+\begin{table}[h]\centering\footnotesize
+\begin{tabular}{rrrrrr}
+\toprule
+$D$ & $g_{\mathrm{dyn}}$ & $\hat I$ (nats) & $\Omega\sqrt{\hat I/2}$ & $\Delta$ & steering share \\
+\midrule
+0 & $0.117$ & $1.563$ & $1.768$ & $0.00004$ & $1.000$ \\
+1 & $0.101$ & $0.747$ & $1.222$ & $0.00008$ & $0.999$ \\
+2 & $0.087$ & $0.480$ & $0.980$ & $0.00007$ & $0.999$ \\
+4 & $0.077$ & $0.304$ & $0.779$ & $0.00013$ & $0.998$ \\
+8 & $0.062$ & $0.171$ & $0.585$ & $0.00017$ & $0.997$ \\
+16 & $0.046$ & $0.091$ & $0.427$ & $0.00024$ & $0.995$ \\
+32 & $0.028$ & $0.045$ & $0.302$ & $0.00014$ & $0.995$ \\
+64 & $0.013$ & $0.030$ & $0.246$ & $0.00007$ & $0.994$ \\
+\bottomrule
+\end{tabular}
+\caption{Closed-loop queue (registered; held-out seeds; values per slot).
+$g_{\mathrm{dyn}}$: best delayed-feedback policy minus best open-loop policy
+(open loop earns $0.083$); 95\% block-bootstrap intervals have half-width
+at most $0.0014$. $\Delta$: per-step decision value of the controller's
+statistic under the law its policy induces; $\Omega\sqrt{\hat I/2}$: the
+envelope of Proposition~\ref{prop:clstep} with plug-in information. The
+decision value stays under the envelope at every delay, and the gain is
+almost entirely steering.}
+\label{tab:queue}
+\end{table}
+
 \section{Related work}\label{sec:related}
 
 \emph{Value of information.} The Bayes envelope is the classical object of
@@ -1436,6 +1581,10 @@ Update or wait: how to keep your data fresh.
 \bibitem{witsenhausen68}
 H.~S.~Witsenhausen. A counterexample in stochastic optimum control.
 \emph{SIAM J.\ Control} 6(1):131--147, 1968.
+
+\bibitem{tatikondamitter04}
+S.~Tatikonda, S.~Mitter. Control under communication constraints.
+\emph{IEEE Trans.\ Automatic Control} 49(7):1056--1068, 2004.
 
 \bibitem{nayyar13}
 A.~Nayyar, A.~Mahajan, D.~Teneketzis. Decentralized stochastic control with

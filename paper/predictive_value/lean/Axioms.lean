@@ -60,3 +60,26 @@ open PredictiveValue
 #print axioms two_div_log_two_lt_three
 #print axioms bitbudget_vacuous_iff
 #print axioms bitbudget_bites_nat
+-- Proposition prop:clsteer (closed loop: steering has no information envelope)
+open PredictiveValue.ClosedLoop
+#print axioms rew_add_not
+#print axioms rew_le_one
+#print axioms state_not
+#print axioms openLoop_value
+#print axioms clTraj_state
+#print axioms fbTraj_zero
+#print axioms fbTraj_one
+#print axioms fbTraj_ge2
+#print axioms feedback_value
+#print axioms value_le
+#print axioms feedback_optimal
+#print axioms steering_gain
+#print axioms step_best_eq_worst
+#print axioms step_gain_zero
+#print axioms mutualInfo_const
+#print axioms jointOf_mass
+#print axioms mi_step0
+#print axioms mi_step1
+#print axioms mi_step_ge2
+#print axioms envelope_sum
+#print axioms steering_no_envelope
