@@ -819,7 +819,7 @@ questions, the theory and the battery design, checked the outputs, and is
 responsible for every claim.
 
 \textbf{States.} Binary regime series from four physical domains, one
-computer system, and controls: acoustic source azimuth and voice activity (LOCATA, 120\,Hz);
+computer system, and controls: acoustic source azimuth and voice activity (LOCATA; azimuth at 120\,Hz, voice activity at 100\,Hz);
 sperm-whale coda type (Dominica corpus, per-exchange); GOES space-weather
 series (X-ray flux, magnetometer, proton flux; 1--5-minute cadence); seismic
 ground motion at station IU.ANMO (1~Hz over 3.5 hours, from 30 minutes
@@ -1158,11 +1158,11 @@ band or sample splitting; the fixed-$D^*$ interval below is the
 conditional-on-$D^*$ statement.) Two further routes
 corroborate to within a few percent: the fixed-$D^*$ moving-block
 interval ($[+.146,+.168]$, $\approx0.042$) and the fitted-Markov
-surrogate calibration ($2(0.158-0.014)^2\approx0.041$), alongside the \emph{approximate} total-information witness
+surrogate calibration ($2(0.1575-0.0139)^2\approx0.041$), alongside the \emph{approximate} total-information witness
 $I(X_t;\text{window})\gtrsim0.176$ nats ($0.254$ bits) (exploratory: its estimator
 reuses the gain-error calibration, as noted in the protocol). The same
 route gives BGP $2(0.0472)^2\approx0.0045$ nats (fixed-$D^*$ bound $+.044$;
-surrogate route $2(0.053-0.015)^2\approx0.0028$). Magnetometer's selection-aware bound ($+.026$, certificate
+surrogate route $2(0.0527-0.0154)^2\approx0.0028$). Magnetometer's selection-aware bound ($+.026$, certificate
 $\approx0.001$ nats) is small and reported as exploratory. The instrument reads in
 both directions: class equivalence or bounded excess on most series; a
 dependence-aware conditional-information lower bound exactly where the
@@ -1376,7 +1376,7 @@ Series & $N$ & cadence & lag grid & sel.\ grid & $D^*$ & block \\
 Two-state Markov & 19,874 & per step & 1--126 (40) & 21 & 76 & 152 \\
 i.i.d.\ null & 19,874 & per step & 1--126 (40) & 21 & 11 & 22 \\
 LOCATA azimuth & 21,452 & 120 Hz & 1--118 (42) & 22 & 118 & 236 \\
-LOCATA VAD & 17,708 & 120 Hz & 1--118 (42) & 21 & 1 & 10 \\
+LOCATA VAD & 17,708 & 100 Hz & 1--118 (42) & 21 & 1 & 10 \\
 Sperm-whale codas & 4,698 & per step & 1--39 (39) & 21 & 36 & 72 \\
 GOES X-ray flux & 9,988 & 60 s & 1--88 (38) & 19 & 55 & 110 \\
 GOES magnetometer & 9,988 & 60 s & 1--88 (38) & 19 & 33 & 66 \\

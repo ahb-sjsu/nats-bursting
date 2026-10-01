@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 00:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.9.5)  1 OCT 2026 00:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1223,11 +1223,11 @@ Package rerunfilecheck Info: File `sigmetrics.out' has not changed.
 (rerunfilecheck)             Checksum: 78C3C3FAA72EF63EB9A1ADAD63005BA2;2803.
  ) 
 Here is how much of TeX's memory you used:
- 21977 strings out of 467869
- 364071 string characters out of 5418334
+ 21980 strings out of 467869
+ 364149 string characters out of 5418334
  837558 words of memory out of 5000000
  49349 multiletter control sequences out of 15000+600000
- 909513 words of font info for 749 fonts, out of 8000000 for 9000
+ 909786 words of font info for 751 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
  90i,17n,131p,2348b,828s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/Libert
@@ -1250,7 +1250,7 @@ fb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/txexs
 iaX.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newtx/
 txsym.pfb><C:/Users/abptl/AppData/Local/Programs/MiKTeX/fonts/type1/public/newt
 x/txsys.pfb>
-Output written on sigmetrics.pdf (21 pages, 847568 bytes).
+Output written on sigmetrics.pdf (21 pages, 847642 bytes).
 PDF statistics:
  727 PDF objects out of 1000 (max. 8388607)
  102 named destinations out of 1000 (max. 500000)
