@@ -40,7 +40,9 @@ record and a BGP update stream, carry material history value, and
 calendar blocks show that value concentrated in identifiable regimes. A
 chain-rule decomposition separates what history reveals about the regime
 from what it predicts within one, and the envelope inverts into
-dependence-aware lower bounds on conditional predictive information.
+dependence-aware lower bounds on conditional predictive information. All
+history values are measured for a registered six-lag lookup policy and are
+lower bounds on what a richer policy could extract.
 \end{abstract}
 \keywords{value of information, age of information, Bayes envelope, minimum excess risk, mutual information}
 \maketitle
@@ -122,7 +124,10 @@ converts each gain into a model-calibrated, dependence-aware lower bound
 on \emph{conditional} history information, always one-sided:
 $I(X_t;\text{history}\mid X_{t-D})\ge
 2[(\widehat\Delta_W-\widehat\Delta_Z-\varepsilon)^{+}]^2$
-(\S\ref{sec:battery}).
+(\S\ref{sec:battery}). Every history value in the battery is measured for
+a registered six-lag lookup policy, so it is a lower bound on what a
+richer policy (longer lags, a recurrent model) could extract, and every
+negative finding is a statement about that policy class.
 
 Table~\ref{tab:novelty} separates what this paper restates from what it adds. The
 finite and algebraic results are machine-checked in Lean~4 against Mathlib
@@ -767,7 +772,18 @@ valuable because it identifies the regime or the time, not because of
 stationary higher-order dependence. We therefore read every battery
 quantity, including the seismic certificate, as a property of the
 empirical mixture the series samples, not as a parameter of a stationary
-process.
+process. Lemma~\ref{lem:regime} makes the distinction exact: a history gain
+pooled over the whole record bounds what history reveals about the regime
+plus what it predicts within one, and a gain measured inside a calendar
+block bounds the second term alone; the regime analysis at the end of this
+section measures both.
+
+\textbf{Supplementary artifact.} An anonymized artifact accompanies this
+submission: the code, the derived binary series, every result file, the
+Lean and MATLAB proof-check logs, the seeds of every resampling step, a
+verification record for every reference, and a notebook that rebuilds
+every table and figure from the result files and checks each printed
+certificate. On acceptance it will be archived on Zenodo.
 
 \textbf{Use of generative AI.} An AI assistant (Claude, Anthropic) was used
 throughout as a research assistant, in the following specific ways. It
@@ -871,6 +887,27 @@ protons). Validity checks pass:
 the Markov reference's interval straddles zero (no phantom conditional
 information) and azimuth's is slightly negative (the overfitting cost of
 the richer class).
+In plain terms: choosing the best of many lags and then quoting its
+interval overstates the gain, because the best lag is partly the luckiest.
+The fixed-lag bound $L^{\mathrm{blk}}_{D^*}$ ignores that choice; the
+selection-aware bound $L^{\mathrm{blk}}_{\max}$ repeats the choice inside every
+bootstrap replicate, so it bounds the gain of whichever lag wins, and the
+i.i.d.\ null, which has no true gain at any lag, shows how much optimism
+remains ($+0.008$).
+
+\textbf{The practical floor.} Every verdict compares a bound with a
+practical floor of $0.03$. On the $0/1$ prediction objective ($\Omega=1$)
+the gain is a difference in the probability of a correct decision, so the
+floor is three percentage points of correct decisions per decision. It was
+fixed with the equivalence rule before the final runs, and it sits above
+the procedure's own false-positive floor, the upper end of the i.i.d.\ null's
+paired interval ($\approx0.02$). It does not come from a cost model, so
+we report how the verdicts move with it. Seismic is ``history adds'' at
+floors of $0.02$, $0.03$ and $0.05$. BGP is ``history adds'' at $0.02$ and
+$0.03$ and only detected at $0.05$, where its lower bounds ($+.044$,
+$+.047$) fall short. Magnetometer becomes ``history adds'' at $0.02$; at
+$0.05$ the whale codas and protons become equivalent.
+
 \emph{Non-rejection is not exactness}: where the test does not fire, we
 report the model-calibrated two-tail upper bound
 $U_2=\text{gain}_{\max}+\varepsilon_{\mathrm{under}}$ and claim ``no
@@ -958,15 +995,13 @@ detected point gain just above the practical floor whose lower bounds
 fall below it. The i.i.d.\ null ($p=.023$) is the selection control. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
 one-sided 95\% moving-block lower bounds at the pre-selected lag and
 with lag selection repeated inside each replicate (the latter bounds the
-\emph{maximal} gain over the grid). VAD's fixed-$D^*$ entry is exactly zero because at $D^*{=}1$ the $k{=}6$
-policy and the exact single-sample policy reduce to the same majority rule
-on every fold; its selection-aware entry rounds to zero.
+\emph{maximal} gain over the grid).
 $^{\ddagger}$Inconclusive: the calibrations disagree. The fitted-Markov
 calibration finds the estimator biased upward ($U_2<0$), while both
 moving-block lower bounds are positive and the selection-aware one
 ($+.040$) exceeds the practical floor, and the detection test does not
-fire on this short series ($p=.997$). We claim neither equivalence nor a
-certificate. The i.i.d.\ null's \emph{positive} paired interval is the
+fire on this short series ($p=.997$; $N=4{,}698$ pairs, the second-shortest,
+Table~\ref{tab:details}). We claim neither equivalence nor a certificate. The i.i.d.\ null's \emph{positive} paired interval is the
 empirical lag-selection bias (its upper end, $\approx0.02$, is the claim floor for
 paired bounds, since $D^*$ is an argmax the bootstrap treats as fixed).
 Bold: the one interval that dwarfs every calibration concern. Sample sizes, lag grids, selected lags and block lengths are in Table~\ref{tab:details}.}
@@ -997,9 +1032,10 @@ Four readings, in increasing order of consequence.
 \caption{The battery at a glance. Dots: maximum history-class gain over
 the exact single-sample value; grey bars: the model-calibrated interval
 $[\hat g-\varepsilon_{\mathrm{over}},\hat g+\varepsilon_{\mathrm{under}}]$;
-ticks: the moving-block one-sided bounds at fixed $D^*$ (upper, teal)
-and with in-replicate lag selection (lower, orange); dotted line: the
-registered practical floor. Seismic and BGP separate from both
+ticks: the one-sided 95\% moving-block bounds ($B=2000$ replicates) at
+fixed $D^*$ (upper, teal) and with in-replicate lag selection (lower,
+orange); solid vertical line: zero; dotted vertical line: the registered
+practical floor $0.03$. Seismic and BGP separate from both
 zero and the floor; the i.i.d.\ null's positive selection-aware tick
 is the empirical winner's-curse floor; whale's wide bar is the
 short-series noise the verdict language respects. Where
@@ -1026,7 +1062,17 @@ $\sqrt{\hat I/2}/\widehat V_1$ runs from $1.01$ (BGP) to $1.35$ on the six
 such series, above one as
 Theorem~\ref{thm:mi} requires. This is a consistency check, not an
 independent test, since $\hat I$ and $\widehat V_1$ come from the same
-pooled lag table.
+pooled lag table. In Fig.~\ref{fig:tightness}, the points above the symmetric
+limit at small $\widehat V_1$ are the mildly imbalanced series.
+
+\textbf{The controls behave as designed.} The i.i.d.\ null has no true
+history value, and its positive bounds ($+.005$ fixed-lag, $+.008$
+selection-aware) are the procedure's false-positive floor, which every
+claimed gain must clear. The two-state Markov reference, whose single
+delayed sample is sufficient by construction, comes out equivalent. VAD's
+fixed-lag entry is exactly zero for a structural reason: at its selected
+lag of one step the six-lag lookup policy and the exact single-sample
+policy reduce to the same majority rule on every fold.
 
 \textbf{Two series exhibit material history gains.} Seismic and BGP are
 detected with both moving-block lower bounds above the practical floor. X-ray
@@ -1060,7 +1106,9 @@ maximum), with the correctly-stated target: inference on the per-replicate maxim
 \emph{maximal} gain over the registered lag grid, so the certificate
 reads
 $\max_{D\in\mathcal D} I(X_t;\text{history}_D\mid X_{t-D})
-\ge 2(0.1453)^2\approx0.042$ nats. In words, \emph{there exists a registered
+\ge 2(0.1453)^2\approx0.042$ nats ($0.061$ bits, about $6\%$ of the
+entropy of a fair binary state, so a predictor that also reads the history
+can lower its expected log-loss by at least that much). In words, \emph{there exists a registered
 lag at which the conditional predictive information is at least
 $0.042$ nats}. (A claim at the specific $D^*$ would need a simultaneous
 band or sample splitting; the fixed-$D^*$ interval below is the
@@ -1068,7 +1116,7 @@ conditional-on-$D^*$ statement.) Two further routes
 corroborate to within a few percent: the fixed-$D^*$ moving-block
 interval ($[+.146,+.168]$, $\approx0.042$) and the fitted-Markov
 surrogate calibration ($2(0.158-0.014)^2\approx0.041$), alongside the \emph{approximate} total-information witness
-$I(X_t;\text{window})\gtrsim0.176$ nats (exploratory: its estimator
+$I(X_t;\text{window})\gtrsim0.176$ nats ($0.254$ bits) (exploratory: its estimator
 reuses the gain-error calibration, as noted in the protocol). The same
 route gives BGP $2(0.0472)^2\approx0.0045$ nats (fixed-$D^*$ bound $+.044$;
 surrogate route $2(0.053-0.015)^2\approx0.0028$). Magnetometer's selection-aware bound ($+.026$, certificate
@@ -1227,9 +1275,12 @@ than any single inequality, is what we hope survives.
 \appendix
 \section{Companion results restated}\label{app:companion}
 
-For self-containedness we restate the companion results used above, with
-proofs where short; \cite{infocom} is under submission and unavailable to a
-reviewer.
+No claim in this paper depends on the companion. Every result used from it
+is stated and proved below: the Lipschitz lemma (Lemma~\ref{lem:lip}), the
+binary chain's mixing coefficient and exact law, and the layer-cake sketch.
+Theorems~\ref{thm:mi}, \ref{thm:incr} and \ref{thm:hinge} are this paper's own
+statements; the first two restate published inequalities (\S\ref{sec:mi})
+and are proved in full in the text.
 
 \paragraph{Mixing coefficient.} Throughout,
 $\beta(D)=\E[\sup_{B\in\mathcal F_{\ge t}}
@@ -1291,7 +1342,8 @@ Seismic ANMO & 12,512 & 1 s & 1--88 (38) & 19 & 5 & 10 \\
 BGP rrc06 & 9,992 & 60 s & 1--88 (38) & 19 & 67 & 134 \\
 \bottomrule
 \end{tabular}
-\caption{Battery protocol details. $N$: pooled pairs at the least-populated lag. Cadence: sampling interval (whale codas and the synthetic series are indexed per step). Lag grid: registered lags in steps (count); sel.\ grid: lags entering the in-replicate reselection of \texttt{battery\_v5c}. $D^*$: selected lag; block: moving-block length, $\max(10,2D^*)$ steps. Binarization thresholds and missing-data handling follow the companion study's preparation scripts, released with the artifact.}
+\caption{Battery protocol details. $N$: pooled pairs at the least-populated lag. Cadence: sampling interval (whale codas and the synthetic series are indexed per step). Lag grid: registered lags in steps (count); sel.\ grid: lags entering the in-replicate reselection (every second
+registered lag, plus $D^*$). $D^*$: selected lag; block: moving-block length, $\max(10,2D^*)$ steps. Binarization thresholds and missing-data handling follow the companion study's preparation scripts, released with the artifact.}
 \label{tab:details}
 \end{table}
 
