@@ -69,9 +69,11 @@ proving that for symmetric two-state Markov capacity the advantage of
 age-$D$ feedback over the best static policy is \emph{exactly}
 $\Delta(D)=\tfrac12 r(D)$ (with $r(D)$ the autocorrelation at the sensing lag), and
 measuring the law on a live GPU cluster. This paper supplies the theory that
-result belongs to. The thesis is one line:
-\begin{center}\emph{Age matters only through predictive information, and
-predictive information matters only through the Bayes envelope.}\end{center}
+result belongs to. The thesis:
+\begin{center}\emph{Age has decision value only insofar as the delayed
+observation moves the posterior over the current state. That value is
+exactly the Bayes envelope, and predictive information bounds it
+universally.}\end{center}
 
 Concretely: (\textbf{C1}) we isolate the exact object, the Bayes envelope
 $\Delta_Y=\E[\psi(\mu_Y)]-\psi(\bar\mu)$, classical in decision theory
@@ -957,13 +959,14 @@ as unrestricted single-sample sufficiency.
 \textbf{Surrogate calibration.} The null for ``history adds nothing beyond
 the law'' is a population of Markov surrogates per domain, each matched
 to the real series' lag-1 transition probabilities and evaluated by the
-identical pipeline, with $M=299$ surrogates. We name the procedure
+identical pipeline, with $M=4{,}999$ surrogates (the error tails below use the registered
+first $299$). We name the procedure
 precisely: because the surrogates are generated from \emph{estimated}
 lag-1 transition probabilities, this is a \emph{parametric-bootstrap test
 under a fitted Markov null} (not an exact randomization test for the
 broad null ``history adds nothing''), with
 $p=(1+\#\{T_j\ge T_{\mathrm{obs}}\})/(M+1)$ (smallest reportable value
-$1/300\approx0.0033$, written $p<.004$, never $.00$), together with the
+$1/5000=.0002$, never $.00$), together with the
 companion study's practical floor of $0.03$ on the effect. Because each
 surrogate is Markov, its true history gain is zero and its own exact
 $\widehat V_1$ is computable from its lag table, so the $M$ surrogate gain
@@ -1082,7 +1085,7 @@ artifact before the BGP data were fetched. The v3 run and the
 protocol corrections are preserved in the artifact. Per domain: the class proportion $\hat\pi$; the
 maximum history-class gain over the exact single-sample Bayes value
 $\widehat V_1$; the parametric-bootstrap $p$ under the fitted Markov null
-($M{=}299$, floor $1/300$, written $<.004$); the two calibration tails
+($M{=}4{,}999$, floor $1/5000=.0002$); the two calibration tails
 $\varepsilon_{\mathrm{over}}=q_{0.95}(E)$ and
 $\varepsilon_{\mathrm{under}}=-q_{0.05}(E)$; the two-tail equivalence
 bound $U_2=\text{gain}_{\max}+\varepsilon_{\mathrm{under}}$
@@ -1100,23 +1103,23 @@ Domain & $\hat\pi$ & gain & $p$ & $\varepsilon_{\mathrm{ov}}$ &
 $\varepsilon_{\mathrm{un}}$ & $U_2$ & $L^{\mathrm{blk}}_{D^*}\,/\,L^{\mathrm{blk}}_{\max}$ & verdict \\
 \midrule
 Two-state Markov & $.470$ & $+.000$ & $.78$ & $.006$ & $.000$ & $.000$ & $-.003\,/\,+.000$ & equivalent \\
-i.i.d.\ null & $.497$ & $+.012$ & $.023$ & $.011$ & $-.001$ & $.011$ & $+.005\,/\,+.008$ & selection control \\
-LOCATA azimuth & $.494$ & $+.008$ & $.063$ & $.009$ & $.020$ & $.027$ & $-.003\,/\,-.001$ & equivalent \\
-LOCATA VAD & $.636$ & $-.000$ & $.82$ & $.052$ & $.000$ & $.000$ & $.000\,/\,.000$ & equivalent \\
+i.i.d.\ null & $.497$ & $+.012$ & $.026$ & $.011$ & $-.001$ & $.011$ & $+.005\,/\,+.008$ & selection control \\
+LOCATA azimuth & $.494$ & $+.008$ & $.074$ & $.009$ & $.020$ & $.027$ & $-.003\,/\,-.001$ & equivalent \\
+LOCATA VAD & $.636$ & $-.000$ & $.86$ & $.052$ & $.000$ & $.000$ & $.000\,/\,.000$ & equivalent \\
 Sperm-whale codas & $.483$ & $+.046$ & $.997$ & $.117$ & $-.063$ & $-.016$ & $+.010\,/\,+.040$ & inconclusive$^{\ddagger}$ \\
-GOES protons & $.489$ & $+.029$ & $.11$ & $.033$ & $.003$ & $.032$ & $+.002\,/\,+.020$ & not established \\
-GOES X-ray flux & $.421$ & $+.028$ & $<.004$ & $.008$ & $.001$ & $.028$ & $+.011\,/\,+.017$ & detected, below floor \\
-GOES magnetometer & $.456$ & $+.033$ & $<.004$ & $.010$ & $.001$ & $.033$ & $+.022\,/\,+.026$ & detected (exploratory) \\
-Seismic ANMO & $.508$ & $+.158$ & $<.004$ & $.014$ & $.000$ & $.158$ & $\mathbf{+.146\,/\,+.145}$ & history adds \\
-BGP rrc06 & $.500$ & $+.053$ & $<.004$ & $.015$ & $-.002$ & $.051$ & $+.044\,/\,+.047$ & history adds \\
+GOES protons & $.489$ & $+.029$ & $.10$ & $.033$ & $.003$ & $.032$ & $+.002\,/\,+.020$ & not established \\
+GOES X-ray flux & $.421$ & $+.028$ & $.0002$ & $.008$ & $.001$ & $.028$ & $+.011\,/\,+.017$ & detected, below floor \\
+GOES magnetometer & $.456$ & $+.033$ & $.0002$ & $.010$ & $.001$ & $.033$ & $+.022\,/\,+.026$ & detected (exploratory) \\
+Seismic ANMO & $.508$ & $+.158$ & $.0002$ & $.014$ & $.000$ & $.158$ & $\mathbf{+.146\,/\,+.145}$ & history adds \\
+BGP rrc06 & $.500$ & $+.053$ & $.0002$ & $.015$ & $-.002$ & $.051$ & $+.044\,/\,+.047$ & history adds \\
 \bottomrule
 \end{tabular}
 \caption{Battery v5 (final analysis). Verdicts are statements about the
-\emph{registered six-lag lookup class}. ``Detected'' means the
-parametric-bootstrap $p$ is at its floor ($<.004$); no series has $p$
-between $.004$ and $.023$, so any level in that range gives the same
-verdicts. This is a conservative analysis rule adopted during the final
-analysis, not a preregistered significance level. The verdicts, applied
+\emph{registered six-lag lookup class}. ``Detected'' means Holm's
+step-down procedure rejects at family-wise level $0.05$ over the ten
+series, controls included, with $M=4{,}999$ surrogates (fixed in the
+protocol after the $M=299$ run; same detected set). After the four detected series ($p=.0002$) comes the
+i.i.d.\ null, $p=.026$ against its Holm threshold $.0083$. The verdicts, applied
 in this order: ``history adds'' $=$ detected, with both moving-block lower
 bounds above the practical floor $0.03$ (a certificate is issued);
 ``detected (exploratory)'' $=$ detected, point gain above the floor, lower
@@ -1125,7 +1128,7 @@ below the floor; ``equivalent'' $=$ not detected and $U_2<0.03$;
 ``not established'' $=$ not detected and $U_2\ge0.03$; ``inconclusive''
 $=$ the calibrations disagree (footnote). Detection takes precedence, so
 X-ray, which also has $U_2<0.03$, is reported as detected. ``Exploratory''
-refers to the size of the gain, not to the calendar-block analysis. The i.i.d.\ null ($p=.023$) is the selection control. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
+refers to the size of the gain, not to the calendar-block analysis. The i.i.d.\ null ($p=.026$) is the selection control. $L^{\mathrm{blk}}_{D^*}$ and $L^{\mathrm{blk}}_{\max}$ are the
 one-sided 95\% moving-block lower bounds at the pre-selected lag and
 with lag selection repeated inside each replicate (the latter bounds the
 \emph{maximal} gain over the grid).
@@ -1262,13 +1265,13 @@ and GOES protons) splits into three equal contiguous blocks, and the
 seismic certificate counts as block-robust only if its selection-aware
 bound clears the practical floor in all three. \emph{It does not.} Block~1,
 which is mostly the 30 minutes before the earthquake's waves arrive, gives
-$+.014$ ($p=.45$, no detection), while blocks~2 and~3 give $+.219$ and
+$+.014$ ($p=.44$, no detection), while blocks~2 and~3 give $+.219$ and
 $+.165$, certificates of $0.096$ and $0.054$ nats, both larger than the
-pooled $0.042$ (Table~\ref{tab:regimes}). BGP shows the same shape: a
-detection below the floor in block~1, history adds in block~2 (certificate
+pooled $0.042$ (Table~\ref{tab:regimes}). BGP shows the same shape: no
+detection in block~1 ($p=.005$), history adds in block~2 (certificate
 $0.0062$ nats), and no material gain was detected by the registered lookup policy in block~3, while its class proportion drifts
-from $.65$ to $.32$ under the single weekly threshold. The GOES detections
-do not reach the bootstrap floor in any block, and a chi-square test
+from $.65$ to $.32$ under the single weekly threshold. Only X-ray block~2 is
+detected among the GOES blocks, none reaches the bootstrap floor, and a chi-square test
 rejects equal lag-1 transition matrices across blocks for every series
 ($p\le10^{-4}$). By Lemma~\ref{lem:regime}, the pooled certificates bound
 regime identification plus within-regime prediction, and the block
@@ -1287,19 +1290,20 @@ failed; the block results are descriptive.
 \toprule
 Series & block & $\hat\pi$ & gain & $p$ & $L^{\mathrm{blk}}_{\max}$ & verdict \\
 \midrule
-Seismic ANMO & 1 & $.513$ & $+.012$ & $.45$ & $+.014$ & equivalent \\
- & 2 & $.501$ & $+.237$ & $<.004$ & $\mathbf{+.219}$ & adds (0.096 nats) \\
- & 3 & $.514$ & $+.181$ & $<.004$ & $\mathbf{+.165}$ & adds (0.054 nats) \\
-BGP rrc06 & 1 & $.649$ & $+.010$ & $<.004$ & $+.001$ & below floor \\
- & 2 & $.527$ & $+.062$ & $<.004$ & $+.056$ & adds (0.006 nats) \\
- & 3 & $.323$ & $+.003$ & $.20$ & $-.003$ & equivalent \\
-GOES X-ray & 1/2/3 & $.37$/$.42$/$.47$ & $+.020$/$+.036$/$+.006$ & $.017$/$.007$/$.66$ & $+.013$/$+.017$/$+.005$ & none detected \\
-GOES magn. & 1/2/3 & $.47$/$.45$/$.45$ & $+.030$/$+.024$/$+.022$ & $.040$/$.057$/$.043$ & $+.019$/$+.028$/$+.001$ & none detected \\
-GOES protons & 1/2/3 & $.50$/$.48$/$.48$ & $+.017$/$+.055$/$+.040$ & $.76$/$.12$/$.33$ & $+.003$/$+.026$/$+.027$ & none detected \\
+Seismic ANMO & 1 & $.513$ & $+.012$ & $.44$ & $+.014$ & equivalent \\
+ & 2 & $.501$ & $+.237$ & $.0002$ & $\mathbf{+.219}$ & adds (0.096 nats) \\
+ & 3 & $.514$ & $+.181$ & $.0002$ & $\mathbf{+.165}$ & adds (0.054 nats) \\
+BGP rrc06 & 1 & $.649$ & $+.010$ & $.005$ & $+.001$ & equivalent \\
+ & 2 & $.527$ & $+.062$ & $.0002$ & $+.056$ & adds (0.006 nats) \\
+ & 3 & $.323$ & $+.003$ & $.21$ & $-.003$ & equivalent \\
+GOES X-ray & 1/2/3 & $.37$/$.42$/$.47$ & $+.020$/$+.036$/$+.006$ & $.017$/$.002$/$.62$ & $+.013$/$+.017$/$+.005$ & blk.~2 exploratory \\
+GOES magn. & 1/2/3 & $.47$/$.45$/$.45$ & $+.030$/$+.024$/$+.022$ & $.043$/$.045$/$.034$ & $+.019$/$+.028$/$+.001$ & none detected \\
+GOES protons & 1/2/3 & $.50$/$.48$/$.48$ & $+.017$/$+.055$/$+.040$ & $.79$/$.11$/$.36$ & $+.003$/$+.026$/$+.027$ & none detected \\
 \bottomrule
 \end{tabular}
 \caption{Registered calendar-block analysis (three equal contiguous blocks
-per series; same pipeline and verdict rules as Table~\ref{tab:battery}). The
+per series; same pipeline and verdict rules as Table~\ref{tab:battery}, with
+Holm over the fifteen block tests, $M=4{,}999$). The
 pre-stated seismic test (selection-aware bound above $0.03$ in every block)
 fails in block~1. ``Adds'' means history adds, with its certificate. Both history-adds series carry their value in one or two
 regimes, and the block certificates exceed the pooled ones where history

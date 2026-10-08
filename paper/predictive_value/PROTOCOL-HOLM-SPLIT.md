@@ -89,3 +89,37 @@ each clears the practical floor 0.03. If a detected series' L_split falls below
 the floor or below zero, the paper says so.
 
 Script: `holm_split/split_eval.py`. Output: `split.json`.
+
+## Outcome of (2), recorded 2026-10-07
+
+The split ran as registered (`holm_split/split.json`). No detected series kept a
+lower bound above the practical floor on the evaluation half: seismic
+L_split = -0.005 (selection-half gain +0.195, evaluation mean +0.020, D* 3
+against 5 on the full record), BGP +0.012 (certificate 0.0003 nats), GOES
+magnetometer -0.011, X-ray -0.014; controls -0.001 (Markov) and -0.029
+(i.i.d.). The failure is transfer of the selection-half lookup table to other
+stretches of the record, not the choice of lag, consistent with the
+regime-local value of the calendar-block analysis. Deviation from the
+registration above: by the author's decision, the paper does not report the
+split. The paper's pooled certificates keep their stated scope (empirically
+selection-calibrated, no formal coverage argument). This result file and this
+note are the record.
+
+## Outcome of (1), recorded 2026-10-08
+
+Both families ran as registered (`holm_split/surr_main.json`,
+`surr_blocks.json`). Every test passed both reproduction guards, with no
+deviations.
+- Main battery: Holm rejects X-ray, magnetometer, seismic and BGP, each at
+  p = .0002 (the M = 4999 floor). This is the same detected set as the earlier
+  floor rule. The next p is the i.i.d. null at .026, above its threshold .0083.
+- Calendar blocks: Holm rejects seismic blocks 2 and 3, X-ray block 2 and BGP
+  block 2. Two verdicts change. X-ray block 2 (p .007 -> .002) becomes
+  detected (exploratory): gain .036, lower bounds .017 and .009. BGP block 1
+  (p < .004 -> .005, threshold .0045) becomes not detected, equivalent
+  (U2 .014).
+- The M = 4999 tails change no verdict. Azimuth U2 .027 -> .0296, still
+  equivalent. Protons .032 -> .0316, still not established.
+The paper reports the new p values, the Holm rule and the two block verdict
+changes. Its tails, U2 and certificates stay those of the registered M = 299
+calibration.
