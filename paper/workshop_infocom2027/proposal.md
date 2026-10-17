@@ -19,7 +19,7 @@ Short name: STALE. Half day, in person, Honolulu, May 24, 2027.
 ## 2. Organization team
 
 - Andrew H. Bond, San Jose State University, USA (General Chair)
-- [TPC Co-Chair, second institution, ideally outside the US] TBD
+- Antonio Marcos Alberti, University of Leeds, UK (TPC Co-Chair)
 - [TPC Co-Chair or Challenge Chair, ideally a cluster operator or national
   research platform staff member] TBD
 - [Publicity Chair, ideally an early-career researcher] TBD
