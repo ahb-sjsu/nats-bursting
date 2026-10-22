@@ -31,6 +31,15 @@ type JobDescriptor struct {
 	// types. Rendered into the pod template's nodeSelector.
 	NodeSelector map[string]string `json:"node_selector,omitempty" yaml:"node_selector,omitempty"`
 
+	// ExcludeNodes keeps the pod off the named nodes (their
+	// kubernetes.io/hostname labels). A nodeSelector can only require
+	// labels; it cannot say "anywhere but these", which is what a
+	// workload needs once particular nodes keep killing its pods. Rendered
+	// as a required node-affinity term with operator NotIn, so the
+	// scheduler never places the pod there; pods already running are not
+	// moved.
+	ExcludeNodes []string `json:"exclude_nodes,omitempty" yaml:"exclude_nodes,omitempty"`
+
 	// BackoffLimit is the K8s Job spec field of the same name —
 	// number of in-pod retries before the Job is marked failed.
 	// Defaults to 0 (fail fast).
@@ -195,6 +204,28 @@ func (d JobDescriptor) ToJob(namespace string) (*batchv1.Job, error) {
 		})
 	}
 
+	var affinity *corev1.Affinity
+	if len(d.ExcludeNodes) > 0 {
+		for _, n := range d.ExcludeNodes {
+			if n == "" {
+				return nil, fmt.Errorf("JobDescriptor.ExcludeNodes: empty node name")
+			}
+		}
+		affinity = &corev1.Affinity{
+			NodeAffinity: &corev1.NodeAffinity{
+				RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{{
+						MatchExpressions: []corev1.NodeSelectorRequirement{{
+							Key:      "kubernetes.io/hostname",
+							Operator: corev1.NodeSelectorOpNotIn,
+							Values:   append([]string(nil), d.ExcludeNodes...),
+						}},
+					}},
+				},
+			},
+		}
+	}
+
 	backoff := d.BackoffLimit
 	job := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
@@ -209,6 +240,7 @@ func (d JobDescriptor) ToJob(namespace string) (*batchv1.Job, error) {
 				Spec: corev1.PodSpec{
 					RestartPolicy: corev1.RestartPolicyNever,
 					NodeSelector:  d.NodeSelector,
+					Affinity:      affinity,
 					Volumes:       vols,
 					Containers: []corev1.Container{{
 						Name:         "main",

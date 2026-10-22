@@ -2,6 +2,7 @@ package submitter
 
 import (
 	"context"
+	"encoding/json"
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
@@ -144,5 +145,59 @@ func TestToJobRejectsBadVolumes(t *testing.T) {
 	}}.ToJob("ns")
 	if err == nil {
 		t.Error("duplicate volume name: want error, got none")
+	}
+}
+
+func TestToJobRendersExcludeNodesAsNotInAffinity(t *testing.T) {
+	d := JobDescriptor{Name: "j", Image: "alpine", ExcludeNodes: []string{"node-a", "node-b"}}
+	job, err := d.ToJob("ns")
+	if err != nil {
+		t.Fatalf("ToJob: %v", err)
+	}
+	a := job.Spec.Template.Spec.Affinity
+	if a == nil || a.NodeAffinity == nil || a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution == nil {
+		t.Fatalf("want a required node affinity, got %+v", a)
+	}
+	terms := a.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms
+	if len(terms) != 1 || len(terms[0].MatchExpressions) != 1 {
+		t.Fatalf("want one term with one expression, got %+v", terms)
+	}
+	e := terms[0].MatchExpressions[0]
+	if e.Key != "kubernetes.io/hostname" || e.Operator != corev1.NodeSelectorOpNotIn {
+		t.Errorf("want kubernetes.io/hostname NotIn, got %s %s", e.Key, e.Operator)
+	}
+	if len(e.Values) != 2 || e.Values[0] != "node-a" || e.Values[1] != "node-b" {
+		t.Errorf("values: %v", e.Values)
+	}
+	// The rendered values must not alias the descriptor's slice.
+	d.ExcludeNodes[0] = "changed"
+	if e.Values[0] != "node-a" {
+		t.Error("affinity values alias the descriptor's ExcludeNodes")
+	}
+}
+
+func TestToJobWithoutExcludeNodesHasNoAffinity(t *testing.T) {
+	job, err := JobDescriptor{Name: "j", Image: "alpine"}.ToJob("ns")
+	if err != nil {
+		t.Fatalf("ToJob: %v", err)
+	}
+	if job.Spec.Template.Spec.Affinity != nil {
+		t.Errorf("want no affinity, got %+v", job.Spec.Template.Spec.Affinity)
+	}
+}
+
+func TestToJobRejectsEmptyExcludedNode(t *testing.T) {
+	if _, err := (JobDescriptor{Name: "j", Image: "alpine", ExcludeNodes: []string{""}}).ToJob("ns"); err == nil {
+		t.Fatal("want an error for an empty node name")
+	}
+}
+
+func TestExcludeNodesDecodesFromJSON(t *testing.T) {
+	var d JobDescriptor
+	if err := json.Unmarshal([]byte(`{"name":"j","image":"alpine","exclude_nodes":["node-a"]}`), &d); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(d.ExcludeNodes) != 1 || d.ExcludeNodes[0] != "node-a" {
+		t.Errorf("exclude_nodes not decoded: %+v", d.ExcludeNodes)
 	}
 }
