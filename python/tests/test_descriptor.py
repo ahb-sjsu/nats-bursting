@@ -107,3 +107,12 @@ def test_status_event_from_dict_tolerates_missing_fields() -> None:
     assert ev.job_id == ""
     assert ev.state == ""
     assert ev.reason is None
+
+
+def test_exclude_nodes_round_trips_and_is_omitted_when_empty() -> None:
+    plain = JobDescriptor(name="x", image="alpine")
+    assert "exclude_nodes" not in plain.to_dict()
+    d = JobDescriptor(name="x", image="alpine", exclude_nodes=["node-a", "node-b"])
+    data = json.loads(d.to_json())
+    assert data["exclude_nodes"] == ["node-a", "node-b"]
+    assert JobDescriptor.from_dict(data).exclude_nodes == ["node-a", "node-b"]

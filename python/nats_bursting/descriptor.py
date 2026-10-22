@@ -73,6 +73,9 @@ class JobDescriptor:
     resources: Resources = field(default_factory=Resources)
     labels: dict[str, str] = field(default_factory=dict)
     node_selector: dict[str, str] = field(default_factory=dict)
+    # Nodes (kubernetes.io/hostname) the pod must not be scheduled on;
+    # rendered by the controller as a required NotIn node affinity.
+    exclude_nodes: list[str] = field(default_factory=list)
     backoff_limit: int = 0
     volumes: list[Volume] = field(default_factory=list)
 
@@ -89,6 +92,8 @@ class JobDescriptor:
             "backoff_limit": self.backoff_limit,
             "volumes": [v.to_dict() for v in self.volumes],
         }
+        if self.exclude_nodes:
+            d["exclude_nodes"] = list(self.exclude_nodes)
         return d
 
     def to_json(self) -> bytes:
@@ -111,6 +116,7 @@ class JobDescriptor:
             ),
             labels=dict(data.get("labels", {}) or {}),
             node_selector=dict(data.get("node_selector", {}) or {}),
+            exclude_nodes=list(data.get("exclude_nodes", []) or []),
             backoff_limit=int(data.get("backoff_limit", 0) or 0),
             volumes=[
                 Volume(
