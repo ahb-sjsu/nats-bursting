@@ -1,6 +1,6 @@
 # nats-bursting
 
-[![CI](https://github.com/ahb-sjsu/nats-bursting/actions/workflows/ci.yml/badge.svg)](https://github.com/ahb-sjsu/nats-bursting/actions/workflows/ci.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/ahb-sjsu/nats-bursting/ci.yml?branch=main&label=CI)](https://github.com/ahb-sjsu/nats-bursting/actions/workflows/ci.yml?query=branch%3Amain)
 [![PyPI](https://img.shields.io/pypi/v/nats-bursting.svg)](https://pypi.org/project/nats-bursting/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20660069.svg)](https://doi.org/10.5281/zenodo.20660069)
