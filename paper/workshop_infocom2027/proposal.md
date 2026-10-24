@@ -20,9 +20,7 @@ Short name: STALE. Half day, in person, Honolulu, May 24, 2027.
 
 - Andrew H. Bond, San Jose State University, USA (General Chair)
 - Antonio Marcos Alberti, University of Leeds, UK (TPC Co-Chair)
-- [TPC Co-Chair or Challenge Chair, ideally a cluster operator or national
-  research platform staff member] TBD
-- [Publicity Chair, ideally an early-career researcher] TBD
+- Egemen Tunçarslan, Maltepe University, Turkey (Publicity Chair)
 
 ## 3. Scope and topics
 
@@ -125,20 +123,18 @@ below also lowers the cost of producing a credible submission.
 - **A panel of operators and researchers** titled "What a good guest looks like."
   Cluster operators state what they need from guest workloads, and researchers say
   what their models can and cannot promise.
-- **Publicity** through the INFOCOM, MobiHoc, and SIGMETRICS mailing lists, research
-  platform user communities, and NATS and Kubernetes community channels.
+- **Publicity**, led by the Publicity Chair, through the INFOCOM, MobiHoc, and
+  SIGMETRICS mailing lists, research platform user communities, and NATS and
+  Kubernetes community channels.
 
 ## 5. Tentative committees
 
 **Organizing committee.** See Section 2.
 
-**Technical program committee** (to be confirmed, target 15 to 20 members across
-age of information, network control, cognitive radio, systems and HPC, and machine
-learning for systems).
-
-- [Name, affiliation] TBD
-- [Name, affiliation] TBD
-- ...
+**Technical program committee.** The General Chair and TPC Co-Chair will recruit
+15 to 20 members once the workshop is accepted, drawn from age of information,
+network control, cognitive radio, systems and HPC, and machine learning for systems.
+Each paper will receive at least three reviews.
 
 Organizers will not handle their own submissions. Any paper with an organizer as
 author will be managed by a TPC member without a conflict, and organizer papers will
@@ -207,8 +203,8 @@ about a full day.
 ## 10. Keynote and panel
 
 Yes. One invited talk from a researcher in age of information or network control
-theory [name TBD, to be confirmed before the proposal is submitted if possible], and
-one panel of three to four speakers mixing research cluster operators and researchers.
+theory, invited once the workshop is accepted, and one panel of three to four
+speakers mixing research cluster operators and researchers.
 
 ## 11. Workshop history
 
