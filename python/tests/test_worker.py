@@ -155,7 +155,9 @@ def test_exception_in_thread_becomes_error_result():
 
     nc = asyncio.run(main())
     assert nc.published[0][1]["error"] == "nope"
-    assert "ValueError" in nc.published[0][1]["traceback"]
+    # The kept part of the traceback is its end, whatever the path length.
+    assert nc.published[0][1]["traceback"].rstrip().endswith("ValueError: nope")
+    assert len(nc.published[0][1]["traceback"]) <= 1000
     assert "no handler" in nc.published[1][1]["error"]
     assert acks == [True, True]
 

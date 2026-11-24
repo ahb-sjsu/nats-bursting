@@ -179,7 +179,9 @@ class Worker:
             except Exception as e:
                 result = {
                     "error": str(e)[:500],
-                    "traceback": traceback.format_exc()[:1000],
+                    # Keep the tail: the exception line and the handler's
+                    # own frames are at the end, after the worker's.
+                    "traceback": traceback.format_exc()[-1000:],
                 }
         result["task_id"] = task_id
         result["task_type"] = task_type

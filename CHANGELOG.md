@@ -30,6 +30,8 @@ project adheres to [Semantic Versioning](https://semver.org/).
   lost. Sync handlers now run in a worker thread (`asyncio.to_thread`),
   one at a time. Opt out with `handler_thread=False` or
   `NATS_HANDLER_THREAD=0`.
+- The `traceback` field of an error result keeps the last 1000
+  characters instead of the first, so the exception line is always in it.
 
 ### Changed
 - **Project renamed from `atlas-burst` to `nats-bursting`.**
