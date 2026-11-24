@@ -110,6 +110,16 @@ TaskHandler = Callable[[dict], dict]
 
 - Sync and async handlers are both supported — if the return value is
   a coroutine, the worker awaits it.
+- A sync handler runs in a worker thread (`asyncio.to_thread`), one at a
+  time, so it may take as long as it needs: the event loop stays free and
+  the NATS client keeps answering server PINGs. Called on the loop, a
+  handler longer than about two ping intervals (4 minutes by default)
+  gets the connection dropped and loses the tasks queued on it. An
+  `async def` handler runs on the loop and must not block it; wrap
+  blocking calls in `asyncio.to_thread` yourself.
+- A handler that must run on the main thread (it installs signal
+  handlers, say) can opt out with `NATS_HANDLER_THREAD=0`; keep such
+  handlers short.
 - The return dict is published as-is to `results.<task_id>`.
 - The worker adds a few metadata keys on top of your return value
   (`task_id`, `worker`, `ts`, `duration_s`), so don't overwrite those.
@@ -129,6 +139,7 @@ can be overridden from the `PoolDescriptor`:
 | `NATS_CONSUMER_GROUP`   | `workers`                     | durable consumer name prefix               |
 | `NATS_RESULT_PREFIX`    | `results.`                    | subject prefix for results                 |
 | `NATS_WORKER_HANDLERS`  | (unset → echo worker)         | dotted path to a `handlers` dict           |
+| `NATS_HANDLER_THREAD`   | `1`                           | run sync handlers in a worker thread       |
 
 ## Sizing a pool
 

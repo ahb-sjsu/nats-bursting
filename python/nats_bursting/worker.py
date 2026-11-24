@@ -21,6 +21,11 @@ The worker:
  - publishes the handler's return value to ``results.<task_id>``,
  - acks on success, naks on exception.
 
+Plain (sync) handlers run in a worker thread, one at a time, so a long
+handler does not hold the event loop: the NATS client keeps answering
+the server's PINGs and the connection stays up. ``async def`` handlers
+run on the loop and must not block it.
+
 It never sleeps-to-idle: if the queue is empty it blocks inside
 ``sub.fetch()`` until a task arrives, which satisfies NRP's
 "no sleeping Jobs" policy.
@@ -30,6 +35,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 import json
 import logging
 import os
@@ -99,6 +105,41 @@ class Worker:
     )
     ack_wait_s: int = 300
     fetch_timeout_s: int = 30
+    #: Run sync handlers in a worker thread (``asyncio.to_thread``) so the
+    #: event loop stays free while they work. A sync handler called on the
+    #: loop blocks the NATS client for its whole duration: the client
+    #: cannot answer server PINGs, the server drops the connection after
+    #: about two ping intervals (4 minutes with default settings), and
+    #: tasks queued on that connection are lost. Set False (or
+    #: ``NATS_HANDLER_THREAD=0``) only for handlers that must run on the
+    #: main thread, and keep those short.
+    handler_thread: bool = field(
+        default_factory=lambda: _get("NATS_HANDLER_THREAD", "1")
+        not in ("0", "false", "False")
+    )
+    _thread_lock: asyncio.Lock | None = field(default=None, init=False, repr=False)
+
+    async def _call_handler(self, handler: TaskHandler, task: dict):
+        """Call one handler without blocking the event loop.
+
+        ``async def`` handlers are awaited on the loop. Sync handlers run
+        in a worker thread, one at a time across all subscriptions, as
+        they did when they ran on the loop. A sync callable that returns
+        a coroutine (a ``functools.partial`` or lambda around an async
+        function) has that coroutine awaited on the loop.
+        """
+        if inspect.iscoroutinefunction(handler):
+            return await handler(task)
+        if not self.handler_thread:
+            maybe = handler(task)
+        else:
+            if self._thread_lock is None:
+                self._thread_lock = asyncio.Lock()
+            async with self._thread_lock:
+                maybe = await asyncio.to_thread(handler, task)
+        if inspect.isawaitable(maybe):
+            return await maybe
+        return maybe
 
     async def _ensure_stream(self, js):
         from nats.js.api import RetentionPolicy, StreamConfig
@@ -134,11 +175,7 @@ class Worker:
             result = {"error": f"no handler for task type {task_type!r}"}
         else:
             try:
-                maybe = handler(task)
-                if asyncio.iscoroutine(maybe):
-                    result = await maybe
-                else:
-                    result = maybe or {}
+                result = await self._call_handler(handler, task) or {}
             except Exception as e:
                 result = {
                     "error": str(e)[:500],
@@ -288,6 +325,8 @@ def run_worker(handlers: Mapping[str, TaskHandler], **kwargs) -> None:
 
     Handlers map ``task["type"]`` → callable. Callables may be sync or
     async; return value (a dict) is published on ``results.{task_id}``.
+    Sync handlers run in a worker thread, one at a time (see
+    :attr:`Worker.handler_thread`).
     """
     logging.basicConfig(
         level=logging.INFO,

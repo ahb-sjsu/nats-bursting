@@ -23,6 +23,14 @@ project adheres to [Semantic Versioning](https://semver.org/).
   contract and status-subject composition.
 - Article drafts (`docs/articles/linkedin.md`, `docs/articles/reddit.md`).
 
+### Fixed
+- `Worker` ran sync handlers on the event loop, so a handler longer than
+  about two NATS ping intervals stopped the client answering server
+  PINGs; the server dropped the connection and tasks queued on it were
+  lost. Sync handlers now run in a worker thread (`asyncio.to_thread`),
+  one at a time. Opt out with `handler_thread=False` or
+  `NATS_HANDLER_THREAD=0`.
+
 ### Changed
 - **Project renamed from `atlas-burst` to `nats-bursting`.**
   - Go module path: `github.com/ahb-sjsu/nats-bursting`.
