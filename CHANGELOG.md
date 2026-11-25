@@ -34,6 +34,12 @@ project adheres to [Semantic Versioning](https://semver.org/).
   characters instead of the first, so the exception line is always in it.
 
 ### Changed
+- A core-NATS worker (`NATS_DURABLE=0`) that is told to stop (SIGTERM,
+  SIGINT or the idle exit) now leaves the queue group, finishes the task
+  it is running, and hands the tasks queued behind it back to the group
+  for another worker. Before, queued tasks ran on the stopping worker
+  until nats-py's 30 s drain timeout and were lost after it. Give pool
+  pods a `terminationGracePeriodSeconds` as long as their longest task.
 - **Project renamed from `atlas-burst` to `nats-bursting`.**
   - Go module path: `github.com/ahb-sjsu/nats-bursting`.
   - Python package: `nats-bursting` (import `nats_bursting`).

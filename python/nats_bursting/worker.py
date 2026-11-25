@@ -263,24 +263,51 @@ class Worker:
 
     async def _run_core(self, nc):
         """Core-NATS queue-group mode — no persistence, crosses leaf
-        boundaries transparently."""
+        boundaries transparently.
+
+        Stopping (SIGTERM, SIGINT or the idle exit) loses no task that
+        another worker can take: the worker leaves the queue group,
+        finishes the task it is running and publishes its result, and
+        hands every task still queued behind it back to the group. There
+        is no persistence in this mode, so a task handed back when no
+        other worker is subscribed is lost, as any task published then
+        would be. Give the pod a ``terminationGracePeriodSeconds`` as
+        long as its longest task.
+        """
         done = asyncio.Event()
         last_activity = {"t": time.time()}
+        loop = asyncio.get_running_loop()
 
         def _stop(*_):
             done.set()
 
         for sig in (signal.SIGINT, signal.SIGTERM):
-            with contextlib.suppress(ValueError):
-                signal.signal(sig, _stop)
+            try:
+                # Wakes the loop at once; signal.signal alone leaves it
+                # asleep until its next timer or socket event.
+                loop.add_signal_handler(sig, _stop)
+            except (NotImplementedError, RuntimeError, ValueError):
+                with contextlib.suppress(ValueError):
+                    signal.signal(sig, _stop)
 
         async def _cb(msg):
+            if done.is_set():
+                # Queued behind the task that was running when the stop
+                # came. This worker has left the group (or is leaving: a
+                # task that comes back is handed on again), so publishing
+                # it again gives it to another worker now.
+                await nc.publish(
+                    msg.subject, msg.data, reply=msg.reply or "", headers=msg.headers
+                )
+                log.info(f"stopping: handed a queued task back to {msg.subject}")
+                return
             last_activity["t"] = time.time()
             await self._handle(nc, msg.data)
             last_activity["t"] = time.time()
 
+        subs = []
         for subj in self.subjects:
-            await nc.subscribe(subj, queue=self.consumer_group, cb=_cb)
+            subs.append(await nc.subscribe(subj, queue=self.consumer_group, cb=_cb))
 
         # Job-shape: exit when idle for exit_on_idle_s seconds. When 0,
         # this task is a no-op and the worker runs forever (Deployment).
@@ -304,6 +331,15 @@ class Worker:
             f"subjects={self.subjects} handlers={list(self.handlers)}"
         )
         await done.wait()
+        log.info("stopping: leaving the queue group, finishing the task in hand")
+        for sub in subs:
+            # drain() unsubscribes at the server, then waits (without a
+            # time limit) until every message already delivered has been
+            # through _cb: the running task finishes, the rest go back.
+            try:
+                await sub.drain()
+            except Exception as e:
+                log.warning(f"drain of {getattr(sub, 'subject', '?')} failed: {e}")
 
     async def run(self) -> None:
         import nats

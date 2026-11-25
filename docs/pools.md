@@ -126,6 +126,25 @@ TaskHandler = Callable[[dict], dict]
 - Raise any exception you like — it becomes `{"error": str(e), "traceback": "..."}`
   in the result.
 
+## Stopping a worker
+
+In core-NATS mode (`NATS_DURABLE=0`) a worker that gets SIGTERM (a
+scale-down, a rolling update, a node drain) or reaches its idle exit:
+
+1. leaves the queue group, so it is sent no more tasks;
+2. finishes the task it is running and publishes its result;
+3. publishes every task still queued behind that one back to its
+   subject, where another worker of the group takes it;
+4. exits 0.
+
+Nothing is lost as long as another worker is subscribed and the pod is
+allowed to finish: set `terminationGracePeriodSeconds` on the pod to at
+least the longest task (Kubernetes' default is 30 s, after which the
+container is killed). Core NATS keeps nothing, so a task handed back when
+no other worker is subscribed is lost, like any task published then.
+In JetStream mode a stopping worker finishes its current task, and
+unacknowledged tasks are redelivered by the stream.
+
 ## Config knobs
 
 All via env vars so they match the `Worker` dataclass defaults and
